@@ -508,6 +508,72 @@ if not api_key:
     st.code('[secrets]\nANTHROPIC_API_KEY = "sk-ant-..."', language="toml")
     st.stop()
 
+
+# ── 논문 근거 섹션 ──────────────────────────────────────────
+with st.expander("📚 연구 배경 — 환경오염과 피부건강 근거 논문"):
+    st.markdown("""
+<div style='font-size:0.83rem;line-height:1.8;color:#333;'>
+
+<div style='font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;
+            color:#0f3460;font-weight:700;margin-bottom:0.8rem;
+            font-family:monospace;'>Scientific Evidence Base</div>
+
+본 플랫폼의 환경-피부 분석은 아래 국제 학술 연구를 근거로 합니다.
+
+<table style='width:100%;border-collapse:collapse;margin-top:0.8rem;font-size:0.8rem;'>
+<tr style='background:#f0f4fa;'>
+  <th style='padding:8px;text-align:left;border:1px solid #e4e8ee;width:18%'>오염원</th>
+  <th style='padding:8px;text-align:left;border:1px solid #e4e8ee;width:30%'>피부 영향</th>
+  <th style='padding:8px;text-align:left;border:1px solid #e4e8ee;'>논문 출처</th>
+</tr>
+<tr>
+  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>PM2.5</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;'>피부 장벽 손상, 염증 반응(ROS↑), 아토피·습진 악화</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
+    Liao et al. (2019) <i>Toxicol Rep</i><br>
+    Park et al. (2022) <i>J Am Acad Dermatol</i><br>
+    PMC12045276 (2024) Review
+  </td>
+</tr>
+<tr style='background:#fafafa;'>
+  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>NO₂</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;'>색소 침착(갈색반점)↑, 산화 스트레스, 표피 장벽 기능 저하</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
+    PMC9351911 (2022) <i>Medicine</i><br>
+    Springer (2020) <i>Curr Environ Health Rep</i>
+  </td>
+</tr>
+<tr>
+  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>O₃ (오존)</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;'>주름 형성 가속, PM·UV와 독립적 피부 노화 촉진</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
+    Krutmann et al. (2020) <i>Curr Environ Health Rep</i><br>
+    PMC9320051 (2022) <i>Cells</i>
+  </td>
+</tr>
+<tr style='background:#fafafa;'>
+  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>장기 복합 노출</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;'>모공 확장, 피부결 불균일, 색소반점 20%↑, 광노화 가속</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
+    PMC11965873 (2025) <i>Sci Rep</i><br>
+    PMC9351911 (2022) 389명 코호트
+  </td>
+</tr>
+</table>
+
+<div style='margin-top:1rem;padding:0.8rem;background:#f0f4fa;border-radius:8px;
+            border-left:3px solid #0f3460;font-size:0.78rem;color:#555;'>
+<b>YD Lab 연구 목표</b><br>
+인천·안산·시흥 지역 주민을 대상으로 저가형 USB 현미경 + AI Vision 분석 도구를 활용하여
+지역 대기오염 데이터(AirKorea)와 피부 상태 지표(주름·모공·피부결·색소)의 상관관계를
+정량적으로 분석합니다. 누구나 자가 측정 가능한 저비용 플랫폼으로 기존 연구를 국내
+환경에 맞게 검증하는 것을 목표로 합니다.<br><br>
+<i>개발: 남정훈 교수 · 재능대학교 바이오테크과 · AI 바이오분석특화연구소</i>
+</div>
+
+</div>
+""", unsafe_allow_html=True)
+
 # ── 촬영 가이드 ──────────────────────────────────────────────
 with st.expander("📷 촬영 가이드"):
     st.markdown("""
@@ -617,71 +683,6 @@ if st.button("🔬 피부 분석 시작", type="primary", use_container_width=Tr
             show_result(result, air, region, air.get("pm25"),
                         residence_years=res_yr_map.get(residence_years, 0))
 
-
-# ── 논문 근거 섹션 ──────────────────────────────────────────
-with st.expander("📚 연구 배경 — 환경오염과 피부건강 근거 논문"):
-    st.markdown("""
-<div style='font-size:0.83rem;line-height:1.8;color:#333;'>
-
-<div style='font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;
-            color:#0f3460;font-weight:700;margin-bottom:0.8rem;
-            font-family:monospace;'>Scientific Evidence Base</div>
-
-본 플랫폼의 환경-피부 분석은 아래 국제 학술 연구를 근거로 합니다.
-
-<table style='width:100%;border-collapse:collapse;margin-top:0.8rem;font-size:0.8rem;'>
-<tr style='background:#f0f4fa;'>
-  <th style='padding:8px;text-align:left;border:1px solid #e4e8ee;width:18%'>오염원</th>
-  <th style='padding:8px;text-align:left;border:1px solid #e4e8ee;width:30%'>피부 영향</th>
-  <th style='padding:8px;text-align:left;border:1px solid #e4e8ee;'>논문 출처</th>
-</tr>
-<tr>
-  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>PM2.5</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;'>피부 장벽 손상, 염증 반응(ROS↑), 아토피·습진 악화</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
-    Liao et al. (2019) <i>Toxicol Rep</i><br>
-    Park et al. (2022) <i>J Am Acad Dermatol</i><br>
-    PMC12045276 (2024) Review
-  </td>
-</tr>
-<tr style='background:#fafafa;'>
-  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>NO₂</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;'>색소 침착(갈색반점)↑, 산화 스트레스, 표피 장벽 기능 저하</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
-    PMC9351911 (2022) <i>Medicine</i><br>
-    Springer (2020) <i>Curr Environ Health Rep</i>
-  </td>
-</tr>
-<tr>
-  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>O₃ (오존)</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;'>주름 형성 가속, PM·UV와 독립적 피부 노화 촉진</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
-    Krutmann et al. (2020) <i>Curr Environ Health Rep</i><br>
-    PMC9320051 (2022) <i>Cells</i>
-  </td>
-</tr>
-<tr style='background:#fafafa;'>
-  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>장기 복합 노출</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;'>모공 확장, 피부결 불균일, 색소반점 20%↑, 광노화 가속</td>
-  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
-    PMC11965873 (2025) <i>Sci Rep</i><br>
-    PMC9351911 (2022) 389명 코호트
-  </td>
-</tr>
-</table>
-
-<div style='margin-top:1rem;padding:0.8rem;background:#f0f4fa;border-radius:8px;
-            border-left:3px solid #0f3460;font-size:0.78rem;color:#555;'>
-<b>YD Lab 연구 목표</b><br>
-인천·안산·시흥 지역 주민을 대상으로 저가형 USB 현미경 + AI Vision 분석 도구를 활용하여
-지역 대기오염 데이터(AirKorea)와 피부 상태 지표(주름·모공·피부결·색소)의 상관관계를
-정량적으로 분석합니다. 누구나 자가 측정 가능한 저비용 플랫폼으로 기존 연구를 국내
-환경에 맞게 검증하는 것을 목표로 합니다.<br><br>
-<i>개발: 남정훈 교수 · 재능대학교 바이오테크과 · AI 바이오분석특화연구소</i>
-</div>
-
-</div>
-""", unsafe_allow_html=True)
 
 # ── 관리자 사이드바 ──────────────────────────────────────────
 with st.sidebar:
