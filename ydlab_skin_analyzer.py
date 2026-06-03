@@ -115,22 +115,49 @@ STATION_MAP = {
     "안산": "안산", "시흥": "시흥", "서울": "중구", "기타": None
 }
 
-@st.cache_data(ttl=3600)
-def fetch_air(station: str) -> dict:
-    """AirKorea API 또는 mock 반환"""
-    try:
-        key = st.secrets.get("AIRKOREA_API_KEY", "")
-        if key:
-            url = "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty"
-            params = dict(serviceKey=key, stationName=station,
-                          dataTerm="DAILY", pageNo=1, numOfRows=1,
-                          returnType="json", ver="1.3")
-            r = requests.get(url, params=params, timeout=5)
-            item = r.json()["response"]["body"]["items"][0]
-            return dict(pm25=item["pm25Value"], pm10=item["pm10Value"],
-                        o3=item["o3Value"],   no2=item["no2Value"], mock=False)
-    except Exception:
-        pass
+# 지역별 측정소 후보 (ydlab fetch_air.py 기반)
+STATION_CANDIDATES = {
+    "인천":  ["중구", "항동", "신흥"],
+    "부평구": ["부평", "갈산", "산곡"],
+    "연수구": ["송도", "동춘", "연수", "옥련"],
+    "남동구": ["남동", "구월동", "논현", "구월"],
+    "안산":  ["고잔동", "본오동", "부곡동1", "선부동"],
+    "시흥":  ["대야동", "배곧동", "목감동", "정왕동"],
+    "서울":  ["중구", "종로구", "을지로"],
+    "기타":  ["중구"],
+}
+
+@st.cache_data(ttl=1800)
+def fetch_air(region: str) -> dict:
+    """AirKorea 실데이터 조회 — 후보 측정소 순서대로 시도"""
+    key = st.secrets.get("AIRKOREA_API_KEY", "")
+    url = "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty"
+    candidates = STATION_CANDIDATES.get(region, ["중구"])
+
+    if key:
+        for station in candidates:
+            try:
+                params = dict(serviceKey=key, stationName=station,
+                              dataTerm="DAILY", pageNo=1, numOfRows=1,
+                              returnType="json", ver="1.3")
+                r = requests.get(url, params=params, timeout=8)
+                items = r.json()["response"]["body"]["items"]
+                if items and isinstance(items, list):
+                    item = items[0]
+                    pm25 = item.get("pm25Value", "")
+                    if pm25 and pm25 != "-":
+                        return dict(
+                            pm25 = float(pm25),
+                            pm10 = float(item.get("pm10Value") or 0),
+                            o3   = float(item.get("o3Value")   or 0),
+                            no2  = float(item.get("no2Value")  or 0),
+                            station = station,
+                            mock = False
+                        )
+            except Exception:
+                continue
+
+    # API 실패 시 mock
     return dict(pm25=random.randint(12, 65), pm10=random.randint(18, 85),
                 o3=round(random.uniform(0.01, 0.08), 3),
                 no2=round(random.uniform(0.01, 0.05), 3), mock=True)
@@ -473,7 +500,10 @@ def show_result(result: dict, air: dict, region: str, pm25_val, residence_years:
         st.markdown(f"<div style='margin-top:0.7rem;font-size:0.83rem;color:#444;line-height:1.7'>{env_msg}</div>",
                     unsafe_allow_html=True)
     if air.get("mock"):
-        st.caption("※ 현재 샘플 데이터입니다. AirKorea API 키 연결 시 실수치로 업데이트됩니다.")
+        if air.get("mock"):
+            st.caption("※ 현재 샘플 데이터입니다. 잠시 후 다시 시도해주세요.")
+        else:
+            st.caption(f"※ 실측 데이터 · 측정소: {air.get('station','')} · 30분 갱신")
 
 
     # 누적 노출 지수 카드
@@ -684,9 +714,7 @@ if st.button("🔬 피부 분석 시작", type="primary", use_container_width=Tr
 
     if not errors:
         # 환경 지수 조회
-        station = STATION_MAP.get(region)
-        air = fetch_air(station) if station else \
-              dict(pm25=None, pm10=None, o3=None, no2=None, mock=True)
+        air = fetch_air(region)
 
         # Claude Vision 분석
         with st.spinner("🔬 AI가 피부를 분석하고 있습니다... (10~20초)"):
