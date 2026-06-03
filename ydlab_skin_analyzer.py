@@ -230,6 +230,196 @@ def analyze_skin(images: list, api_key: str) -> dict | None:
 
 
 
+def generate_order_html(result: dict, air: dict, region: str,
+                        residence_years: int, name: str,
+                        age_group: str, gender: str) -> str:
+    """공방 주문서 HTML 생성"""
+    from datetime import datetime as _dt
+    import random, string
+
+    code = "YDL-" + _dt.now().strftime("%Y%m%d") + "-" + ''.join(random.choices(string.ascii_uppercase+string.digits, k=4))
+    overall   = result.get("overall_score", 0)
+    skin_type = result.get("skin_type", "")
+    summary   = result.get("summary", "")
+    care      = result.get("care_advice", "")
+    ingredients = result.get("recommended_ingredients", [])
+    concerns  = result.get("key_concerns", [])
+    pm25      = air.get("pm25", "-")
+    station   = air.get("station", "인천")
+
+    # 지표별 점수
+    scores = {
+        "주름":   result.get("wrinkle_score", 0),
+        "모공":   result.get("pore_score", 0),
+        "피부결": result.get("texture_score", 0),
+        "피부톤": result.get("tone_score", 0),
+        "수분":   result.get("moisture_score", 0),
+    }
+
+    # 우선순위 문제 (점수 낮은 순 정렬)
+    priority = sorted(scores.items(), key=lambda x: x[1])
+
+    # 성분별 목적 매핑
+    ing_purpose = {
+        "히알루론산": "즉각 수분 공급·보습",
+        "세라마이드": "피부 장벽 강화",
+        "레티놀": "주름 개선·탄력",
+        "비타민C": "항산화·피부톤 개선",
+        "나이아신아마이드": "피부톤 균일화·모공 관리",
+        "펩타이드": "탄력·항노화",
+        "판테놀": "진정·보습",
+        "AHA/BHA": "각질 제거·피부결 개선",
+    }
+
+    # CEEI
+    pm25_avg = REGION_PM25_AVG.get(region, 22.0)
+    res_yr_map = {"1년 미만":0,"1~2년":1,"3~5년":4,"5~10년":7,"10년 이상":12,"선택":0}
+    yrs = res_yr_map.get(residence_years, 0) if isinstance(residence_years, str) else residence_years
+    ceei = round(pm25_avg * yrs, 1)
+    _, ceei_grade, _, ceei_msg = calc_exposure_index(pm25_avg, yrs)
+
+    # 환경 기반 추가 권장
+    env_recommend = ""
+    if isinstance(pm25, (int, float)) and float(pm25) > 35:
+        env_recommend = "항산화 성분(비타민C·나이아신아마이드) 강화 권장 — 오늘 PM2.5 나쁨"
+    elif ceei >= 150:
+        env_recommend = "장기 오염 노출로 피부 광노화 대응 성분(레티놀·펩타이드) 권장"
+
+    priority_rows = ""
+    for i, (lbl, score) in enumerate(priority[:3]):
+        color = "#c62828" if score < 40 else "#e65100" if score < 60 else "#2e7d32"
+        priority_rows += f"""
+        <tr>
+          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>{i+1}순위</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;'>{lbl}</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:700;color:{color};font-family:monospace;'>{score}점</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>{"집중 케어 필요" if score<40 else "개선 권장" if score<60 else "유지 관리"}</td>
+        </tr>"""
+
+    ing_rows = ""
+    for i, ing in enumerate(ingredients):
+        purpose = ing_purpose.get(ing, "피부 상태 개선")
+        ing_rows += f"""
+        <tr style='background:{"#f8faff" if i%2==0 else "white"}'>
+          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>{i+1}</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;'>{ing}</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>{purpose}</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;color:#888;'>권장 농도 별도 협의</td>
+        </tr>"""
+
+    return f"""<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>YD Lab 공방 주문서 {code}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+*{{box-sizing:border-box;margin:0;padding:0;}}
+body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;background:white;padding:0;}}
+.header{{background:#0f3460;color:white;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;}}
+.header h1{{font-size:18px;font-weight:700;}}
+.header .sub{{font-size:9px;opacity:0.6;margin-top:3px;}}
+.header .code{{font-size:13px;font-family:monospace;background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:4px;}}
+.body{{padding:22px 30px;}}
+.section{{margin-bottom:18px;}}
+.stitle{{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#0f3460;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #0f3460;}}
+.infobar{{display:flex;gap:20px;font-size:10px;color:#444;padding:10px 0;border-bottom:1px solid #e4e8ee;margin-bottom:14px;flex-wrap:wrap;}}
+.infobar span strong{{color:#0f3460;}}
+table{{width:100%;border-collapse:collapse;font-size:11px;}}
+th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
+.alert{{background:#fff3e0;border-left:3px solid #e65100;padding:8px 12px;font-size:10px;color:#e65100;margin-top:8px;border-radius:0 4px 4px 0;}}
+.score-row{{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}}
+.sbox{{flex:1;min-width:80px;background:#f8f9fa;border:1px solid #e4e8ee;border-radius:6px;padding:8px;text-align:center;}}
+.snum{{font-size:22px;font-weight:700;line-height:1;}}
+.slbl{{font-size:9px;color:#666;margin-top:2px;}}
+.product-box{{background:#f0f4fa;border:1px solid #c8d8f0;border-radius:8px;padding:12px;margin-bottom:10px;}}
+.product-title{{font-weight:700;color:#0f3460;font-size:12px;margin-bottom:6px;}}
+.product-detail{{font-size:10px;color:#555;line-height:1.7;}}
+.footer{{background:#0f3460;color:rgba(255,255,255,0.6);padding:10px 30px;font-size:8px;display:flex;justify-content:space-between;margin-top:16px;}}
+.print-btn{{position:fixed;bottom:20px;right:20px;background:#0f3460;color:white;border:none;padding:10px 18px;border-radius:8px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;z-index:999;}}
+@media print{{.print-btn{{display:none;}}}}
+</style>
+</head><body>
+<button class="print-btn" onclick="window.print()">🖨️ PDF 저장</button>
+<div class="header">
+  <div>
+    <h1>🧪 YD Lab 공방 주문서</h1>
+    <div class="sub">AI 피부분석 기반 맞춤형 화장품 제조 요청 · 재능대학교 AI-바이오분석특화연구소</div>
+  </div>
+  <div class="code">{code}</div>
+</div>
+<div class="body">
+
+  <div class="infobar">
+    <span><strong>분석일:</strong> {_dt.now().strftime("%Y년 %m월 %d일")}</span>
+    <span><strong>고객:</strong> {name}  {age_group}  {gender}</span>
+    <span><strong>거주지:</strong> {region}  거주 {yrs}년</span>
+    <span><strong>피부 타입:</strong> {skin_type}</span>
+    <span><strong>종합 점수:</strong> {overall}점</span>
+  </div>
+
+  <div class="section">
+    <div class="stitle">피부 분석 점수</div>
+    <div class="score-row">
+      {"".join([f'<div class="sbox"><div class="snum" style="color:{"#2e7d32" if v>=70 else "#e65100" if v>=40 else "#c62828"}">{v}</div><div class="slbl">{k}</div></div>' for k,v in scores.items()])}
+    </div>
+    <div style='font-size:10px;color:#555;line-height:1.7;padding:8px;background:#f8f9fa;border-radius:6px;'>{summary}</div>
+  </div>
+
+  <div class="section">
+    <div class="stitle">우선 개선 항목 (제조 집중 방향)</div>
+    <table>
+      <tr><th>우선순위</th><th>지표</th><th>점수</th><th>케어 방향</th></tr>
+      {priority_rows}
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="stitle">AI 추천 화장품 성분</div>
+    <table>
+      <tr><th>#</th><th>성분명</th><th>목적</th><th>농도</th></tr>
+      {ing_rows}
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="stitle">제품 구성 제안</div>
+    <div class="product-box">
+      <div class="product-title">제품 1 — 하이드레이팅 세럼 (30ml)</div>
+      <div class="product-detail">
+        핵심 성분: {ingredients[0] if ingredients else "-"} · {ingredients[2] if len(ingredients)>2 else ""}<br>
+        목적: 즉각 수분 공급 · 피부톤 개선 · 항산화<br>
+        제형: 저점도 세럼 · 빠른 흡수 · 향료 최소화
+      </div>
+    </div>
+    <div class="product-box">
+      <div class="product-title">제품 2 — 장벽 강화 크림 (50ml)</div>
+      <div class="product-detail">
+        핵심 성분: {ingredients[1] if len(ingredients)>1 else "-"} · {ingredients[3] if len(ingredients)>3 else ""}<br>
+        목적: 피부 장벽 강화 · 탄력 개선 · 광노화 억제<br>
+        제형: 중점도 크림 · pH 5.5~6.0 · 저자극 방부제
+      </div>
+    </div>
+    <div style='font-size:10px;color:#555;line-height:1.7;'>{care}</div>
+  </div>
+
+  <div class="section">
+    <div class="stitle">환경 요인 (누적 노출 지수)</div>
+    <div style='display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;'>
+      <span style='background:#e8f4fd;color:#1565c0;border-radius:12px;padding:3px 10px;font-size:10px;'>PM2.5 {pm25}㎍/m³ · {station}</span>
+      <span style='background:#{"fce4ec" if ceei>=300 else "fff3e0" if ceei>=150 else "e8f5e9"};color:#{"c62828" if ceei>=300 else "e65100" if ceei>=150 else "2e7d32"};border-radius:12px;padding:3px 10px;font-size:10px;'>CEEI {ceei} [{ceei_grade}]</span>
+      <span style='background:#f1f3f4;color:#555;border-radius:12px;padding:3px 10px;font-size:10px;'>{region} 거주 {yrs}년 · 연평균 PM2.5 {pm25_avg}㎍/m³</span>
+    </div>
+    {f'<div class="alert">⚠️ 환경 권장: {env_recommend}</div>' if env_recommend else ''}
+  </div>
+
+</div>
+<div class="footer">
+  <span>본 주문서는 YD Lab AI 피부분석 결과 기반이며 의료적 처방이 아닙니다.</span>
+  <span>YD Lab · 재능대학교 바이오테크과 · 개발: 남정훈 교수</span>
+</div>
+</body></html>"""
+
+
 def generate_pdf_html(result: dict, air: dict, region: str,
                       residence_years: int, name: str,
                       age_group: str, gender: str) -> str:
@@ -556,6 +746,22 @@ def show_result(result: dict, air: dict, region: str, pm25_val, residence_years:
         use_container_width=True
     )
     st.caption("💡 다운로드된 파일을 크롬으로 열면 PDF 저장 창이 자동으로 열립니다.")
+
+    # 공방 주문서 자동 생성
+    order_html = generate_order_html(
+        result, air, region, residence_years,
+        st.session_state.get("pdf_name", ""),
+        st.session_state.get("pdf_age", ""),
+        st.session_state.get("pdf_gender", "")
+    )
+    st.download_button(
+        label="🧪 공방 주문서 저장",
+        data=order_html.encode("utf-8"),
+        file_name=f"YDLab_공방주문서_{_dt2.now().strftime('%Y%m%d_%H%M')}.html",
+        mime="text/html",
+        use_container_width=True
+    )
+    st.caption("💡 주문서를 크롬으로 열어 PDF 저장 후 공방에 전달하세요. 추후 이메일 자동 전송 기능이 추가됩니다.")
 
     # 출처 표기
     st.markdown("""
