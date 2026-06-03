@@ -127,7 +127,6 @@ STATION_CANDIDATES = {
     "기타":  ["중구"],
 }
 
-@st.cache_data(ttl=1800)
 def fetch_air(region: str) -> dict:
     """AirKorea 실데이터 조회 — 후보 측정소 순서대로 시도"""
     key = st.secrets.get("AIRKOREA_API_KEY", "")
@@ -145,14 +144,26 @@ def fetch_air(region: str) -> dict:
                 if items and isinstance(items, list):
                     item = items[0]
                     pm25 = item.get("pm25Value", "")
-                    if pm25 and pm25 != "-":
+                    pm10 = item.get("pm10Value", "")
+                    # 수치가 있으면 실데이터로 처리
+                    if pm25 and str(pm25).strip() not in ["-", "", "None"]:
                         return dict(
-                            pm25 = float(pm25),
-                            pm10 = float(item.get("pm10Value") or 0),
-                            o3   = float(item.get("o3Value")   or 0),
-                            no2  = float(item.get("no2Value")  or 0),
+                            pm25    = float(pm25),
+                            pm10    = float(pm10) if pm10 and str(pm10).strip() not in ["-",""] else 0,
+                            o3      = float(item.get("o3Value")  or 0),
+                            no2     = float(item.get("no2Value") or 0),
                             station = station,
-                            mock = False
+                            mock    = False
+                        )
+                    # pm25 없어도 다른 수치라도 있으면 부분 실데이터
+                    elif pm10 and str(pm10).strip() not in ["-", "", "None"]:
+                        return dict(
+                            pm25    = 0,
+                            pm10    = float(pm10),
+                            o3      = float(item.get("o3Value")  or 0),
+                            no2     = float(item.get("no2Value") or 0),
+                            station = station,
+                            mock    = False
                         )
             except Exception:
                 continue
