@@ -12,6 +12,8 @@ secrets.toml (.streamlit/secrets.toml):
 
 import streamlit as st
 import io as _io
+import gspread
+from google.oauth2.service_account import Credentials
 import anthropic
 import base64
 import json
@@ -332,7 +334,40 @@ FIELDS = ["timestamp","name","age_group","gender","region","residence_years","sk
           "photo_count","pm25","pm10","o3","no2","exposure_index",
           "overall_score","skin_type","key_concerns","recommended_ingredients","consent"]
 
+def get_sheet():
+    """Google Sheets 연결 반환"""
+    try:
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+        scopes = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive"
+        ]
+        creds  = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        client = gspread.authorize(creds)
+        sheet_id = st.secrets.get("GOOGLE_SHEETS_ID", "")
+        return client.open_by_key(sheet_id).sheet1
+    except Exception as e:
+        return None
+
+def ensure_header(sheet):
+    """헤더 행이 없으면 추가"""
+    try:
+        if sheet.row_values(1) == []:
+            sheet.append_row(FIELDS)
+    except Exception:
+        pass
+
 def save_record(r: dict):
+    # Google Sheets 저장
+    try:
+        sheet = get_sheet()
+        if sheet:
+            ensure_header(sheet)
+            sheet.append_row([r.get(k, "") for k in FIELDS])
+    except Exception:
+        pass
+    # 로컬 CSV 백업
     header = not DATA_FILE.exists()
     with open(DATA_FILE, "a", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS)
