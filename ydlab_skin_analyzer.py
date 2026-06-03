@@ -551,11 +551,12 @@ def show_result(result: dict, air: dict, region: str, pm25_val, residence_years:
     )
     st.caption("💡 다운로드된 파일을 크롬으로 열면 PDF 저장 창이 자동으로 열립니다.")
 
-    # 대시보드 CTA
+    # 출처 표기
     st.markdown("""
-    <a class='cta-btn' href='https://ydlabbio.com' target='_blank'>
-      🌍 인천·안산·시흥 환경 현황 대시보드 보기 →
-    </a>
+    <div style='margin-top:0.6rem;font-size:0.75rem;color:#888;line-height:1.7;'>
+      📡 출처: 한국환경공단 에어코리아 (airkorea.or.kr) 실측값 · 30분 갱신<br>
+      🔬 환경-피부 상관 연구: YD Lab · 재능대학교 AI-바이오분석특화연구소
+    </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
