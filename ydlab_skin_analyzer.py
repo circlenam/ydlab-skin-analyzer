@@ -259,17 +259,24 @@ def generate_order_html(result: dict, air: dict, region: str,
     # 우선순위 문제 (점수 낮은 순 정렬)
     priority = sorted(scores.items(), key=lambda x: x[1])
 
-    # 성분별 목적 매핑
-    ing_purpose = {
-        "히알루론산": "즉각 수분 공급·보습",
-        "세라마이드": "피부 장벽 강화",
-        "레티놀": "주름 개선·탄력",
-        "비타민C": "항산화·피부톤 개선",
-        "나이아신아마이드": "피부톤 균일화·모공 관리",
-        "펩타이드": "탄력·항노화",
-        "판테놀": "진정·보습",
-        "AHA/BHA": "각질 제거·피부결 개선",
+    # 성분별 목적 + 권장 농도 매핑
+    # (피부 타입별 농도 자동 조정)
+    is_sensitive = skin_type in ["민감성", "건성"]
+    ing_data = {
+        "히알루론산":      ("즉각 수분 공급·보습",      "1~2%" if not is_sensitive else "0.5~1%",   "저·고분자 혼합 권장"),
+        "세라마이드":      ("피부 장벽 강화",            "1~3%" if not is_sensitive else "0.5~1%",   "NP·AP·EOP 3종 혼합"),
+        "나이아신아마이드":("피부톤 균일화·모공 관리",   "5~10%" if not is_sensitive else "2~5%",    "10% 초과 시 자극 가능"),
+        "레티놀":          ("주름 개선·탄력",            "0.1~0.3%" if not is_sensitive else "0.05%","야간 전용·서서히 농도↑"),
+        "비타민C":         ("항산화·피부톤 개선",        "10~15%" if not is_sensitive else "5~10%",  "pH 3.5 이하 유지"),
+        "비타민C 유도체":  ("항산화·안정형",             "3~5%",                                     "아스코빌글루코사이드"),
+        "펩타이드":        ("탄력·항노화",               "2~5%" if not is_sensitive else "1~3%",     "아세틸헥사펩타이드-3"),
+        "판테놀":          ("진정·보습",                 "1~5%" if not is_sensitive else "1~2%",     "Pro-비타민B5"),
+        "AHA":             ("각질 제거·피부결 개선",     "5~10%",                                    "pH 3.5~4.0·주 2~3회"),
+        "BHA":             ("모공 각질 용해",            "0.5~2%",                                   "지성·복합성 권장"),
+        "아데노신":        ("주름 개선 (식약처 고시)",   "0.04%",                                    "기능성 화장품 기준"),
+        "EGF":             ("세포 재생·탄력",            "0.0001~0.001%",                            "냉장 보관 필요"),
     }
+    ing_purpose = {k: v[0] for k, v in ing_data.items()}
 
     # CEEI
     pm25_avg = REGION_PM25_AVG.get(region, 22.0)
@@ -298,13 +305,17 @@ def generate_order_html(result: dict, air: dict, region: str,
 
     ing_rows = ""
     for i, ing in enumerate(ingredients):
-        purpose = ing_purpose.get(ing, "피부 상태 개선")
+        d = ing_data.get(ing)
+        purpose = d[0] if d else "피부 상태 개선"
+        conc    = d[1] if d else "공방 재량"
+        note    = d[2] if d else ""
         ing_rows += f"""
         <tr style='background:{"#f8faff" if i%2==0 else "white"}'>
-          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>{i+1}</td>
-          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;'>{ing}</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;text-align:center;'>{i+1}</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:700;color:#1a1a2e;'>{ing}</td>
           <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>{purpose}</td>
-          <td style='padding:8px;border:1px solid #e4e8ee;color:#888;'>권장 농도 별도 협의</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;font-family:monospace;'>{conc}</td>
+          <td style='padding:8px;border:1px solid #e4e8ee;color:#888;font-size:9px;'>{note}</td>
         </tr>"""
 
     return f"""<!DOCTYPE html>
@@ -376,7 +387,7 @@ th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
   <div class="section">
     <div class="stitle">AI 추천 화장품 성분</div>
     <table>
-      <tr><th>#</th><th>성분명</th><th>목적</th><th>농도</th></tr>
+      <tr><th style='width:5%'>#</th><th style='width:18%'>성분명</th><th style='width:30%'>목적</th><th style='width:15%'>권장 농도</th><th style='width:32%'>제조 참고사항</th></tr>
       {ing_rows}
     </table>
   </div>
@@ -957,18 +968,24 @@ if st.button("🔬 피부 분석 시작", type="primary", use_container_width=Tr
         st.error(e)
 
     if not errors:
-        # 환경 지수 조회
         air = fetch_air(region)
-
-        # Claude Vision 분석
         with st.spinner("🔬 AI가 피부를 분석하고 있습니다... (10~20초)"):
             result = analyze_skin(images, api_key)
 
         if result:
-            # 데이터 저장
-            st.session_state["pdf_name"]   = name.strip()
-            st.session_state["pdf_age"]    = age_group
-            st.session_state["pdf_gender"] = gender
+            res_yr_map = {"1년 미만":0,"1~2년":1,"3~5년":4,"5~10년":7,"10년 이상":12,"선택":0}
+            yrs = res_yr_map.get(residence_years, 0)
+
+            # ── session_state에 모든 결과 저장 ──────────────
+            st.session_state["result"]           = result
+            st.session_state["air"]              = air
+            st.session_state["region"]           = region
+            st.session_state["residence_years"]  = yrs
+            st.session_state["pdf_name"]         = name.strip()
+            st.session_state["pdf_age"]          = age_group
+            st.session_state["pdf_gender"]       = gender
+            st.session_state["analysis_done"]    = True
+
             save_record({
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "name": name.strip(), "age_group": age_group,
@@ -976,7 +993,7 @@ if st.button("🔬 피부 분석 시작", type="primary", use_container_width=Tr
                 "skin_concern": ", ".join(concerns),
                 "photo_count": len(images),
                 "pm25": air.get("pm25"), "pm10": air.get("pm10"),
-                "exposure_index": f"{REGION_PM25_AVG.get(region,22.0)*({'1년 미만':0.5,'1~2년':1.5,'3~5년':4,'5~10년':7.5,'10년 이상':12}.get(residence_years,0)):.1f}",
+                "exposure_index": f"{REGION_PM25_AVG.get(region,22.0)*yrs:.1f}",
                 "o3":   air.get("o3"),   "no2":  air.get("no2"),
                 "overall_score":          result.get("overall_score"),
                 "skin_type":              result.get("skin_type"),
@@ -985,10 +1002,16 @@ if st.button("🔬 피부 분석 시작", type="primary", use_container_width=Tr
                     ", ".join(result.get("recommended_ingredients",[])),
                 "consent": "Y"
             })
-            # 결과 표시
-            res_yr_map = {"1년 미만":0,"1~2년":1,"3~5년":4,"5~10년":7,"10년 이상":12,"선택":0}
-            show_result(result, air, region, air.get("pm25"),
-                        residence_years=res_yr_map.get(residence_years, 0))
+
+# ── 결과 표시 (session_state 기반 — 버튼 눌러도 유지) ──────
+if st.session_state.get("analysis_done"):
+    show_result(
+        st.session_state["result"],
+        st.session_state["air"],
+        st.session_state["region"],
+        st.session_state["air"].get("pm25"),
+        residence_years=st.session_state["residence_years"]
+    )
 
 
 # ── 관리자 사이드바 ──────────────────────────────────────────
