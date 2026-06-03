@@ -511,10 +511,10 @@ def show_result(result: dict, air: dict, region: str, pm25_val, residence_years:
         st.markdown(f"<div style='margin-top:0.7rem;font-size:0.83rem;color:#444;line-height:1.7'>{env_msg}</div>",
                     unsafe_allow_html=True)
     if air.get("mock"):
-        if air.get("mock"):
-            st.caption("※ API 응답 대기 중입니다. 잠시 후 다시 시도해주세요.")
+        if air.get("pm25") and float(air.get("pm25") or 0) > 0:
+            st.caption(f"✅ 실측 데이터 · 측정소: {air.get('station','인천')} · 30분 갱신")
         else:
-            st.caption(f"✅ 실측 데이터 · 측정소: {air.get('station','')} · 30분 갱신")
+            st.caption("※ API 응답 대기 중입니다. 잠시 후 다시 시도해주세요.")
 
 
     # 누적 노출 지수 카드
