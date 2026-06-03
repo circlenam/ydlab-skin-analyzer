@@ -637,6 +637,15 @@ with st.expander("📚 연구 배경 — 환경오염과 피부건강 근거 논
   </td>
 </tr>
 <tr style='background:#fafafa;'>
+  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>아토피·염증성 피부질환</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;'>PM2.5·NO₂·SO₂ 노출 시 아토피 악화 및 의료기관 방문 증가, 도시-농촌 이주 연구에서 환경 요인 역할 확인</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
+    Fadadu et al. (2023) <i>J Eur Acad Dermatol Venereol</i><br>
+    Lai et al. (2023) <i>Curr Allergy Asthma Rep</i><br>
+    JACI (2024) <i>J Allergy Clin Immunol</i>
+  </td>
+</tr>
+<tr>
   <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>장기 복합 노출</td>
   <td style='padding:8px;border:1px solid #e4e8ee;'>모공 확장, 피부결 불균일, 색소반점 20%↑, 광노화 가속</td>
   <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
@@ -644,12 +653,21 @@ with st.expander("📚 연구 배경 — 환경오염과 피부건강 근거 논
     PMC9351911 (2022) 389명 코호트
   </td>
 </tr>
+<tr style='background:#fafafa;'>
+  <td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#0f3460;'>AI × 맞춤 스킨케어</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;'>AI가 환경·유전·피부 데이터 통합 분석으로 맞춤형 스킨케어 실현, 글로벌 AI 스킨케어 시장 연평균 12.1% 성장</td>
+  <td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>
+    Hash et al. (2025) <i>Cureus</i><br>
+    Kania et al. (2024) <i>J Cosmet Dermatol</i><br>
+    Elder et al. (2021) <i>J Cosmet Dermatol</i>
+  </td>
+</tr>
 </table>
 
 <div style='margin-top:1rem;padding:0.8rem;background:#f0f4fa;border-radius:8px;
             border-left:3px solid #0f3460;font-size:0.78rem;color:#555;'>
 <b>YD Lab 연구 목표</b><br>
-인천·안산·시흥 지역 주민을 대상으로 저가형 USB 현미경 + AI Vision 분석 도구를 활용하여
+인천(서구·남동구·부평구 등)·안산·시흥 지역 주민을 대상으로 저가형 USB 현미경 + AI Vision 분석 도구를 활용하여
 지역 대기오염 데이터(AirKorea)와 피부 상태 지표(주름·모공·피부결·색소)의 상관관계를
 정량적으로 분석합니다. 누구나 자가 측정 가능한 저비용 플랫폼으로 기존 연구를 국내
 환경에 맞게 검증하는 것을 목표로 합니다.<br><br>
