@@ -553,9 +553,11 @@ def show_result(result: dict, air: dict, region: str, pm25_val, residence_years:
 
     # 출처 표기
     st.markdown("""
-    <div style='margin-top:0.6rem;font-size:0.75rem;color:#888;line-height:1.7;'>
+    <div style='margin-top:0.6rem;font-size:0.75rem;color:#888;line-height:1.7;
+                border-top:1px solid #f0f0f0;padding-top:0.6rem;'>
       📡 출처: 한국환경공단 에어코리아 (airkorea.or.kr) 실측값 · 30분 갱신<br>
-      🔬 환경-피부 상관 연구: YD Lab · 재능대학교 AI-바이오분석특화연구소
+      🔬 환경-피부 상관 연구: YD Lab · 재능대학교 AI-바이오분석특화연구소<br>
+      👨‍🔬 연구소장: 남정훈 교수 · Dept. of Biotechnology, Jaeneung University
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
