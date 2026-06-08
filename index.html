@@ -1339,16 +1339,19 @@
     const APP_URL    = 'https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/';
 
     function activateCode() {
-        const code = document.getElementById('codeInput').value.trim();
-        if (!code) {
-            alert('코드를 입력해주세요');
-            return;
-        }
-        // 코드를 URL 파라미터로 전달해 Streamlit 플랫폼으로 이동
-        // 실제 주소로 변경하세요
-        window.location.href =
-            // 이전 코드 — 사용하지 않음
+    const code = document.getElementById('codeInput').value.trim().toUpperCase();
+    if (!code) {
+        alert('코드를 입력해주세요.');
+        return;
     }
+    if (code === ADMIN_CODE) {
+        window.location.href = APP_URL;
+    } else if (code.startsWith('SKIN-') && code.length === 19) {
+        alert('현재는 오픈랩 이벤트 기간입니다.\n행사장에서 받은 코드를 이용해주세요.');
+    } else {
+        alert('유효하지 않은 코드입니다.\n오픈랩 참여자는 행사장에서 받은 코드를 입력하세요.');
+    }
+}
 
     // Enter 키로도 코드 입력 가능
     document.getElementById('codeInput')
