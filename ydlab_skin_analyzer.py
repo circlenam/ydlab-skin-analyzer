@@ -275,7 +275,7 @@ def analyze_skin(images, api_key, body_parts=None):
                 parts_str += "\n두피 부위 포함 — is_scalp=true로 설정하고 두피 3지표를 반드시 채우세요."
         content.append({"type": "text", "text": ANALYSIS_PROMPT + parts_str})
         msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model="claude-haiku-4-5",
             max_tokens=1200,
             messages=[{"role": "user", "content": content}]
         )
@@ -947,7 +947,7 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
         cols = st.columns(min(show_count, 4))
         for i, f in enumerate(uploaded[:max_photos]):
             with cols[i % min(show_count, 4)]:
-                st.image(f, use_column_width=True)
+                st.image(f, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── 동의
