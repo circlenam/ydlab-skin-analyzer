@@ -1360,16 +1360,20 @@
         });
 
     // ===== 코드 입력 자동 포맷 (SKIN-XXXX-XXXX-XXXX) =====
-    document.getElementById('codeInput')
-        .addEventListener('input', function() {
-            let v = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+document.getElementById('codeInput')
+    .addEventListener('input', function() {
+        let raw = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        if (raw.startsWith('SKIN')) {
             let parts = [];
-            if (v.length > 0)  parts.push(v.substring(0, 4));
-            if (v.length > 4)  parts.push(v.substring(4, 8));
-            if (v.length > 8)  parts.push(v.substring(8, 12));
-            if (v.length > 12) parts.push(v.substring(12, 16));
+            if (raw.length > 0)  parts.push(raw.substring(0, 4));
+            if (raw.length > 4)  parts.push(raw.substring(4, 8));
+            if (raw.length > 8)  parts.push(raw.substring(8, 12));
+            if (raw.length > 12) parts.push(raw.substring(12, 16));
             this.value = parts.join('-');
-        });
+        } else {
+            this.value = raw;
+        }
+    });
 
     // ===== 네비게이션 스크롤 시 배경 강조 =====
     window.addEventListener('scroll', function() {
