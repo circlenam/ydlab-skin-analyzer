@@ -475,7 +475,7 @@ def show_result(result, air, region, residence_years_str,
             {"집중 케어 필요" if score<40 else "개선 권장" if score<60 else "유지 관리"}
           </span>
         </div>"""
- st.markdown(f"""
+    st.markdown(f"""
     <div class='card'>
       <div class='card-label'>우선 개선 항목</div>
       {priority_html}
