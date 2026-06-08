@@ -936,7 +936,7 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
                 unsafe_allow_html=True)
     selected_parts = st.multiselect(
         "📍 촬영한 부위를 선택하세요 (복수 선택 가능)",
-        BODY_PARTS, default=["볼"], key="k_parts",
+        BODY_PARTS, default=[], key="k_parts",
         help="두피 선택 시 두피 3지표(각질·모공·모발굵기)가 추가 분석됩니다."
     )
     if any("두피" in p for p in selected_parts):
