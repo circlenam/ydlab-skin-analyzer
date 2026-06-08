@@ -85,6 +85,12 @@ html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
 .priority-label { font-weight:600; flex:1; font-size:0.85rem; }
 .priority-score { font-weight:700; font-family:'DM Mono',monospace; font-size:0.85rem; }
 .priority-msg { font-size:0.78rem; color:#888; }
+.air-real { background:#e8f5e9; border:1px solid #a5d6a7; border-radius:8px;
+            padding:0.5rem 1rem; font-size:0.78rem; color:#2e7d32;
+            margin-bottom:0.8rem; font-weight:600; }
+.air-mock { background:#fff3e0; border:1px solid #ffcc80; border-radius:8px;
+            padding:0.5rem 1rem; font-size:0.78rem; color:#e65100;
+            margin-bottom:0.8rem; font-weight:600; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -212,12 +218,18 @@ def fetch_air(region):
                             pm10=float(pm10) if pm10 and str(pm10).strip() not in ["-",""] else 0,
                             o3=float(item.get("o3Value") or 0),
                             no2=float(item.get("no2Value") or 0),
-                            station=station, mock=False)
+                            station=station,
+                            fetch_time=datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            mock=False)
             except Exception:
                 continue
-    return dict(pm25=random.randint(12,65), pm10=random.randint(18,85),
-                o3=round(random.uniform(0.01,0.08),3),
-                no2=round(random.uniform(0.01,0.05),3), mock=True)
+    return dict(
+        pm25=random.randint(12,65), pm10=random.randint(18,85),
+        o3=round(random.uniform(0.01,0.08),3),
+        no2=round(random.uniform(0.01,0.05),3),
+        station="모의데이터",
+        fetch_time=datetime.now().strftime("%Y-%m-%d %H:%M"),
+        mock=True)
 
 ANALYSIS_PROMPT = """
 당신은 피부과학 전문가입니다. 업로드된 피부 또는 두피 현미경(클로즈업) 사진을 분석하여
@@ -287,7 +299,7 @@ DATA_FILE = Path("ydlab_skin_data.csv")
 FIELDS = [
     "timestamp","name","age_group","gender","region","residence_years",
     "skin_concern","body_parts","photo_count",
-    "pm25","pm10","o3","no2","ceei_score","ceei_grade",
+    "pm25","pm10","o3","no2","air_station","air_source","ceei_score","ceei_grade",
     "overall_score","skin_type","key_concerns","recommended_ingredients",
     "wrinkle_score","pore_score","texture_score","tone_score","moisture_score",
     "is_scalp","scalp_keratin_score","scalp_pore_score","scalp_hair_thickness_score",
@@ -327,6 +339,27 @@ def save_record(r):
         if header: w.writeheader()
         w.writerow({k: r.get(k,"") for k in FIELDS})
 
+def show_air_status(air):
+    """에어코리아 연결 상태 표시"""
+    if air.get("mock"):
+        st.markdown(
+            "<div class='air-mock'>"
+            "⚠️ 대기오염 데이터: <b>모의(Mock) 데이터</b> 사용 중 — "
+            "AirKorea API 연결 실패 (실제 측정값 아님)"
+            "</div>",
+            unsafe_allow_html=True
+        )
+    else:
+        station = air.get("station", "")
+        fetch_time = air.get("fetch_time", "")
+        st.markdown(
+            f"<div class='air-real'>"
+            f"✅ 대기오염 데이터: <b>에어코리아 실시간 측정값</b> — "
+            f"측정소: {station} · 수집시각: {fetch_time}"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+
 def show_result(result, air, region, residence_years_str,
                 name, age_group, gender, selected_parts):
     pm25_avg = REGION_PM25_AVG.get(region, 22.0)
@@ -347,6 +380,9 @@ def show_result(result, air, region, residence_years_str,
         "<div class='patent-banner'>"
         "🔐 본 기술은 특허 출원 중입니다 — 환경오염 연동 AI 피부·두피 분석 및 화장품 제안 시스템"
         "</div>", unsafe_allow_html=True)
+
+    # 에어코리아 연결 상태 표시
+    show_air_status(air)
 
     st.markdown(f"""
 <div class='card'>
@@ -427,9 +463,20 @@ def show_result(result, air, region, residence_years_str,
 </div>
 """, unsafe_allow_html=True)
 
+    # CEEI + 에어코리아 출처 표시
+    air_source_badge = (
+        "<span style='background:#e8f5e9;color:#2e7d32;border-radius:4px;"
+        "padding:2px 8px;font-size:0.72rem;font-weight:600;margin-left:4px;'>"
+        f"📡 에어코리아 실측 ({air.get('station','')})</span>"
+        if not air.get("mock") else
+        "<span style='background:#fff3e0;color:#e65100;border-radius:4px;"
+        "padding:2px 8px;font-size:0.72rem;font-weight:600;margin-left:4px;'>"
+        "⚠️ 모의 데이터</span>"
+    )
+
     st.markdown(f"""
 <div class='card'>
-  <div class='card-label'>CEEI — 누적 환경 노출 지수</div>
+  <div class='card-label'>CEEI — 누적 환경 노출 지수 {air_source_badge}</div>
   <div style='display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.7rem;'>
     {pm25_chip(pm25_val)} {ceei_chip}
     <span class='chip chip-neu'>지역 연평균 PM2.5 {pm25_avg}㎍/m³</span>
@@ -496,8 +543,16 @@ def generate_order_html(result, air, region, residence_years, name, age_group, g
     care       = result.get("care_advice", "")
     ingredients= result.get("recommended_ingredients", [])
     pm25       = air.get("pm25", "-")
-    station    = air.get("station", "인천")
+    station    = air.get("station", "-")
+    fetch_time = air.get("fetch_time", "-")
+    is_mock    = air.get("mock", True)
     is_scalp   = result.get("is_scalp", False)
+
+    air_source_txt = (
+        f"에어코리아 실시간 측정 · 측정소: {station} · 수집: {fetch_time}"
+        if not is_mock else
+        "⚠️ 모의(Mock) 데이터 — API 연결 실패"
+    )
 
     scores = {
         "주름":   result.get("wrinkle_score", 0),
@@ -608,6 +663,9 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
 .infobar{{display:flex;gap:20px;font-size:10px;color:#444;padding:10px 0;
           border-bottom:1px solid #e4e8ee;margin-bottom:14px;flex-wrap:wrap;}}
 .infobar span strong{{color:#0f3460;}}
+.air-badge{{font-size:9px;padding:4px 10px;border-radius:4px;margin-bottom:12px;font-weight:600;}}
+.air-real-badge{{background:#e8f5e9;color:#2e7d32;}}
+.air-mock-badge{{background:#fff3e0;color:#e65100;}}
 table{{width:100%;border-collapse:collapse;font-size:11px;}}
 th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
 .score-row{{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}}
@@ -632,6 +690,9 @@ th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
   <div class="code">{code}</div>
 </div>
 <div class="body">
+<div class="air-badge {'air-real-badge' if not is_mock else 'air-mock-badge'}">
+  {'📡 대기오염: ' + air_source_txt}
+</div>
 <div class="infobar">
   <span><strong>분석일:</strong> {datetime.now().strftime("%Y년 %m월 %d일")}</span>
   <span><strong>고객:</strong> {name} {age_group} {gender}</span>
@@ -661,7 +722,7 @@ th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
 <div class="section">
   <div class="stitle">환경 요인 (CEEI)</div>
   <div style='font-size:10px;color:#555;margin-bottom:6px;'>
-  PM2.5 {pm25}㎍/m³ ({station}) · CEEI {ceei} [{ceei_grade}] · {region} 거주 {residence_years}년 · 연평균 {pm25_avg}㎍/m³
+  PM2.5 {pm25}㎍/m³ · CEEI {ceei} [{ceei_grade}] · {region} 거주 {residence_years}년 · 연평균 {pm25_avg}㎍/m³
   </div>
   <div style='font-size:10px;color:#555;'>{ceei_msg}</div>
   {f'<div class="alert">{alert_msg}</div>' if alert_msg else ''}
@@ -689,6 +750,17 @@ def generate_pdf_html(result, air, region, residence_years, name, age_group, gen
     pm10 = air.get("pm10", "-")
     o3   = air.get("o3", "-")
     no2  = air.get("no2", "-")
+    station    = air.get("station", "-")
+    fetch_time = air.get("fetch_time", "-")
+    is_mock    = air.get("mock", True)
+
+    air_source_txt = (
+        f"📡 에어코리아 실시간 측정 · 측정소: {station} · 수집: {fetch_time}"
+        if not is_mock else
+        "⚠️ 모의(Mock) 데이터 — API 연결 실패"
+    )
+    air_color = "#2e7d32" if not is_mock else "#e65100"
+    air_bg    = "#e8f5e9" if not is_mock else "#fff3e0"
 
     def sc(s):
         if s >= 70: return "#2e7d32"
@@ -746,6 +818,8 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
 .header .sub{{font-size:9px;opacity:0.6;margin-top:3px;}}
 .header .date{{font-size:10px;opacity:0.75;}}
 .body{{padding:22px 30px;}}
+.air-bar{{font-size:9px;font-weight:600;padding:5px 10px;border-radius:4px;
+          margin-bottom:12px;background:{air_bg};color:{air_color};}}
 .infobar{{font-size:10px;color:#555;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid #e4e8ee;}}
 .infobar span{{margin-right:14px;}}
 .section{{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #f0f0f0;}}
@@ -778,6 +852,7 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
   <div class="date">{datetime.now().strftime("%Y년 %m월 %d일")}</div>
 </div>
 <div class="body">
+<div class="air-bar">{air_source_txt}</div>
 <div class="infobar">
   <span>이름: {name}</span><span>연령대: {age_group}</span>
   <span>성별: {gender}</span><span>거주지: {region}</span>
@@ -1007,8 +1082,6 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
 
         with st.spinner("🌡️ 실시간 대기오염 데이터 수집 중..."):
             air = fetch_air(region)
-            if air.get("mock"):
-                st.caption("⚠️ AirKorea API 연결 실패 — Mock 데이터 사용 중")
 
         with st.spinner("🔬 AI 피부·두피 분석 중... (10~20초 소요)"):
             result = analyze_skin(images, api_key, selected_parts)
@@ -1017,27 +1090,22 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
             st.error("분석에 실패했습니다. 사진을 확인하고 다시 시도해 주세요.")
             st.stop()
 
-        st.session_state["result"] = result
-        st.session_state["air"] = air
-        st.session_state["region"] = region
-        st.session_state["residence_years_str"] = residence_years_str
-        st.session_state["name"] = name
-        st.session_state["age_group"] = age_group
-        st.session_state["gender"] = gender
-        st.session_state["selected_parts"] = selected_parts
-        st.success("✅ 분석 완료!")
+        st.session_state["result"]             = result
+        st.session_state["air"]                = air
+        st.session_state["region"]             = region
+        st.session_state["residence_years_str"]= residence_years_str
+        st.session_state["name"]               = name
+        st.session_state["age_group"]          = age_group
+        st.session_state["gender"]             = gender
+        st.session_state["selected_parts"]     = selected_parts
+        st.session_state["skin_concern"]       = skin_concern
+        st.session_state["consent"]            = consent
+        st.session_state["research_consent"]   = research_consent
+        st.session_state["images_count"]       = len(images)
 
-    if "result" in st.session_state:
-        show_result(
-            st.session_state["result"],
-            st.session_state["air"],
-            st.session_state["region"],
-            st.session_state["residence_years_str"],
-            st.session_state["name"],
-            st.session_state["age_group"],
-            st.session_state["gender"],
-            st.session_state["selected_parts"],
-        )
+        yrs      = RESIDENCE_YEAR_MAP.get(residence_years_str, 0)
+        pm25_avg = REGION_PM25_AVG.get(region, 22.0)
+        ceei, ceei_grade, _, _ = calc_ceei(pm25_avg, yrs)
 
         save_record({
             "timestamp":                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -1053,6 +1121,8 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
             "pm10":                       air.get("pm10",""),
             "o3":                         air.get("o3",""),
             "no2":                        air.get("no2",""),
+            "air_station":                air.get("station",""),
+            "air_source":                 "실측" if not air.get("mock") else "모의",
             "ceei_score":                 ceei,
             "ceei_grade":                 ceei_grade,
             "overall_score":              result.get("overall_score",""),
@@ -1073,6 +1143,19 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
             "research_consent":           research_consent,
         })
 
+    if "result" in st.session_state:
+        st.success("✅ 분석 완료!")
+        show_result(
+            st.session_state["result"],
+            st.session_state["air"],
+            st.session_state["region"],
+            st.session_state["residence_years_str"],
+            st.session_state["name"],
+            st.session_state["age_group"],
+            st.session_state["gender"],
+            st.session_state["selected_parts"],
+        )
+
     with st.sidebar:
         st.markdown("### 🔐 관리자")
         admin_pw = st.text_input("관리자 비밀번호", type="password", key="k_admin")
@@ -1090,6 +1173,10 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
                         st.bar_chart(df["ceei_grade"].value_counts())
                     if "is_scalp" in df.columns:
                         st.metric("두피 분석 건수", f"{df['is_scalp'].sum()}건")
+                    if "air_source" in df.columns:
+                        real_count = (df["air_source"] == "실측").sum()
+                        mock_count = (df["air_source"] == "모의").sum()
+                        st.markdown(f"**대기오염 데이터** — 실측: {real_count}건 / 모의: {mock_count}건")
                     score_cols = ["overall_score","wrinkle_score","pore_score",
                                   "texture_score","tone_score","moisture_score"]
                     available = [c for c in score_cols if c in df.columns]
