@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SKIN AI – 피부·두피 환경 분석 플랫폼</title>
+    <title>SKIN-X by YD Lab – 피부·두피 환경 분석 플랫폼</title>
     <meta name="description" content="스마트폰 하나로 피부·두피를 분석하고 환경오염 맞춤 화장품을 처방받으세요">
     <style>
         /* ===== 기본 설정 ===== */
@@ -186,33 +186,18 @@
             overflow: hidden;
         }
 
-        #hero::after {
+        #hero::before {
             content: '';
             position: absolute;
             inset: 0;
             background: linear-gradient(
                 to right,
-                rgba(10,20,30,0.45) 0%,
-                rgba(10,20,30,0.15) 55%,
-                rgba(10,20,30,0.05) 100%
+                rgba(5,15,25,0.55) 0%,
+                rgba(5,15,25,0.25) 55%,
+                rgba(5,15,25,0.05) 100%
             );
             z-index: 0;
-        }
-
-        .hero-inner {
-            position: relative;
-            z-index: 1;
-        }
-
-        #hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(46,125,107,0.3) 0%, transparent 70%);
-            border-radius: 50%;
+            border-radius: 0;
         }
 
         .hero-inner {
@@ -222,8 +207,6 @@
             grid-template-columns: 1fr 1fr;
             gap: 4rem;
             align-items: center;
-            position: relative;
-            z-index: 1;
         }
 
         .hero-badge {
@@ -704,7 +687,7 @@
 
         /* ===== CTA 섹션 ===== */
         #cta {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            background: url('skinx-bg02.png') center center / cover no-repeat;
             text-align: center;
         }
 
@@ -893,7 +876,7 @@
 <!-- ===== 네비게이션 ===== -->
 <nav>
     <div class="nav-inner">
-        <a href="#hero" class="nav-logo">SKIN<span>AI</span></a>
+        <a href="#hero" class="nav-logo">SKIN-<span style="color:#FF6B6B;">X</span></a>
         <ul class="nav-menu">
             <li><a href="#about">회사소개</a></li>
             <li><a href="#technology">기술소개</a></li>
@@ -903,8 +886,7 @@
         </ul>
         <div class="nav-buttons">
             <a href="#cta" class="btn btn-outline">코드 입력</a>
-            <a href="https://smartstore.naver.com/YOUR_STORE" 
-               target="_blank" class="btn btn-primary">키트 구매</a>
+            <a href="#" onclick="alert('네이버 스마트스토어 입점 계획 중입니다!')" class="btn btn-primary">키트 구매 (계획 중)</a>
         </div>
     </div>
 </nav>
@@ -927,9 +909,8 @@
                 AI 피부·두피 분석과 맞춤 화장품 처방을 받으세요.
             </p>
             <div class="hero-buttons">
-                <a href="https://smartstore.naver.com/YOUR_STORE"
-                   target="_blank" class="btn btn-primary btn-large">
-                    📦 키트 구매하기
+                <a href="#" onclick="alert('네이버 스마트스토어 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-primary btn-large">
+                    📦 키트 구매하기 (계획 중)
                 </a>
                 <a href="#cta" class="btn btn-outline btn-large"
                    style="color:white; border-color:white;">
@@ -986,7 +967,7 @@
                     환경과 피부의 연결을<br>처음으로 과학화했습니다
                 </h2>
                 <p class="section-sub">
-                    한양대학교 화학 전공 연구팀이 개발한
+                    바이오테크 융합전공 연구팀이 개발한
                     세계 최초 환경오염 연동 AI 피부·두피 분석 플랫폼입니다.
                     PM2.5, NO₂ 등 실시간 대기오염 데이터와
                     스마트폰 현미경 이미지를 결합해
@@ -998,7 +979,7 @@
                 <div class="about-card">
                     <div class="icon">🎓</div>
                     <h4>대학 연구 기반</h4>
-                    <p>한양대학교 화학 전공 연구팀 개발</p>
+                    <p>바이오테크 융합전공 연구팀 개발</p>
                 </div>
                 <div class="about-card">
                     <div class="icon">📄</div>
@@ -1083,7 +1064,7 @@
             <div class="step-card">
                 <div class="step-number">📱</div>
                 <h3>QR 스캔·코드 입력</h3>
-                <p>스마트폰으로 QR 스캔 또는 PC에서 skinai.kr 접속 후 코드 입력</p>
+                <p>스마트폰으로 QR 스캔 또는 PC에서 SKIN-X 플랫폼 접속 후 코드 입력</p>
             </div>
             <div class="step-card">
                 <div class="step-number">🔬</div>
@@ -1197,7 +1178,7 @@
                 <div class="news-card-header">📄</div>
                 <div class="news-card-body">
                     <span class="news-tag">특허</span>
-                    <h3>핵심 기술 3건 국내 특허 출원 완료</h3>
+                    <h3>핵심 기술 3건 국내 특허 출원 진행 중</h3>
                     <p>CEEI 산출 알고리즘, 스마트폰 현미경 AI 분석 시스템, 맞춤 처방 생성 방법 특허 출원</p>
                     <div class="news-date">2026년 예정</div>
                 </div>
@@ -1232,26 +1213,24 @@
         </span>
         <h2 class="section-title">지금 바로 시작하세요</h2>
         <p class="section-sub" style="margin:0 auto 2rem">
-            키트를 구매하거나 보유하신 코드를 입력해 분석을 시작하세요
+            오픈랩 이벤트 참여 코드 또는 키트 구매 코드를 입력해 분석을 시작하세요
         </p>
         <div class="cta-buttons">
-            <a href="https://smartstore.naver.com/YOUR_STORE"
-               target="_blank" class="btn btn-accent btn-large">
-                📦 키트 구매하기
+            <a href="#" onclick="alert('네이버 스마트스토어 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-accent btn-large">
+                📦 키트 구매하기 (계획 중)
             </a>
-            <a href="https://qoo10.jp/YOUR_STORE"
-               target="_blank" class="btn btn-outline btn-large"
+            <a href="#" onclick="alert('일본 Qoo10 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-outline btn-large"
                style="color:white;border-color:white;">
-                🇯🇵 일본 구매 (Qoo10)
+                🇯🇵 일본 구매 Qoo10 (계획 중)
             </a>
         </div>
 
         <!-- 코드 입력 박스 -->
         <div class="code-input-box">
-            <p>🔑 이미 키트가 있으신가요? 코드를 입력해 바로 시작하세요</p>
+            <p>🔑 코드를 입력해 바로 시작하세요 (오픈랩 참여자는 행사 코드 입력)</p>
             <div class="code-input-wrap">
                 <input type="text" id="codeInput"
-                       placeholder="SKIN-XXXX-XXXX-XXXX"
+                       placeholder="오픈랩 코드 또는 SKIN-XXXX-XXXX-XXXX"
                        maxlength="19">
                 <button class="btn btn-primary" onclick="activateCode()">
                     시작하기
@@ -1320,11 +1299,11 @@
 <footer>
     <div class="footer-inner">
         <div>
-            <div class="footer-logo">SKIN AI</div>
+            <div class="footer-logo">SKIN-<span style="color:#FF6B6B;">X</span> <span style="font-size:0.8rem;opacity:0.7;">by YD Lab</span></div>
             <div class="footer-info">
-                (주)○○○ · 대표: ○○○ · 사업자등록번호: XXX-XX-XXXXX<br>
-                이메일: contact@skinai.kr · 전화: 02-XXXX-XXXX<br>
-                © 2026 SKIN AI. All rights reserved.
+                (주)와이디랩 · 대표: 남정훈 · 사업자등록번호: 등록 예정<br>
+                이메일: circlenam@naver.com<br>
+                © 2026 SKIN-<span style="color:#FF6B6B;">X</span> by YD Lab · 재능대학교 AI-바이오분석특화연구소. All rights reserved.
             </div>
         </div>
         <div class="footer-links">
@@ -1359,17 +1338,23 @@
     }
 
     // ===== 코드 입력 → 분석 플랫폼 이동 =====
+    const ADMIN_CODE = 'YDLAB2025';
+    const APP_URL    = 'https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/';
+
     function activateCode() {
-        const code = document.getElementById('codeInput').value.trim();
-        if (!code) {
-            alert('코드를 입력해주세요');
-            return;
-        }
-        // 코드를 URL 파라미터로 전달해 Streamlit 플랫폼으로 이동
-        // 실제 주소로 변경하세요
-        window.location.href =
-            'https://app.skinai.kr/activate?code=' + encodeURIComponent(code);
+    const code = document.getElementById('codeInput').value.trim().toUpperCase();
+    if (!code) {
+        alert('코드를 입력해주세요.');
+        return;
     }
+    if (code === ADMIN_CODE) {
+        window.location.href = APP_URL;
+    } else if (code.startsWith('SKIN-') && code.length === 19) {
+        alert('현재는 오픈랩 이벤트 기간입니다.\n행사장에서 받은 코드를 이용해주세요.');
+    } else {
+        alert('유효하지 않은 코드입니다.\n오픈랩 참여자는 행사장에서 받은 코드를 입력하세요.');
+    }
+}
 
     // Enter 키로도 코드 입력 가능
     document.getElementById('codeInput')
@@ -1378,16 +1363,20 @@
         });
 
     // ===== 코드 입력 자동 포맷 (SKIN-XXXX-XXXX-XXXX) =====
-    document.getElementById('codeInput')
-        .addEventListener('input', function() {
-            let v = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+document.getElementById('codeInput')
+    .addEventListener('input', function() {
+        let raw = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        if (raw.startsWith('SKIN')) {
             let parts = [];
-            if (v.length > 0)  parts.push(v.substring(0, 4));
-            if (v.length > 4)  parts.push(v.substring(4, 8));
-            if (v.length > 8)  parts.push(v.substring(8, 12));
-            if (v.length > 12) parts.push(v.substring(12, 16));
+            if (raw.length > 0)  parts.push(raw.substring(0, 4));
+            if (raw.length > 4)  parts.push(raw.substring(4, 8));
+            if (raw.length > 8)  parts.push(raw.substring(8, 12));
+            if (raw.length > 12) parts.push(raw.substring(12, 16));
             this.value = parts.join('-');
-        });
+        } else {
+            this.value = raw;
+        }
+    });
 
     // ===== 네비게이션 스크롤 시 배경 강조 =====
     window.addEventListener('scroll', function() {
