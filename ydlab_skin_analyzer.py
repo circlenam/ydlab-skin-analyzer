@@ -20,14 +20,12 @@ from pathlib import Path
 from PIL import Image
 import io
 
-# ── 페이지 설정 ─────────────────────────────────────────────
 st.set_page_config(
     page_title="YD Lab 피부·두피 분석",
     page_icon="🔬",
     layout="centered"
 )
 
-# ── 스타일 ──────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
@@ -59,9 +57,7 @@ html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
              background:#f8f9fa; border:1px solid #e4e8ee; }
 .score-num { font-size:2rem; font-weight:700; font-family:'DM Mono',monospace; line-height:1; }
 .score-lbl { font-size:0.72rem; color:#888; margin-top:0.3rem; }
-.result-section { border-left:3px solid #0f3460; padding-left:1rem; margin-bottom:1rem; }
-.result-title { font-size:0.82rem; font-weight:700; color:#0f3460; margin-bottom:0.3rem; }
-.result-text  { font-size:0.84rem; color:#444; line-height:1.7; }
+.result-text { font-size:0.84rem; color:#444; line-height:1.7; }
 .ingredient-chip { display:inline-block; background:#eef2ff; color:#3730a3;
                    border-radius:6px; padding:0.25rem 0.65rem; font-size:0.78rem;
                    margin:0.2rem; font-weight:500; }
@@ -80,13 +76,18 @@ html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
                  margin-bottom:1rem; text-align:center; font-weight:600; }
 .scalp-card { background:#f0faf4; border:1px solid #a5d6a7; border-radius:12px;
               padding:1.2rem; margin-bottom:1rem; }
-.ref-badge { display:inline-block; background:#f1f3f4; color:#444; border-radius:4px;
-             padding:0.15rem 0.5rem; font-size:0.72rem; margin-left:0.3rem;
-             font-family:'DM Mono',monospace; }
+.priority-item { display:flex; align-items:center; gap:0.8rem; padding:0.6rem 0;
+                 border-bottom:1px solid #f0f0f0; }
+.priority-num { background:#0f3460; color:white; border-radius:50%;
+                width:22px; height:22px; min-width:22px;
+                display:inline-flex; align-items:center; justify-content:center;
+                font-size:0.72rem; font-weight:700; }
+.priority-label { font-weight:600; flex:1; font-size:0.85rem; }
+.priority-score { font-weight:700; font-family:'DM Mono',monospace; font-size:0.85rem; }
+.priority-msg { font-size:0.78rem; color:#888; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── 상수 ────────────────────────────────────────────────────
 PM25_ALERT_THRESHOLD       = 35
 CEEI_ANTIOXIDANT_THRESHOLD = 150
 
@@ -126,7 +127,6 @@ STATION_CANDIDATES = {
     "기타":             ["중구"],
 }
 
-# ── 유틸 함수 ────────────────────────────────────────────────
 def img_to_b64(pil_img):
     buf = io.BytesIO()
     pil_img.save(buf, format="JPEG", quality=85)
@@ -190,7 +190,6 @@ def calc_ceei(pm25_avg, residence_years):
                 f"<span class='chip chip-bad'>CEEI {ceei} [매우높음]</span>",
                 "매우 높은 누적 노출 — 피부과 상담 및 기능성 화장품 집중 케어 권장")
 
-# ── AirKorea API ─────────────────────────────────────────────
 def fetch_air(region):
     key = st.secrets.get("AIRKOREA_API_KEY", "")
     url = "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty"
@@ -220,7 +219,6 @@ def fetch_air(region):
                 o3=round(random.uniform(0.01,0.08),3),
                 no2=round(random.uniform(0.01,0.05),3), mock=True)
 
-# ── 분석 프롬프트 ────────────────────────────────────────────
 ANALYSIS_PROMPT = """
 당신은 피부과학 전문가입니다. 업로드된 피부 또는 두피 현미경(클로즈업) 사진을 분석하여
 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트는 절대 포함하지 마세요.
@@ -257,7 +255,6 @@ ANALYSIS_PROMPT = """
 사진이 불명확해도 최대한 추정하여 응답하세요.
 """
 
-# ── LLM 비전 분석 ────────────────────────────────────────────
 def analyze_skin(images, api_key, body_parts=None):
     try:
         client = anthropic.Anthropic(api_key=api_key)
@@ -286,7 +283,6 @@ def analyze_skin(images, api_key, body_parts=None):
         st.error(f"분석 오류: {e}")
         return None
 
-# ── 데이터 저장 ──────────────────────────────────────────────
 DATA_FILE = Path("ydlab_skin_data.csv")
 FIELDS = [
     "timestamp","name","age_group","gender","region","residence_years",
@@ -331,7 +327,6 @@ def save_record(r):
         if header: w.writeheader()
         w.writerow({k: r.get(k,"") for k in FIELDS})
 
-# ── 결과 표시 ────────────────────────────────────────────────
 def show_result(result, air, region, residence_years_str,
                 name, age_group, gender, selected_parts):
     pm25_avg = REGION_PM25_AVG.get(region, 22.0)
@@ -342,7 +337,11 @@ def show_result(result, air, region, residence_years_str,
     overall   = result.get("overall_score", 0)
     skin_type = result.get("skin_type", "")
     is_scalp  = result.get("is_scalp", False)
-    sc = lambda s: "#2e7d32" if s>=70 else "#e65100" if s>=40 else "#c62828"
+
+    def sc(s):
+        if s >= 70: return "#2e7d32"
+        if s >= 40: return "#e65100"
+        return "#c62828"
 
     st.markdown(
         "<div class='patent-banner'>"
@@ -350,68 +349,67 @@ def show_result(result, air, region, residence_years_str,
         "</div>", unsafe_allow_html=True)
 
     st.markdown(f"""
-    <div class='card'>
-      <div class='card-label'>종합 분석 결과</div>
-      <div style='display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;'>
-        <div style='text-align:center;'>
-          <div style='font-size:3.5rem;font-weight:700;color:{sc(overall)};line-height:1;
-                      font-family:"DM Mono",monospace;'>{overall}</div>
-          <div style='font-size:0.72rem;color:#888;margin-top:0.3rem;'>종합 점수</div>
-        </div>
-        <div>
-          <div style='font-size:1rem;font-weight:700;margin-bottom:0.4rem;'>피부 타입: {skin_type}</div>
-          <div style='font-size:0.84rem;color:#555;line-height:1.7;'>{result.get("summary","")}</div>
-          <div style='margin-top:0.5rem;'>{pm25_chip(pm25_val)} {ceei_chip}</div>
-        </div>
-      </div>
+<div class='card'>
+  <div class='card-label'>종합 분석 결과</div>
+  <div style='display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;'>
+    <div style='text-align:center;'>
+      <div style='font-size:3.5rem;font-weight:700;color:{sc(overall)};line-height:1;
+                  font-family:"DM Mono",monospace;'>{overall}</div>
+      <div style='font-size:0.72rem;color:#888;margin-top:0.3rem;'>종합 점수</div>
     </div>
-    """, unsafe_allow_html=True)
+    <div>
+      <div style='font-size:1rem;font-weight:700;margin-bottom:0.4rem;'>피부 타입: {skin_type}</div>
+      <div style='font-size:0.84rem;color:#555;line-height:1.7;'>{result.get("summary","")}</div>
+      <div style='margin-top:0.5rem;'>{pm25_chip(pm25_val)} {ceei_chip}</div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
     if alert_msg:
         st.warning(alert_msg)
 
-    # 피부 5지표
     metrics = [
-        ("주름",   result.get("wrinkle_score",0),  result.get("wrinkle_comment","")),
-        ("모공",   result.get("pore_score",0),      result.get("pore_comment","")),
-        ("피부결", result.get("texture_score",0),   result.get("texture_comment","")),
-        ("피부톤", result.get("tone_score",0),       result.get("tone_comment","")),
-        ("수분",   result.get("moisture_score",0),  ""),
+        ("주름",   result.get("wrinkle_score", 0),  result.get("wrinkle_comment", "")),
+        ("모공",   result.get("pore_score", 0),      result.get("pore_comment", "")),
+        ("피부결", result.get("texture_score", 0),   result.get("texture_comment", "")),
+        ("피부톤", result.get("tone_score", 0),      result.get("tone_comment", "")),
+        ("수분",   result.get("moisture_score", 0),  ""),
     ]
     cols = st.columns(5)
     for i, (lbl, val, cmt) in enumerate(metrics):
         with cols[i]:
             st.markdown(f"""
-            <div class='score-box'>
-              <div class='score-num' style='color:{sc(val)};'>{val}</div>
-              <div class='score-lbl'>{lbl}</div>
-              <div style='font-size:0.68rem;color:#999;margin-top:0.3rem;line-height:1.3;'>{cmt}</div>
-            </div>
-            """, unsafe_allow_html=True)
+<div class='score-box'>
+  <div class='score-num' style='color:{sc(val)};'>{val}</div>
+  <div class='score-lbl'>{lbl}</div>
+  <div style='font-size:0.68rem;color:#999;margin-top:0.3rem;line-height:1.3;'>{cmt}</div>
+</div>
+""", unsafe_allow_html=True)
 
-    # 두피 3지표
     if is_scalp:
         sk = result.get("scalp_keratin_score")
         sp = result.get("scalp_pore_score")
         sh = result.get("scalp_hair_thickness_score")
-        sc_comment = result.get("scalp_comment","")
+        sc_comment = result.get("scalp_comment", "")
         st.markdown("<div class='scalp-card'>", unsafe_allow_html=True)
         st.markdown("**🌿 두피 분석 결과 (3지표)**")
         s_cols = st.columns(3)
-        for i, (lbl, val, desc) in enumerate([
+        scalp_items = [
             ("각질 상태", sk, "각질 분포·두께"),
             ("모공·피지", sp, "모공 상태·피지 분비"),
             ("모발 굵기·밀도", sh, "모발 굵기·풍성함"),
-        ]):
+        ]
+        for i, (lbl, val, desc) in enumerate(scalp_items):
             v = val if isinstance(val, int) else 0
             with s_cols[i]:
                 st.markdown(f"""
-                <div class='score-box' style='background:#f0faf4;border-color:#a5d6a7;'>
-                  <div class='score-num' style='color:{sc(v)};'>{val if val is not None else "-"}</div>
-                  <div class='score-lbl'>{lbl}</div>
-                  <div style='font-size:0.68rem;color:#999;margin-top:0.3rem;'>{desc}</div>
-                </div>
-                """, unsafe_allow_html=True)
+<div class='score-box' style='background:#f0faf4;border-color:#a5d6a7;'>
+  <div class='score-num' style='color:{sc(v)};'>{val if val is not None else "-"}</div>
+  <div class='score-lbl'>{lbl}</div>
+  <div style='font-size:0.68rem;color:#999;margin-top:0.3rem;'>{desc}</div>
+</div>
+""", unsafe_allow_html=True)
         if sc_comment:
             st.markdown(
                 f"<div style='font-size:0.83rem;color:#2e7d32;margin-top:0.7rem;"
@@ -419,68 +417,59 @@ def show_result(result, air, region, residence_years_str,
                 unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # 추천 성분
     ingredients = result.get("recommended_ingredients", [])
-    ing_html = "".join([f"<span class='ingredient-chip'>{i}</span>" for i in ingredients])
+    ing_html = "".join([f"<span class='ingredient-chip'>{ing}</span>" for ing in ingredients])
     st.markdown(f"""
-    <div class='card'>
-      <div class='card-label'>AI 추천 화장품 성분</div>
-      <div style='margin-bottom:0.8rem;'>{ing_html}</div>
-      <div class='result-text'>{result.get("care_advice","")}</div>
-    </div>
-    """, unsafe_allow_html=True)
+<div class='card'>
+  <div class='card-label'>AI 추천 화장품 성분</div>
+  <div style='margin-bottom:0.8rem;'>{ing_html}</div>
+  <div class='result-text'>{result.get("care_advice","")}</div>
+</div>
+""", unsafe_allow_html=True)
 
-    # CEEI
     st.markdown(f"""
-    <div class='card'>
-      <div class='card-label'>CEEI — 누적 환경 노출 지수</div>
-      <div style='display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.7rem;'>
-        {pm25_chip(pm25_val)} {ceei_chip}
-        <span class='chip chip-neu'>지역 연평균 PM2.5 {pm25_avg}㎍/m³</span>
-        <span class='chip chip-neu'>거주 {yrs}년</span>
-      </div>
-      <div class='result-text'>{ceei_msg}</div>
-    </div>
-    """, unsafe_allow_html=True)
+<div class='card'>
+  <div class='card-label'>CEEI — 누적 환경 노출 지수</div>
+  <div style='display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.7rem;'>
+    {pm25_chip(pm25_val)} {ceei_chip}
+    <span class='chip chip-neu'>지역 연평균 PM2.5 {pm25_avg}㎍/m³</span>
+    <span class='chip chip-neu'>거주 {yrs}년</span>
+  </div>
+  <div class='result-text'>{ceei_msg}</div>
+</div>
+""", unsafe_allow_html=True)
 
-    # 우선 개선 항목
     scores_dict = {
-        "주름": result.get("wrinkle_score",0),
-        "모공": result.get("pore_score",0),
-        "피부결": result.get("texture_score",0),
-        "피부톤": result.get("tone_score",0),
-        "수분": result.get("moisture_score",0),
+        "주름":   result.get("wrinkle_score", 0),
+        "모공":   result.get("pore_score", 0),
+        "피부결": result.get("texture_score", 0),
+        "피부톤": result.get("tone_score", 0),
+        "수분":   result.get("moisture_score", 0),
     }
     if is_scalp:
         if result.get("scalp_keratin_score") is not None:
-            scores_dict["두피 각질"] = result.get("scalp_keratin_score",0)
+            scores_dict["두피 각질"] = result.get("scalp_keratin_score", 0)
         if result.get("scalp_pore_score") is not None:
-            scores_dict["두피 모공"] = result.get("scalp_pore_score",0)
+            scores_dict["두피 모공"] = result.get("scalp_pore_score", 0)
         if result.get("scalp_hair_thickness_score") is not None:
-            scores_dict["모발 굵기"] = result.get("scalp_hair_thickness_score",0)
+            scores_dict["모발 굵기"] = result.get("scalp_hair_thickness_score", 0)
 
     priority = sorted(scores_dict.items(), key=lambda x: x[1])[:3]
-    priority_html = ""
+
+    st.markdown("<div class='card'><div class='card-label'>우선 개선 항목</div>",
+                unsafe_allow_html=True)
     for i, (lbl, score) in enumerate(priority):
-        color = "#c62828" if score<40 else "#e65100" if score<60 else "#2e7d32"
-        priority_html += f"""
-        <div style='display:flex;align-items:center;gap:0.8rem;padding:0.6rem 0;
-                    border-bottom:1px solid #f0f0f0;'>
-          <span style='background:#0f3460;color:white;border-radius:50%;width:22px;height:22px;
-                       display:inline-flex;align-items:center;justify-content:center;
-                       font-size:0.72rem;font-weight:700;min-width:22px;'>{i+1}</span>
-          <span style='font-weight:600;flex:1;'>{lbl}</span>
-          <span style='font-weight:700;color:{color};font-family:"DM Mono",monospace;'>{score}점</span>
-          <span style='font-size:0.78rem;color:#888;'>
-            {"집중 케어 필요" if score<40 else "개선 권장" if score<60 else "유지 관리"}
-          </span>
-        </div>"""
-    st.markdown(f"""
-    <div class='card'>
-      <div class='card-label'>우선 개선 항목</div>
-      {priority_html}
-    </div>
-    """, unsafe_allow_html=True)
+        color = "#c62828" if score < 40 else "#e65100" if score < 60 else "#2e7d32"
+        care_msg = "집중 케어 필요" if score < 40 else "개선 권장" if score < 60 else "유지 관리"
+        st.markdown(f"""
+<div class='priority-item'>
+  <span class='priority-num'>{i+1}</span>
+  <span class='priority-label'>{lbl}</span>
+  <span class='priority-score' style='color:{color};'>{score}점</span>
+  <span class='priority-msg'>{care_msg}</span>
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
     col1, col2 = st.columns(2)
@@ -497,29 +486,33 @@ def show_result(result, air, region, residence_years_str,
                            file_name=f"YDLab_주문서_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
                            mime="text/html", use_container_width=True, key="k_dl_order")
 
-# ── 공방 주문서 HTML ─────────────────────────────────────────
+
 def generate_order_html(result, air, region, residence_years, name, age_group, gender):
     code = "YDL-" + datetime.now().strftime("%Y%m%d") + "-" + \
-           ''.join(random.choices(string.ascii_uppercase+string.digits, k=4))
-    overall    = result.get("overall_score",0)
-    skin_type  = result.get("skin_type","")
-    summary    = result.get("summary","")
-    care       = result.get("care_advice","")
-    ingredients= result.get("recommended_ingredients",[])
-    pm25       = air.get("pm25","-")
-    station    = air.get("station","인천")
-    is_scalp   = result.get("is_scalp",False)
+           ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    overall    = result.get("overall_score", 0)
+    skin_type  = result.get("skin_type", "")
+    summary    = result.get("summary", "")
+    care       = result.get("care_advice", "")
+    ingredients= result.get("recommended_ingredients", [])
+    pm25       = air.get("pm25", "-")
+    station    = air.get("station", "인천")
+    is_scalp   = result.get("is_scalp", False)
 
-    scores = {"주름":result.get("wrinkle_score",0),"모공":result.get("pore_score",0),
-              "피부결":result.get("texture_score",0),"피부톤":result.get("tone_score",0),
-              "수분":result.get("moisture_score",0)}
+    scores = {
+        "주름":   result.get("wrinkle_score", 0),
+        "모공":   result.get("pore_score", 0),
+        "피부결": result.get("texture_score", 0),
+        "피부톤": result.get("tone_score", 0),
+        "수분":   result.get("moisture_score", 0),
+    }
     if is_scalp:
         if result.get("scalp_keratin_score") is not None:
-            scores["두피 각질"] = result.get("scalp_keratin_score",0)
+            scores["두피 각질"] = result.get("scalp_keratin_score", 0)
         if result.get("scalp_pore_score") is not None:
-            scores["두피 모공"] = result.get("scalp_pore_score",0)
+            scores["두피 모공"] = result.get("scalp_pore_score", 0)
         if result.get("scalp_hair_thickness_score") is not None:
-            scores["모발 굵기"] = result.get("scalp_hair_thickness_score",0)
+            scores["모발 굵기"] = result.get("scalp_hair_thickness_score", 0)
 
     priority = sorted(scores.items(), key=lambda x: x[1])
     pm25_avg = REGION_PM25_AVG.get(region, 22.0)
@@ -527,35 +520,42 @@ def generate_order_html(result, air, region, residence_years, name, age_group, g
     alert_msg = get_pollution_alert(pm25, ceei)
 
     ing_purpose_map = {
-        "히알루론산":"즉각 수분 공급·보습","세라마이드":"피부 장벽 강화",
-        "나이아신아마이드":"피부톤 균일화·모공 관리","레티놀":"주름 개선·탄력",
-        "비타민C":"항산화·피부톤 개선","비타민C 유도체":"항산화·안정형",
-        "펩타이드":"탄력·항노화","판테놀":"진정·보습",
-        "AHA":"각질 제거·피부결 개선","BHA":"모공 각질 용해",
-        "아데노신":"주름 개선(식약처 고시)","EGF":"세포 재생·탄력",
-        "징크피리치온":"두피 항균·비듬 억제","살리실산":"두피 각질 용해",
-        "바이오틴":"모발 강화·성장","판테놀 (두피용)":"두피 진정·보습",
+        "히알루론산": "즉각 수분 공급·보습",
+        "세라마이드": "피부 장벽 강화",
+        "나이아신아마이드": "피부톤 균일화·모공 관리",
+        "레티놀": "주름 개선·탄력",
+        "비타민C": "항산화·피부톤 개선",
+        "비타민C 유도체": "항산화·안정형",
+        "펩타이드": "탄력·항노화",
+        "판테놀": "진정·보습",
+        "AHA": "각질 제거·피부결 개선",
+        "BHA": "모공 각질 용해",
+        "아데노신": "주름 개선(식약처 고시)",
+        "EGF": "세포 재생·탄력",
+        "징크피리치온": "두피 항균·비듬 억제",
+        "살리실산": "두피 각질 용해",
+        "바이오틴": "모발 강화·성장",
+        "판테놀 (두피용)": "두피 진정·보습",
     }
 
     priority_rows = ""
-    for i,(lbl,score) in enumerate(priority[:3]):
-        color = "#c62828" if score<40 else "#e65100" if score<60 else "#2e7d32"
+    for i, (lbl, score) in enumerate(priority[:3]):
+        color = "#c62828" if score < 40 else "#e65100" if score < 60 else "#2e7d32"
+        care_txt = "집중 케어 필요" if score < 40 else "개선 권장" if score < 60 else "유지 관리"
         priority_rows += (
             f"<tr><td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;"
             f"color:#0f3460;'>{i+1}순위</td>"
             f"<td style='padding:8px;border:1px solid #e4e8ee;'>{lbl}</td>"
             f"<td style='padding:8px;border:1px solid #e4e8ee;font-weight:700;"
             f"color:{color};'>{score}점</td>"
-            f"<td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>"
-            f"{'집중 케어 필요' if score<40 else '개선 권장' if score<60 else '유지 관리'}"
-            f"</td></tr>"
+            f"<td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>{care_txt}</td></tr>"
         )
 
     ing_rows = ""
-    for i,ing in enumerate(ingredients):
-        conc,note = get_concentration(ing, skin_type)
-        purpose = ing_purpose_map.get(ing,"피부·두피 상태 개선")
-        bg = "#f8faff" if i%2==0 else "white"
+    for i, ing in enumerate(ingredients):
+        conc, note = get_concentration(ing, skin_type)
+        purpose = ing_purpose_map.get(ing, "피부·두피 상태 개선")
+        bg = "#f8faff" if i % 2 == 0 else "white"
         ing_rows += (
             f"<tr style='background:{bg}'>"
             f"<td style='padding:8px;border:1px solid #e4e8ee;text-align:center;"
@@ -570,30 +570,39 @@ def generate_order_html(result, air, region, residence_years, name, age_group, g
 
     scalp_section = ""
     if is_scalp:
-        sk=result.get("scalp_keratin_score","-")
-        sp=result.get("scalp_pore_score","-")
-        sh=result.get("scalp_hair_thickness_score","-")
-        sc_cmt=result.get("scalp_comment","")
+        sk  = result.get("scalp_keratin_score", "-")
+        sp  = result.get("scalp_pore_score", "-")
+        sh  = result.get("scalp_hair_thickness_score", "-")
+        sc_cmt = result.get("scalp_comment", "")
         scalp_section = (
-            f"<div class='section'><div class='stitle'>두피 분석 결과 (3지표)</div>"
-            f"<div class='score-row'>"
+            "<div class='section'><div class='stitle'>두피 분석 결과 (3지표)</div>"
+            "<div class='score-row'>"
             f"<div class='sbox'><div class='snum'>{sk}</div><div class='slbl'>각질 상태</div></div>"
             f"<div class='sbox'><div class='snum'>{sp}</div><div class='slbl'>모공·피지</div></div>"
             f"<div class='sbox'><div class='snum'>{sh}</div><div class='slbl'>모발 굵기</div></div>"
-            f"</div><div style='font-size:10px;color:#2e7d32;padding:6px 8px;"
+            "</div>"
+            f"<div style='font-size:10px;color:#2e7d32;padding:6px 8px;"
             f"background:#e8f5e9;border-radius:4px;margin-top:6px;'>{sc_cmt}</div></div>"
         )
 
-    return f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+    score_boxes_html = "".join([
+        f"<div class='sbox'><div class='snum'>{v}</div><div class='slbl'>{k}</div></div>"
+        for k, v in list(scores.items())[:5]
+    ])
+
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8">
 <title>YD Lab 공방 주문서 {code}</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
 *{{box-sizing:border-box;margin:0;padding:0;}}
 body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;background:white;}}
 .header{{background:#0f3460;color:white;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;}}
-.header h1{{font-size:18px;font-weight:700;}}.header .sub{{font-size:9px;opacity:0.6;margin-top:3px;}}
+.header h1{{font-size:18px;font-weight:700;}}
+.header .sub{{font-size:9px;opacity:0.6;margin-top:3px;}}
 .header .code{{font-size:13px;font-family:monospace;background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:4px;}}
-.body{{padding:22px 30px;}}.section{{margin-bottom:18px;}}
+.body{{padding:22px 30px;}}
+.section{{margin-bottom:18px;}}
 .stitle{{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
          color:#0f3460;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #0f3460;}}
 .infobar{{display:flex;gap:20px;font-size:10px;color:#444;padding:10px 0;
@@ -616,8 +625,10 @@ th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
 </style></head><body>
 <button class="print-btn" onclick="window.print()">🖨️ PDF 저장</button>
 <div class="header">
-  <div><h1>🧪 YD Lab 공방 주문서</h1>
-  <div class="sub">AI 피부·두피 분석 기반 맞춤형 화장품 제조 요청 · 재능대학교 AI-바이오분석특화연구소</div></div>
+  <div>
+    <h1>🧪 YD Lab 공방 주문서</h1>
+    <div class="sub">AI 피부·두피 분석 기반 맞춤형 화장품 제조 요청 · 재능대학교 AI-바이오분석특화연구소</div>
+  </div>
   <div class="code">{code}</div>
 </div>
 <div class="body">
@@ -628,130 +639,142 @@ th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
   <span><strong>피부 타입:</strong> {skin_type}</span>
   <span><strong>종합 점수:</strong> {overall}점</span>
 </div>
-<div class="section"><div class="stitle">피부 분석 점수</div>
-<div class="score-row">
-{"".join([f'<div class="sbox"><div class="snum">{v}</div><div class="slbl">{k}</div></div>' for k,v in list(scores.items())[:5]])}
+<div class="section">
+  <div class="stitle">피부 분석 점수</div>
+  <div class="score-row">{score_boxes_html}</div>
+  <div style='font-size:10px;color:#555;line-height:1.7;padding:8px;background:#f8f9fa;border-radius:6px;'>{summary}</div>
 </div>
-<div style='font-size:10px;color:#555;line-height:1.7;padding:8px;
-            background:#f8f9fa;border-radius:6px;'>{summary}</div></div>
 {scalp_section}
-<div class="section"><div class="stitle">우선 개선 항목</div>
-<table><tr><th>순위</th><th>지표</th><th>점수</th><th>케어 방향</th></tr>
-{priority_rows}</table></div>
-<div class="section"><div class="stitle">AI 추천 화장품 성분</div>
-<table>
-<tr><th style='width:5%'>#</th><th style='width:18%'>성분명</th>
-<th style='width:30%'>목적</th><th style='width:15%'>권장 농도</th><th>제조 참고사항</th></tr>
-{ing_rows}</table></div>
-<div class="section"><div class="stitle">환경 요인 (CEEI)</div>
-<div style='font-size:10px;color:#555;margin-bottom:6px;'>
-PM2.5 {pm25}㎍/m³ ({station}) · CEEI {ceei} [{ceei_grade}] · {region} 거주 {residence_years}년 · 연평균 {pm25_avg}㎍/m³
+<div class="section">
+  <div class="stitle">우선 개선 항목</div>
+  <table><tr><th>순위</th><th>지표</th><th>점수</th><th>케어 방향</th></tr>
+  {priority_rows}</table>
 </div>
-<div style='font-size:10px;color:#555;'>{ceei_msg}</div>
-{f'<div class="alert">{alert_msg}</div>' if alert_msg else ''}
+<div class="section">
+  <div class="stitle">AI 추천 화장품 성분</div>
+  <table>
+  <tr><th style='width:5%'>#</th><th style='width:18%'>성분명</th>
+  <th style='width:30%'>목적</th><th style='width:15%'>권장 농도</th><th>제조 참고사항</th></tr>
+  {ing_rows}
+  </table>
 </div>
-<div class="section"><div class="stitle">생활 관리 조언</div>
-<div style='font-size:10px;color:#555;line-height:1.7;'>{care}</div></div>
+<div class="section">
+  <div class="stitle">환경 요인 (CEEI)</div>
+  <div style='font-size:10px;color:#555;margin-bottom:6px;'>
+  PM2.5 {pm25}㎍/m³ ({station}) · CEEI {ceei} [{ceei_grade}] · {region} 거주 {residence_years}년 · 연평균 {pm25_avg}㎍/m³
+  </div>
+  <div style='font-size:10px;color:#555;'>{ceei_msg}</div>
+  {f'<div class="alert">{alert_msg}</div>' if alert_msg else ''}
+</div>
+<div class="section">
+  <div class="stitle">생활 관리 조언</div>
+  <div style='font-size:10px;color:#555;line-height:1.7;'>{care}</div>
+</div>
 </div>
 <div class="footer">
   <span>본 주문서는 AI 분석 결과 기반이며 의료적 처방이 아닙니다. 특허 출원 중.</span>
   <span>YD Lab · 재능대학교 바이오테크과 · 개발: 남정훈 교수</span>
-</div></body></html>"""
+</div>
+</body></html>"""
 
 
-# ── PDF 리포트 HTML ──────────────────────────────────────────
 def generate_pdf_html(result, air, region, residence_years, name, age_group, gender):
-    overall    = result.get("overall_score",0)
-    skin_type  = result.get("skin_type","")
-    summary    = result.get("summary","")
-    care       = result.get("care_advice","")
-    ingredients= result.get("recommended_ingredients",[])
-    is_scalp   = result.get("is_scalp",False)
-    pm25=air.get("pm25","-"); pm10=air.get("pm10","-")
-    o3=air.get("o3","-");     no2=air.get("no2","-")
-    sc = lambda s: "#2e7d32" if s>=70 else "#e65100" if s>=40 else "#c62828"
+    overall     = result.get("overall_score", 0)
+    skin_type   = result.get("skin_type", "")
+    summary     = result.get("summary", "")
+    care        = result.get("care_advice", "")
+    ingredients = result.get("recommended_ingredients", [])
+    is_scalp    = result.get("is_scalp", False)
+    pm25 = air.get("pm25", "-")
+    pm10 = air.get("pm10", "-")
+    o3   = air.get("o3", "-")
+    no2  = air.get("no2", "-")
+
+    def sc(s):
+        if s >= 70: return "#2e7d32"
+        if s >= 40: return "#e65100"
+        return "#c62828"
+
     metrics = [
-        ("주름",  result.get("wrinkle_score",0),  result.get("wrinkle_comment","")),
-        ("모공",  result.get("pore_score",0),      result.get("pore_comment","")),
-        ("피부결",result.get("texture_score",0),   result.get("texture_comment","")),
-        ("피부톤",result.get("tone_score",0),       result.get("tone_comment","")),
-        ("수분",  result.get("moisture_score",0),  ""),
+        ("주름",   result.get("wrinkle_score", 0),  result.get("wrinkle_comment", "")),
+        ("모공",   result.get("pore_score", 0),      result.get("pore_comment", "")),
+        ("피부결", result.get("texture_score", 0),   result.get("texture_comment", "")),
+        ("피부톤", result.get("tone_score", 0),      result.get("tone_comment", "")),
+        ("수분",   result.get("moisture_score", 0),  ""),
     ]
     score_boxes = "".join([
         f"<div class='sbox'><div class='snum' style='color:{sc(v)}'>{v}</div>"
         f"<div class='slbl'>{l}</div><div class='scmt'>{c}</div></div>"
-        for l,v,c in metrics
+        for l, v, c in metrics
     ])
     ing_html = "".join([f"<span class='ing'>{i}</span>" for i in ingredients])
 
     scalp_section = ""
     if is_scalp:
-        sk=result.get("scalp_keratin_score","-")
-        sp=result.get("scalp_pore_score","-")
-        sh=result.get("scalp_hair_thickness_score","-")
-        sc_cmt=result.get("scalp_comment","")
+        sk  = result.get("scalp_keratin_score", "-")
+        sp  = result.get("scalp_pore_score", "-")
+        sh  = result.get("scalp_hair_thickness_score", "-")
+        sc_cmt = result.get("scalp_comment", "")
         scalp_section = (
-            f"<div class='section'><div class='stitle'>두피 분석 (3지표)</div>"
-            f"<div class='score-row'>"
+            "<div class='section'><div class='stitle'>두피 분석 (3지표)</div>"
+            "<div class='score-row'>"
             f"<div class='sbox' style='background:#f0faf4;border-color:#a5d6a7;'>"
             f"<div class='snum'>{sk}</div><div class='slbl'>각질 상태</div></div>"
             f"<div class='sbox' style='background:#f0faf4;border-color:#a5d6a7;'>"
             f"<div class='snum'>{sp}</div><div class='slbl'>모공·피지</div></div>"
             f"<div class='sbox' style='background:#f0faf4;border-color:#a5d6a7;'>"
             f"<div class='snum'>{sh}</div><div class='slbl'>모발 굵기</div></div>"
-            f"</div><div style='font-size:9px;color:#2e7d32;padding:5px 8px;"
+            "</div>"
+            f"<div style='font-size:9px;color:#2e7d32;padding:5px 8px;"
             f"background:#e8f5e9;border-radius:4px;margin-top:5px;'>{sc_cmt}</div></div>"
         )
 
     pm25_avg = REGION_PM25_AVG.get(region, 22.0)
     ceei, ceei_grade, _, ceei_msg = calc_ceei(pm25_avg, residence_years)
-    gc = {"낮음":"#2e7d32","보통":"#1565c0","높음":"#e65100","매우높음":"#c62828"}.get(ceei_grade,"#333")
+    gc = {"낮음": "#2e7d32", "보통": "#1565c0", "높음": "#e65100", "매우높음": "#c62828"}.get(ceei_grade, "#333")
+    ceei_bg = "fce4ec" if ceei >= 300 else "fff3e0" if ceei >= 150 else "e8f5e9"
 
-    return f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8">
 <title>YD Lab 피부·두피 분석 리포트</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
 *{{box-sizing:border-box;margin:0;padding:0;}}
 body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;background:white;}}
-.header{{background:#0f3460;color:white;padding:22px 30px;display:flex;
-         justify-content:space-between;align-items:center;}}
+.header{{background:#0f3460;color:white;padding:22px 30px;display:flex;justify-content:space-between;align-items:center;}}
 .header h1{{font-size:18px;font-weight:700;}}
 .header .sub{{font-size:9px;opacity:0.6;margin-top:3px;}}
 .header .date{{font-size:10px;opacity:0.75;}}
 .body{{padding:22px 30px;}}
-.infobar{{font-size:10px;color:#555;padding-bottom:12px;margin-bottom:14px;
-          border-bottom:1px solid #e4e8ee;}}
+.infobar{{font-size:10px;color:#555;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid #e4e8ee;}}
 .infobar span{{margin-right:14px;}}
 .section{{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #f0f0f0;}}
-.stitle{{font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
-         color:#0f3460;margin-bottom:10px;}}
+.stitle{{font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#0f3460;margin-bottom:10px;}}
 .overall-row{{display:flex;align-items:center;gap:18px;}}
 .big-score{{font-size:44px;font-weight:700;color:{sc(overall)};line-height:1;}}
 .skin-type{{font-size:13px;font-weight:600;margin-bottom:5px;}}
 .summary{{font-size:9px;color:#555;line-height:1.65;}}
 .score-row{{display:flex;gap:7px;}}
-.sbox{{flex:1;background:#f8f9fa;border:1px solid #e4e8ee;border-radius:7px;
-       padding:9px 5px;text-align:center;}}
+.sbox{{flex:1;background:#f8f9fa;border:1px solid #e4e8ee;border-radius:7px;padding:9px 5px;text-align:center;}}
 .snum{{font-size:22px;font-weight:700;line-height:1.1;}}
 .slbl{{font-size:8px;color:#666;margin-top:2px;}}
 .scmt{{font-size:7px;color:#999;margin-top:3px;line-height:1.3;}}
 .ing-row{{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;}}
-.ing{{background:#eef2ff;color:#3730a3;border-radius:4px;padding:3px 9px;
-      font-size:9px;font-weight:500;}}
+.ing{{background:#eef2ff;color:#3730a3;border-radius:4px;padding:3px 9px;font-size:9px;font-weight:500;}}
 .care{{font-size:9px;color:#555;line-height:1.6;}}
 .chip-row{{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;}}
 .chip{{background:#f1f3f4;color:#444;border-radius:12px;padding:2px 9px;font-size:9px;}}
 .small{{font-size:9px;color:#555;line-height:1.6;}}
-.footer{{background:#0f3460;color:rgba(255,255,255,0.6);padding:10px 30px;
-         font-size:8px;display:flex;justify-content:space-between;margin-top:10px;}}
-.print-btn{{position:fixed;bottom:20px;right:20px;background:#0f3460;color:white;
-            border:none;padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;}}
+.footer{{background:#0f3460;color:rgba(255,255,255,0.6);padding:10px 30px;font-size:8px;display:flex;justify-content:space-between;margin-top:10px;}}
+.print-btn{{position:fixed;bottom:20px;right:20px;background:#0f3460;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;}}
 @media print{{.print-btn{{display:none;}}}}
 </style></head><body>
 <button class="print-btn" onclick="window.print()">🖨️ PDF로 저장</button>
 <div class="header">
-  <div><h1>🔬 YD Lab 피부·두피 분석 리포트</h1>
-  <div class="sub">재능대학교 바이오테크과 · AI 바이오분석특화연구소 · 특허 출원 중</div></div>
+  <div>
+    <h1>🔬 YD Lab 피부·두피 분석 리포트</h1>
+    <div class="sub">재능대학교 바이오테크과 · AI 바이오분석특화연구소 · 특허 출원 중</div>
+  </div>
   <div class="date">{datetime.now().strftime("%Y년 %m월 %d일")}</div>
 </div>
 <div class="body">
@@ -760,31 +783,44 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
   <span>성별: {gender}</span><span>거주지: {region}</span>
   <span>거주기간: {residence_years}년</span>
 </div>
-<div class="section"><div class="stitle">종합 결과</div>
-<div class="overall-row"><div class="big-score">{overall}</div>
-<div><div class="skin-type">피부 타입: {skin_type}</div>
-<div class="summary">{summary}</div></div></div></div>
-<div class="section"><div class="stitle">세부 지표 (피부 5지표)</div>
-<div class="score-row">{score_boxes}</div></div>
-{scalp_section}
-<div class="section"><div class="stitle">추천 화장품 성분</div>
-<div class="ing-row">{ing_html}</div>
-<div class="care">{care}</div></div>
-<div class="section"><div class="stitle">환경 지수 (실시간)</div>
-<div class="chip-row">
-  <span class="chip">PM2.5 {pm25}㎍/m³</span>
-  <span class="chip">PM10 {pm10}㎍/m³</span>
-  <span class="chip">O₃ {o3}ppm</span>
-  <span class="chip">NO₂ {no2}ppm</span>
-</div></div>
-<div class="section"><div class="stitle">CEEI 누적 환경 노출 지수</div>
-<div class="chip-row">
-  <span class="chip" style="background:#{'fce4ec' if ceei>=300 else 'fff3e0' if ceei>=150 else 'e8f5e9'};
-        color:{gc};">CEEI {ceei} [{ceei_grade}]</span>
-  <span class="chip">지역 연평균 {pm25_avg}㎍/m³</span>
-  <span class="chip">거주 {residence_years}년</span>
+<div class="section">
+  <div class="stitle">종합 결과</div>
+  <div class="overall-row">
+    <div class="big-score">{overall}</div>
+    <div>
+      <div class="skin-type">피부 타입: {skin_type}</div>
+      <div class="summary">{summary}</div>
+    </div>
+  </div>
 </div>
-<div class="small">{ceei_msg}</div></div>
+<div class="section">
+  <div class="stitle">세부 지표 (피부 5지표)</div>
+  <div class="score-row">{score_boxes}</div>
+</div>
+{scalp_section}
+<div class="section">
+  <div class="stitle">추천 화장품 성분</div>
+  <div class="ing-row">{ing_html}</div>
+  <div class="care">{care}</div>
+</div>
+<div class="section">
+  <div class="stitle">환경 지수 (실시간)</div>
+  <div class="chip-row">
+    <span class="chip">PM2.5 {pm25}㎍/m³</span>
+    <span class="chip">PM10 {pm10}㎍/m³</span>
+    <span class="chip">O₃ {o3}ppm</span>
+    <span class="chip">NO₂ {no2}ppm</span>
+  </div>
+</div>
+<div class="section">
+  <div class="stitle">CEEI 누적 환경 노출 지수</div>
+  <div class="chip-row">
+    <span class="chip" style="background:#{ceei_bg};color:{gc};">CEEI {ceei} [{ceei_grade}]</span>
+    <span class="chip">지역 연평균 {pm25_avg}㎍/m³</span>
+    <span class="chip">거주 {residence_years}년</span>
+  </div>
+  <div class="small">{ceei_msg}</div>
+</div>
 </div>
 <div class="footer">
   <span>본 리포트는 연구 참고용이며 의료적 진단을 대체하지 않습니다. 특허 출원 중.</span>
@@ -792,27 +828,25 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
     <div>YD Lab · 재능대학교 바이오테크과</div>
     <div style="opacity:0.7;margin-top:2px;">개발: 남정훈 교수 · Dept. of Biotechnology, Jaeneung Univ.</div>
   </div>
-</div></body></html>"""
+</div>
+</body></html>"""
 
 
-# ── 메인 앱 ─────────────────────────────────────────────────
 def main():
     api_key = st.secrets.get("ANTHROPIC_API_KEY", "")
     if not api_key:
         st.error("⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다.")
         st.stop()
 
-    # ── 히어로
     st.markdown("""
-    <div class='hero'>
-      <div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
-      <h1>🔬 AI 피부·두피 분석</h1>
-      <p>스마트폰 현미경 + 실시간 대기오염 데이터 + LLM 비전 AI<br>
-         환경오염 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)</p>
-    </div>
-    """, unsafe_allow_html=True)
+<div class='hero'>
+  <div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
+  <h1>🔬 AI 피부·두피 분석</h1>
+  <p>스마트폰 현미경 + 실시간 대기오염 데이터 + LLM 비전 AI<br>
+     환경오염 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)</p>
+</div>
+""", unsafe_allow_html=True)
 
-    # ── 연구 배경 (보강된 버전)
     with st.expander("📚 연구 배경 및 과학적 근거", expanded=False):
         st.markdown("""
 ### 🌫️ 대기오염과 피부·두피의 과학적 연관성
@@ -828,10 +862,10 @@ PM2.5·NO₂·오존과 피부·두피 손상의 직접적 연관성이 잇따�
 | 연구 기관 / 저널 | 핵심 발견 | 출처 |
 |---|---|---|
 | **Nature Scientific Reports** | 실내 PM2.5 노출이 중국인 여성 피부 노화 징후(주름·색소침착)와 유의미한 상관관계 확인 | Ding et al., 2017 |
-| **NIH / PMC (Journal of Investigative Dermatology)** | PM2.5 노출 시 경표피수분손실(TEWL) 증가 및 피부 장벽 기능 저하 직접 확인 | PMC8021104, 2021 |
-| **ScienceDirect (Ecotoxicology & Environmental Safety)** | PM2.5가 세포 노화를 가속화해 피부·장기 기능 저하 유발, 산화스트레스 경로 규명 | Wang et al., 2024 |
+| **NIH / PMC** | PM2.5 노출 시 경표피수분손실(TEWL) 증가 및 피부 장벽 기능 저하 직접 확인 | PMC8021104, 2021 |
+| **ScienceDirect** | PM2.5가 세포 노화를 가속화해 피부·장기 기능 저하 유발, 산화스트레스 경로 규명 | Wang et al., 2024 |
 | **NIH / PMC (Antioxidants)** | PM 노출이 아토피피부염·건선·여드름·피부 노화를 악화시키는 분자적 기전 종합 정리 | PMC11432173, 2024 |
-| **Springer (Particle and Fibre Toxicology)** | 미세먼지(PM)가 피부 장벽 기능장애를 유발하고 반응성 산소종(ROS) 생성 촉진 | Springer, 2020 |
+| **Springer** | 미세먼지(PM)가 피부 장벽 기능장애를 유발하고 반응성 산소종(ROS) 생성 촉진 | Springer, 2020 |
 
 ---
 
@@ -839,10 +873,10 @@ PM2.5·NO₂·오존과 피부·두피 손상의 직접적 연관성이 잇따�
 
 | 연구 기관 / 저널 | 핵심 발견 | 출처 |
 |---|---|---|
-| **NIH / PMC (Int. J. Environmental Research)** | 대기오염 물질(PM·중금속·VOC)이 모낭 염증 반응 유발, 원형탈모(AA)와 연관 확인 | PMC11299971, 2024 |
+| **NIH / PMC** | 대기오염 물질(PM·중금속·VOC)이 모낭 염증 반응 유발, 원형탈모(AA)와 연관 확인 | PMC11299971, 2024 |
 | **Polish Journal of Environmental Studies** | 초미세먼지가 모발 손상·탈모·지루성 두피염·모낭 염증을 유발한다는 연구 결과 | PJOES, 2024 |
-| **EurekAlert! / 국제학술발표** | 모낭 유두세포(HFDPC)를 PM2.5에 노출 시 모발 성장 관련 단백질(β-카테닌·Wnt) 현저히 감소 | EurekAlert, 2019 |
-| **ResearchSquare (Preprint)** | PM2.5·PM10·NO₂ 단기 노출이 탈모 외래 방문 건수를 통계적으로 유의미하게 증가시킴 | ResearchSquare, 2025 |
+| **EurekAlert!** | 모낭 유두세포(HFDPC)를 PM2.5에 노출 시 모발 성장 관련 단백질(β-카테닌·Wnt) 현저히 감소 | EurekAlert, 2019 |
+| **ResearchSquare** | PM2.5·PM10·NO₂ 단기 노출이 탈모 외래 방문 건수를 통계적으로 유의미하게 증가시킴 | ResearchSquare, 2025 |
 
 ---
 
@@ -850,8 +884,8 @@ PM2.5·NO₂·오존과 피부·두피 손상의 직접적 연관성이 잇따�
 
 | 연구 기관 / 저널 | 핵심 발견 | 출처 |
 |---|---|---|
-| **JAAD (J. of the American Academy of Dermatology)** | 오존 노출이 피부 산화스트레스를 유발하며, 항산화 세럼이 손상을 예방함을 임상 확인 | JAAD, 2020 |
-| **NIH / PMC (Toxicology & Applied Pharmacology)** | O₃가 피부 세포막 지질 산화·단백질 손상을 유발하고 염증 반응을 촉진 | PMC, 2002 |
+| **JAAD** | 오존 노출이 피부 산화스트레스를 유발하며, 항산화 세럼이 손상을 예방함을 임상 확인 | JAAD, 2020 |
+| **NIH / PMC** | O₃가 피부 세포막 지질 산화·단백질 손상을 유발하고 염증 반응을 촉진 | PMC, 2002 |
 | **NIH / PMC (Dermatology Reviews)** | NO₂·SO₂·오존 복합 노출이 피부 염증성 질환(아토피·건선) 악화와 직접 연관 | PMC11965873, 2025 |
 
 ---
@@ -860,8 +894,7 @@ PM2.5·NO₂·오존과 피부·두피 손상의 직접적 연관성이 잇따�
 
 본 시스템이 독자적으로 개발한 환경 누적 노출 지수입니다.
 
-
-$$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
+CEEI = 지역 연평균 PM2.5 × 거주 년수
 
 | CEEI 구간 | 등급 | 권장 케어 |
 |---|---|---|
@@ -871,46 +904,38 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
 | 300 이상 | 🔴 매우높음 | 피부과 상담 + 기능성 화장품 |
 
 > 본 연구는 공용IRB 면제심의 신청 예정이며, 수집 데이터는 학술 연구 목적으로만 활용됩니다.
-        """)
+""")
 
     with st.expander("📷 촬영 가이드", expanded=False):
         st.markdown("""
-        <div class='guide-body'>
-          <div class='gstep'><span class='gnum'>1</span>
-            <span>스마트폰에 클립온 현미경(50~200배)을 장착하세요.</span></div>
-          <div class='gstep'><span class='gnum'>2</span>
-            <span>아래 부위 선택 후, 각 부위를 밝은 곳에서 클로즈업 촬영하세요.</span></div>
-          <div class='gstep'><span class='gnum'>3</span>
-            <span>피부·모공이 선명하게 보이도록 초점을 맞추세요 (흔들리지 않게 고정).</span></div>
-          <div class='gstep'><span class='gnum'>4</span>
-            <span>두피 촬영 시: 모발을 가르마로 나누어 두피 표면이 잘 보이도록 하세요.</span></div>
-          <div class='gstep'><span class='gnum'>5</span>
-            <span>촬영한 사진 여러 장을 한꺼번에 업로드하시면 됩니다. 어느 부위인지 따로 표시하지 않아도 AI가 자동으로 판별합니다.</span></div>
-        </div>
-        """, unsafe_allow_html=True)
+<div class='guide-body'>
+  <div class='gstep'><span class='gnum'>1</span>
+    <span>스마트폰에 클립온 현미경(50~200배)을 장착하세요.</span></div>
+  <div class='gstep'><span class='gnum'>2</span>
+    <span>촬영 부위를 선택 후, 각 부위를 밝은 곳에서 클로즈업 촬영하세요.</span></div>
+  <div class='gstep'><span class='gnum'>3</span>
+    <span>피부·모공이 선명하게 보이도록 초점을 맞추세요 (흔들리지 않게 고정).</span></div>
+  <div class='gstep'><span class='gnum'>4</span>
+    <span>두피 촬영 시: 모발을 가르마로 나누어 두피 표면이 잘 보이도록 하세요.</span></div>
+  <div class='gstep'><span class='gnum'>5</span>
+    <span>촬영한 사진 여러 장을 한꺼번에 업로드하시면 됩니다. AI가 자동으로 부위를 판별합니다.</span></div>
+</div>
+""", unsafe_allow_html=True)
 
-    # ── 기본 정보 입력
     st.markdown("<div class='card'><div class='card-label'>기본 정보 입력</div>",
                 unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     with c1:
-        name = st.text_input("이름 (익명 가능)", value="익명",
-                             placeholder="홍길동", key="k_name")
+        name = st.text_input("이름 (익명 가능)", value="익명", placeholder="홍길동", key="k_name")
     with c2:
-        age_group = st.selectbox("연령대",
-                                 ["선택","10대","20대","30대","40대","50대","60대 이상"],
-                                 key="k_age")
+        age_group = st.selectbox("연령대", ["선택","10대","20대","30대","40대","50대","60대 이상"], key="k_age")
     with c3:
         gender = st.selectbox("성별", ["선택","여성","남성","기타"], key="k_gender")
-
     c4, c5 = st.columns(2)
     with c4:
         region = st.selectbox("거주 지역", list(REGION_PM25_AVG.keys()), key="k_region")
     with c5:
-        residence_years_str = st.selectbox("거주 기간",
-                                           list(RESIDENCE_YEAR_MAP.keys()),
-                                           key="k_residence")
-
+        residence_years_str = st.selectbox("거주 기간", list(RESIDENCE_YEAR_MAP.keys()), key="k_residence")
     skin_concern = st.multiselect(
         "주요 피부·두피 고민 (복수 선택)",
         ["주름·탄력","모공","피부톤·색소침착","수분·건조",
@@ -919,7 +944,6 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── 촬영 부위 선택
     st.markdown("<div class='card'><div class='card-label'>촬영 부위 선택</div>",
                 unsafe_allow_html=True)
     selected_parts = st.multiselect(
@@ -931,11 +955,10 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
         st.info("💡 두피 부위 선택됨 — 각질·모공·모발 굵기 3지표가 추가 분석됩니다.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── 사진 업로드 (부위 수만큼 자동 확장)
     max_photos = max(len(selected_parts), 3)
     st.markdown("<div class='card'><div class='card-label'>피부·두피 사진 업로드</div>",
                 unsafe_allow_html=True)
-    st.caption(f"💡 촬영한 사진을 한꺼번에 올리세요. 어느 부위인지 따로 표시하지 않아도 AI가 자동 판별합니다. (최대 {max_photos}장)")
+    st.caption(f"💡 촬영한 사진을 한꺼번에 올리세요. AI가 자동으로 부위를 판별합니다. (최대 {max_photos}장)")
     uploaded = st.file_uploader(
         f"사진 업로드 (최대 {max_photos}장)",
         type=["jpg","jpeg","png"],
@@ -950,7 +973,6 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
                 st.image(f, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── 동의
     st.markdown("<div class='consent-box'>", unsafe_allow_html=True)
     consent = st.checkbox(
         "✅ [필수] 개인정보 수집·이용 동의: 분석 결과 및 환경 데이터가 서비스 개선 목적으로 저장됩니다.",
@@ -1028,7 +1050,7 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
             "texture_score":              result.get("texture_score",""),
             "tone_score":                 result.get("tone_score",""),
             "moisture_score":             result.get("moisture_score",""),
-            "is_scalp":                   result.get("is_scalp",False),
+            "is_scalp":                   result.get("is_scalp", False),
             "scalp_keratin_score":        result.get("scalp_keratin_score",""),
             "scalp_pore_score":           result.get("scalp_pore_score",""),
             "scalp_hair_thickness_score": result.get("scalp_hair_thickness_score",""),
@@ -1037,7 +1059,6 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
             "research_consent":           research_consent,
         })
 
-    # ── 관리자 사이드바
     with st.sidebar:
         st.markdown("### 🔐 관리자")
         admin_pw = st.text_input("관리자 비밀번호", type="password", key="k_admin")
@@ -1063,7 +1084,7 @@ $$CEEI = PM2.5_{지역연평균} \\times 거주년수$$
                         st.dataframe(df[available].mean().round(1).rename("평균"))
                 st.download_button(
                     "📥 전체 데이터 CSV",
-                    data=open(DATA_FILE,"rb").read(),
+                    data=open(DATA_FILE, "rb").read(),
                     file_name=f"ydlab_data_{datetime.now().strftime('%Y%m%d')}.csv",
                     mime="text/csv", key="k_csv"
                 )
