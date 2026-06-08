@@ -1017,13 +1017,27 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
             st.error("분석에 실패했습니다. 사진을 확인하고 다시 시도해 주세요.")
             st.stop()
 
+        st.session_state["result"] = result
+        st.session_state["air"] = air
+        st.session_state["region"] = region
+        st.session_state["residence_years_str"] = residence_years_str
+        st.session_state["name"] = name
+        st.session_state["age_group"] = age_group
+        st.session_state["gender"] = gender
+        st.session_state["selected_parts"] = selected_parts
         st.success("✅ 분석 완료!")
-        show_result(result, air, region, residence_years_str,
-                    name, age_group, gender, selected_parts)
 
-        yrs      = RESIDENCE_YEAR_MAP.get(residence_years_str, 0)
-        pm25_avg = REGION_PM25_AVG.get(region, 22.0)
-        ceei, ceei_grade, _, _ = calc_ceei(pm25_avg, yrs)
+    if "result" in st.session_state:
+        show_result(
+            st.session_state["result"],
+            st.session_state["air"],
+            st.session_state["region"],
+            st.session_state["residence_years_str"],
+            st.session_state["name"],
+            st.session_state["age_group"],
+            st.session_state["gender"],
+            st.session_state["selected_parts"],
+        )
 
         save_record({
             "timestamp":                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
