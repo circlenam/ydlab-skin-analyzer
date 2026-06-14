@@ -297,13 +297,13 @@ def analyze_skin(images, api_key, body_parts=None):
 
 DATA_FILE = Path("ydlab_skin_data.csv")
 FIELDS = [
-    "timestamp","name","age_group","gender","region","residence_years",
+    "timestamp","participant_id","age_group","gender","region","residence_years",
     "skin_concern","body_parts","photo_count",
     "pm25","pm10","o3","no2","air_station","air_source","ceei_score","ceei_grade",
     "overall_score","skin_type","key_concerns","recommended_ingredients",
     "wrinkle_score","pore_score","texture_score","tone_score","moisture_score",
     "is_scalp","scalp_keratin_score","scalp_pore_score","scalp_hair_thickness_score",
-    "scalp_comment","consent","research_consent"
+    "scalp_comment","consent","research_consent","marketing_opt_in"
 ]
 
 def get_sheet():
@@ -317,6 +317,35 @@ def get_sheet():
         return client.open_by_key(st.secrets.get("GOOGLE_SHEETS_ID","")).sheet1
     except Exception:
         return None
+
+def get_marketing_sheet():
+    """'marketing_opt' 워크시트 (없으면 자동 생성)"""
+    try:
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+        scopes = ["https://spreadsheets.google.com/feeds",
+                  "https://www.googleapis.com/auth/drive"]
+        creds  = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        client = gspread.authorize(creds)
+        sh = client.open_by_key(st.secrets.get("GOOGLE_SHEETS_ID",""))
+        try:
+            ws = sh.worksheet("marketing_opt")
+        except gspread.exceptions.WorksheetNotFound:
+            ws = sh.add_worksheet("marketing_opt", rows=200, cols=4)
+            ws.append_row(["participant_id","email","opt_in_date","region"])
+        return ws
+    except Exception:
+        return None
+
+def save_marketing_opt(participant_id, email, region):
+    """연구 데이터와 분리된 별도 시트에 마케팅 동의 정보 저장"""
+    try:
+        ws = get_marketing_sheet()
+        if ws:
+            ws.append_row([participant_id, email,
+                           datetime.now().strftime("%Y-%m-%d %H:%M:%S"), region])
+    except Exception:
+        pass
 
 def ensure_header(sheet):
     try:
@@ -361,7 +390,7 @@ def show_air_status(air):
         )
 
 def show_result(result, air, region, residence_years_str,
-                name, age_group, gender, selected_parts):
+                participant_id, age_group, gender, selected_parts):
     pm25_avg = REGION_PM25_AVG.get(region, 22.0)
     yrs      = RESIDENCE_YEAR_MAP.get(residence_years_str, 0)
     ceei, ceei_grade, ceei_chip, ceei_msg = calc_ceei(pm25_avg, yrs)
@@ -521,20 +550,20 @@ def show_result(result, air, region, residence_years_str,
     st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
-        pdf_html = generate_pdf_html(result, air, region, yrs, name, age_group, gender)
+        pdf_html = generate_pdf_html(result, air, region, yrs, participant_id, age_group, gender)
         st.download_button("📄 분석 리포트 다운로드",
                            data=pdf_html.encode("utf-8"),
                            file_name=f"YDLab_리포트_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
                            mime="text/html", use_container_width=True, key="k_dl_report")
     with col2:
-        order_html = generate_order_html(result, air, region, yrs, name, age_group, gender)
+        order_html = generate_order_html(result, air, region, yrs, participant_id, age_group, gender)
         st.download_button("🧪 공방 주문서 다운로드",
                            data=order_html.encode("utf-8"),
                            file_name=f"YDLab_주문서_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
                            mime="text/html", use_container_width=True, key="k_dl_order")
 
 
-def generate_order_html(result, air, region, residence_years, name, age_group, gender):
+def generate_order_html(result, air, region, residence_years, participant_id, age_group, gender):
     code = "YDL-" + datetime.now().strftime("%Y%m%d") + "-" + \
            ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     overall    = result.get("overall_score", 0)
@@ -695,7 +724,7 @@ th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
 </div>
 <div class="infobar">
   <span><strong>분석일:</strong> {datetime.now().strftime("%Y년 %m월 %d일")}</span>
-  <span><strong>고객:</strong> {name} {age_group} {gender}</span>
+  <span><strong>참여자 코드:</strong> {participant_id} {age_group} {gender}</span>
   <span><strong>거주지:</strong> {region} 거주 {residence_years}년</span>
   <span><strong>피부 타입:</strong> {skin_type}</span>
   <span><strong>종합 점수:</strong> {overall}점</span>
@@ -739,7 +768,7 @@ th{{background:#0f3460;color:white;padding:8px;text-align:left;font-size:10px;}}
 </body></html>"""
 
 
-def generate_pdf_html(result, air, region, residence_years, name, age_group, gender):
+def generate_pdf_html(result, air, region, residence_years, participant_id, age_group, gender):
     overall     = result.get("overall_score", 0)
     skin_type   = result.get("skin_type", "")
     summary     = result.get("summary", "")
@@ -854,7 +883,7 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
 <div class="body">
 <div class="air-bar">{air_source_txt}</div>
 <div class="infobar">
-  <span>이름: {name}</span><span>연령대: {age_group}</span>
+  <span>참여자 코드: {participant_id}</span><span>연령대: {age_group}</span>
   <span>성별: {gender}</span><span>거주지: {region}</span>
   <span>거주기간: {residence_years}년</span>
 </div>
@@ -1001,7 +1030,7 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
                 unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     with c1:
-        name = st.text_input("이름 (익명 가능)", value="익명", placeholder="홍길동", key="k_name")
+        participant_id = st.text_input("익명 참여 코드", value="", placeholder="YD-001", key="k_pid")
     with c2:
         age_group = st.selectbox("연령대", ["선택","10대","20대","30대","40대","50대","60대 이상"], key="k_age")
     with c3:
@@ -1059,6 +1088,16 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
+    with st.expander("📧 결과 알림 수신 동의 (선택)", expanded=False):
+        st.caption("연구 참여와 무관하며, 동의하지 않으셔도 불이익이 없습니다.")
+        marketing_opt_in = st.checkbox(
+            "SKIN-X 플랫폼 정식 출시 시 안내를 받겠습니다.",
+            key="k_marketing"
+        )
+        marketing_email = ""
+        if marketing_opt_in:
+            marketing_email = st.text_input("이메일 주소", key="k_marketing_email")
+
     st.markdown("<br>", unsafe_allow_html=True)
     run = st.button("🔬 AI 피부·두피 분석 시작",
                     use_container_width=True, type="primary", key="k_run")
@@ -1068,6 +1107,8 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
             st.error("사진을 업로드해 주세요."); st.stop()
         if not consent:
             st.error("개인정보 수집·이용 동의가 필요합니다."); st.stop()
+        if not participant_id.strip():
+            st.error("익명 참여 코드를 입력해 주세요. (예: YD-001)"); st.stop()
         if age_group == "선택" or gender == "선택":
             st.warning("연령대와 성별을 선택해 주세요."); st.stop()
         if not selected_parts:
@@ -1094,7 +1135,7 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
         st.session_state["air"]                = air
         st.session_state["region"]             = region
         st.session_state["residence_years_str"]= residence_years_str
-        st.session_state["name"]               = name
+        st.session_state["participant_id"]     = participant_id
         st.session_state["age_group"]          = age_group
         st.session_state["gender"]             = gender
         st.session_state["selected_parts"]     = selected_parts
@@ -1109,7 +1150,7 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
 
         save_record({
             "timestamp":                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "name":                       name,
+            "participant_id":             participant_id,
             "age_group":                  age_group,
             "gender":                     gender,
             "region":                     region,
@@ -1141,7 +1182,11 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
             "scalp_comment":              result.get("scalp_comment",""),
             "consent":                    consent,
             "research_consent":           research_consent,
+            "marketing_opt_in":           marketing_opt_in,
         })
+
+        if marketing_opt_in and marketing_email.strip():
+            save_marketing_opt(participant_id, marketing_email.strip(), region)
 
     if "result" in st.session_state:
         st.success("✅ 분석 완료!")
@@ -1150,7 +1195,7 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
             st.session_state["air"],
             st.session_state["region"],
             st.session_state["residence_years_str"],
-            st.session_state["name"],
+            st.session_state["participant_id"],
             st.session_state["age_group"],
             st.session_state["gender"],
             st.session_state["selected_parts"],
