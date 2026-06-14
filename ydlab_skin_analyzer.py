@@ -937,21 +937,34 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
 
 
 def main():
-    # ── 접근 게이트 (연구팀 전용) ──
+    # ── 접근 게이트 (연구팀 전용 + 행사용 QR 코드) ──
+    # Secrets에 ACCESS_CODES = ["YDLAB2025", "DEMO0614"] 형태로 등록하면
+    # 여러 코드를 동시에 운영할 수 있고, 행사 종료 후 행사용 코드만
+    # 목록에서 제거하면 해당 QR은 즉시 무력화됩니다.
+    valid_codes = st.secrets.get("ACCESS_CODES", [st.secrets.get("ACCESS_PASSWORD", "YDLAB2025")])
+    if isinstance(valid_codes, str):
+        valid_codes = [valid_codes]
+
     if "authed" not in st.session_state:
         st.session_state["authed"] = False
+
+    # QR 링크(?code=DEMO0614)로 접속 시 자동 인증
+    if not st.session_state["authed"]:
+        url_code = st.query_params.get("code", "")
+        if url_code and url_code in valid_codes:
+            st.session_state["authed"] = True
 
     if not st.session_state["authed"]:
         st.markdown("""
 <div class='hero'>
   <div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
   <h1>🔬 AI 피부·두피 분석</h1>
-  <p>본 페이지는 연구팀 전용입니다. 접근 코드를 입력해 주세요.</p>
+  <p>본 페이지는 접근 코드가 필요합니다. 코드를 입력해 주세요.</p>
 </div>
 """, unsafe_allow_html=True)
         gate_pw = st.text_input("접근 코드", type="password", key="k_gate")
         if st.button("입장", type="primary"):
-            if gate_pw == st.secrets.get("ACCESS_PASSWORD", "YDLAB2025"):
+            if gate_pw in valid_codes:
                 st.session_state["authed"] = True
                 st.rerun()
             else:
