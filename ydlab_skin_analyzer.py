@@ -937,6 +937,27 @@ body{{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#1a1a2e;backgro
 
 
 def main():
+    # ── 접근 게이트 (연구팀 전용) ──
+    if "authed" not in st.session_state:
+        st.session_state["authed"] = False
+
+    if not st.session_state["authed"]:
+        st.markdown("""
+<div class='hero'>
+  <div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
+  <h1>🔬 AI 피부·두피 분석</h1>
+  <p>본 페이지는 연구팀 전용입니다. 접근 코드를 입력해 주세요.</p>
+</div>
+""", unsafe_allow_html=True)
+        gate_pw = st.text_input("접근 코드", type="password", key="k_gate")
+        if st.button("입장", type="primary"):
+            if gate_pw == st.secrets.get("ACCESS_PASSWORD", "YDLAB2025"):
+                st.session_state["authed"] = True
+                st.rerun()
+            else:
+                st.error("접근 코드가 올바르지 않습니다.")
+        st.stop()
+
     api_key = st.secrets.get("ANTHROPIC_API_KEY", "")
     if not api_key:
         st.error("⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다.")
