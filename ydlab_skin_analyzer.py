@@ -74,6 +74,9 @@ html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
 .patent-banner { background:#e8f4fd; border:1px solid #1565c0; border-radius:8px;
                  padding:0.6rem 1rem; font-size:0.78rem; color:#1565c0;
                  margin-bottom:1rem; text-align:center; font-weight:600; }
+.medical-disclaimer { background:#fdecea; border:1px solid #c62828; border-radius:8px;
+                 padding:0.6rem 1rem; font-size:0.78rem; color:#c62828;
+                 margin-bottom:1rem; text-align:center; font-weight:600; }
 .scalp-card { background:#f0faf4; border:1px solid #a5d6a7; border-radius:12px;
               padding:1.2rem; margin-bottom:1rem; }
 .priority-item { display:flex; align-items:center; gap:0.8rem; padding:0.6rem 0;
@@ -408,6 +411,12 @@ def show_result(result, air, region, residence_years_str,
     st.markdown(
         "<div class='patent-banner'>"
         "🔐 본 기술은 특허 출원 중입니다 — 환경오염 연동 AI 피부·두피 분석 및 화장품 제안 시스템"
+        "</div>", unsafe_allow_html=True)
+
+    st.markdown(
+        "<div class='medical-disclaimer'>"
+        "⚠️ 본 분석 결과는 AI 기반 참고용 정보이며, 의학적 진단·치료·질병 예방을 위한 목적이 아닙니다. "
+        "피부·두피에 이상이 있는 경우 반드시 피부과 등 전문 의료기관에 방문하시기 바랍니다."
         "</div>", unsafe_allow_html=True)
 
     # 에어코리아 연결 상태 표시
