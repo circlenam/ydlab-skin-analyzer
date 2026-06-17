@@ -1122,7 +1122,7 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
 
     st.markdown("<div class='consent-box'>", unsafe_allow_html=True)
     consent = st.checkbox(
-        "✅ [필수] 개인정보 수집·이용 동의: 분석 결과 및 환경 데이터가 서비스 개선 목적으로 저장됩니다.",
+        "✅ [필수] 본 연구는 IRB 승인 후 연구담당자를 통해 별도 동의서를 작성합니다",
         key="k_consent"
     )
     research_consent = st.checkbox(
