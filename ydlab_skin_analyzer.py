@@ -1149,7 +1149,7 @@ CEEI = 지역 연평균 PM2.5 × 거주 년수
         if not uploaded:
             st.error("사진을 업로드해 주세요."); st.stop()
         if not consent:
-            st.error("개인정보 수집·이용 동의가 필요합니다."); st.stop()
+            st.error("IRB 동의 확인이 필요합니다."); st.stop()
         if not participant_id.strip():
             st.error("익명 참여 코드를 입력해 주세요. (예: YD-001)"); st.stop()
         if age_group == "선택" or gender == "선택":
