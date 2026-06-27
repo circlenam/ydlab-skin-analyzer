@@ -197,20 +197,43 @@ COUPANG_LINKS = {
     "티트리오일":         {"url": "https://link.coupang.com/a/eUtWoJz7CK", "name": "티트리 오일"},
     "티트리":             {"url": "https://link.coupang.com/a/eUtWoJz7CK", "name": "티트리 오일"},
     "Tea Tree":           {"url": "https://link.coupang.com/a/eUtWoJz7CK", "name": "티트리 오일"},
+    # 검색 링크 (정식 파트너스 링크 생기면 URL만 교체)
+    "로즈마리 오일":      {"url": "https://www.coupang.com/np/search?q=로즈마리+오일+원액", "name": "로즈마리 오일"},
+    "멘톨":               {"url": "https://www.coupang.com/np/search?q=멘톨+원액", "name": "멘톨"},
+    "소듐PCA":            {"url": "https://www.coupang.com/np/search?q=소듐PCA+원액", "name": "소듐PCA"},
+    "알란토인":           {"url": "https://www.coupang.com/np/search?q=알란토인+원액", "name": "알란토인"},
+    "스쿠알란":           {"url": "https://www.coupang.com/np/search?q=스쿠알란+원액", "name": "스쿠알란"},
+    "EGF":                {"url": "https://www.coupang.com/np/search?q=EGF+원액", "name": "EGF 원액"},
+    "글리세린":           {"url": "https://www.coupang.com/np/search?q=글리세린+원액", "name": "글리세린"},
 }
 
+# ── 쿠팡 고지 문구 (간결 버전) ────────────────────────
 COUPANG_DISCLAIMER = (
-    "※ 이 페이지의 일부 구매 링크는 쿠팡 파트너스 활동의 일환으로, "
-    "구매 시 일정 수수료가 YD Lab에 제공될 수 있습니다. "
-    "이는 구매자에게 추가 비용을 발생시키지 않습니다."
+    "🛒 일부 링크는 쿠팡 파트너스 링크로, 구매 시 소정의 수수료가 발생할 수 있습니다."
 )
 
+# ── 허용 성분 목록 (방법 B: AI 프롬프트 제한용) ────────
+SKIN_INGREDIENT_LIST = [
+    "히알루론산", "세라마이드", "나이아신아마이드", "레티놀",
+    "비타민C", "비타민C 유도체", "펩타이드", "판테놀",
+    "아데노신", "살리실산", "살리실산(BHA)", "글리세린",
+    "알란토인", "스쿠알란", "EGF",
+]
+SCALP_INGREDIENT_LIST = [
+    "징크피리치온", "살리실산", "살리실산(BHA)", "바이오틴",
+    "판테놀", "판테놀 (두피용)", "나이아신아마이드",
+    "비타민C", "히알루론산", "세라마이드", "티트리 오일",
+    "로즈마리 오일", "멘톨", "소듐PCA",
+]
+SKIN_INGREDIENT_STR  = ", ".join(SKIN_INGREDIENT_LIST)
+SCALP_INGREDIENT_STR = ", ".join(SCALP_INGREDIENT_LIST)
+
 # ── AI 분석 프롬프트 ──────────────────────────────────
-SKIN_ANALYSIS_PROMPT = """
+SKIN_ANALYSIS_PROMPT = f"""
 당신은 피부과학 전문가입니다. 업로드된 피부 현미경(클로즈업) 사진을 분석하여
 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트는 절대 포함하지 마세요.
 
-{
+{{
   "wrinkle_score": 0~100,
   "pore_score": 0~100,
   "texture_score": 0~100,
@@ -227,16 +250,20 @@ SKIN_ANALYSIS_PROMPT = """
   "key_concerns": ["주요 고민 1", "주요 고민 2"],
   "recommended_ingredients": ["성분1", "성분2", "성분3", "성분4"],
   "care_advice": "생활 관리 조언 (80자 이내)"
-}
+}}
+
 점수 기준: 높을수록 좋음 (100=최상, 0=매우불량)
 사진이 불명확해도 최대한 추정하여 응답하세요.
+
+※ recommended_ingredients 는 반드시 아래 목록에서만 선택하세요. 목록 외 성분명은 절대 사용하지 마세요.
+허용 성분 목록: {SKIN_INGREDIENT_STR}
 """
 
-SCALP_ANALYSIS_PROMPT = """
+SCALP_ANALYSIS_PROMPT = f"""
 당신은 두피·모발 전문가입니다. 업로드된 두피 현미경(클로즈업) 사진을 분석하여
 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트는 절대 포함하지 마세요.
 
-{
+{{
   "overall_score": 0~100,
   "scalp_type": "지성|건성|민감성|정상|복합성",
   "keratin_score": 0~100,
@@ -257,7 +284,7 @@ SCALP_ANALYSIS_PROMPT = """
   "key_concerns": ["주요 고민 1", "주요 고민 2"],
   "recommended_ingredients": ["성분1", "성분2", "성분3", "성분4"],
   "care_advice": "두피·모발 생활 관리 조언 (80자 이내)"
-}
+}}
 
 점수 기준: 높을수록 좋음 (100=최상, 0=매우불량)
 각 지표 설명:
@@ -269,6 +296,9 @@ SCALP_ANALYSIS_PROMPT = """
   hair_damage_score       = 큐티클 손상 없을수록 높음
   hair_loss_risk_score    = 탈모 위험 낮을수록 높음 (참고용)
 사진이 불명확해도 최대한 추정하여 응답하세요.
+
+※ recommended_ingredients 는 반드시 아래 목록에서만 선택하세요. 목록 외 성분명은 절대 사용하지 마세요.
+허용 성분 목록: {SCALP_INGREDIENT_STR}
 """
 
 # ── 헬퍼 함수 ─────────────────────────────────────────
@@ -314,10 +344,15 @@ def get_concentration(ingredient, skin_type):
         "티트리 오일":     ("0.5~2%", "두피 항균·진정"),
         "티트리오일":      ("0.5~2%", "두피 항균·진정"),
         "티트리":          ("0.5~2%", "두피 항균·진정"),
+        "로즈마리 오일":   ("0.5~1%", "두피 혈행 촉진"),
+        "멘톨":            ("0.1~0.5%", "두피 청량감·항균"),
+        "소듐PCA":         ("2~5%",   "두피 보습"),
+        "알란토인":        ("0.1~0.5%", "두피·피부 진정"),
+        "스쿠알란":        ("3~5%",   "산화 안정적 오일"),
+        "글리세린":        ("3~5%",   "기초 보습"),
     }
     d = ING_DATA.get(ingredient)
     if not d:
-        # 부분 일치 탐색
         for key in ING_DATA:
             if key in ingredient or ingredient in key:
                 d = ING_DATA[key]
@@ -434,9 +469,10 @@ def analyze_scalp(images, api_key, body_parts=None):
 def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=20):
     BASE_WEIGHT = {
         "히알루론산": 35, "세라마이드": 20, "나이아신아마이드": 20,
-        "판테놀": 15, "비타민C": 15, "비타민C 유도체": 15,
+        "판테놀": 25, "비타민C": 15, "비타민C 유도체": 15,
         "펩타이드": 15, "아데노신": 10, "레티놀": 8,
         "AHA": 10, "BHA": 8, "EGF": 5,
+        "글리세린": 20, "알란토인": 10, "스쿠알란": 10,
     }
     boost = {"낮음": 1.0, "보통": 1.2, "높음": 1.5, "매우높음": 1.8}.get(ceei_grade, 1.0)
     antioxidants  = {"비타민C", "비타민C 유도체", "나이아신아마이드", "펩타이드", "레티놀"}
@@ -459,10 +495,10 @@ def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=20):
     ml_dict = {ing: round(total_ml * pct / 100, 1) for ing, pct in ratios.items()}
 
     order_group = {
-        1: {"히알루론산", "판테놀"},
+        1: {"히알루론산", "판테놀", "글리세린"},
         2: {"나이아신아마이드", "비타민C", "비타민C 유도체", "펩타이드"},
-        3: {"아데노신", "EGF", "레티놀"},
-        4: {"세라마이드", "AHA", "BHA"},
+        3: {"아데노신", "EGF", "레티놀", "알란토인"},
+        4: {"세라마이드", "AHA", "BHA", "스쿠알란"},
     }
     steps = {}
     for ing in ingredients:
@@ -477,7 +513,7 @@ def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=20):
         5: "기타 성분 첨가",
     }
     ordered_steps = [
-        {"step": g, "label": step_labels.get(g, "성분 첨가"), "items": steps[g]}
+        {"label": step_labels.get(g, "성분 첨가"), "items": steps[g]}
         for g in sorted(steps)
     ]
     return {"ratios": ratios, "ml": ml_dict, "steps": ordered_steps, "total_ml": total_ml}
@@ -490,6 +526,7 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, ceei_grade, total_ml=
         "살리실산(BHA)":   20,
         "바이오틴":        20,
         "판테놀 (두피용)": 25,
+        "판테놀":          25,
         "나이아신아마이드":15,
         "비타민C":         10,
         "비타민C 유도체":  10,
@@ -498,6 +535,9 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, ceei_grade, total_ml=
         "티트리 오일":     15,
         "티트리오일":      15,
         "티트리":          15,
+        "로즈마리 오일":   10,
+        "멘톨":            5,
+        "소듐PCA":         15,
     }
 
     keratin_score = scalp_result.get("keratin_score", 70)
@@ -509,20 +549,26 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, ceei_grade, total_ml=
 
     env_boost = {"낮음": 1.0, "보통": 1.2, "높음": 1.5, "매우높음": 1.8}.get(ceei_grade, 1.0)
 
+    def is_panthenol(i): return i in {"판테놀", "판테놀 (두피용)"}
+    def is_salicylic(i): return i in {"살리실산", "살리실산(BHA)", "BHA"}
+    def is_teatree(i):   return i in {"티트리 오일", "티트리오일", "티트리", "Tea Tree"}
+    def is_zinc(i):      return i in {"징크피리치온"}
+    def is_biotin(i):    return i in {"바이오틴"}
+
     weights = {}
     for ing in ingredients:
         w = BASE_WEIGHT.get(ing, 10)
-        if ing in {"살리실산", "살리실산(BHA)", "징크피리치온", "티트리 오일", "티트리오일", "티트리"} and keratin_score < 50:
+        if (is_salicylic(ing) or is_zinc(ing) or is_teatree(ing)) and keratin_score < 50:
             w = round(w * 1.5)
-        if ing in {"살리실산", "살리실산(BHA)"} and pore_score < 50:
+        if is_salicylic(ing) and pore_score < 50:
             w = round(w * 1.3)
-        if ing in {"바이오틴", "판테놀 (두피용)"} and thickness < 50:
+        if (is_biotin(ing) or is_panthenol(ing)) and thickness < 50:
             w = round(w * 1.5)
-        if ing in {"판테놀 (두피용)", "히알루론산"} and color_score < 50:
+        if is_panthenol(ing) and color_score < 50:
             w = round(w * 1.4)
-        if ing in {"판테놀 (두피용)", "히알루론산"} and moisture < 50:
+        if (is_panthenol(ing) or ing == "히알루론산") and moisture < 50:
             w = round(w * 1.3)
-        if ing in {"바이오틴", "판테놀 (두피용)"} and damage < 50:
+        if (is_biotin(ing) or is_panthenol(ing)) and damage < 50:
             w = round(w * 1.3)
         if ing in {"나이아신아마이드", "비타민C", "비타민C 유도체"}:
             w = round(w * env_boost)
@@ -537,11 +583,11 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, ceei_grade, total_ml=
     ml_dict = {ing: round(total_ml * pct / 100, 1) for ing, pct in ratios.items()}
 
     order_group = {
-        1: {"히알루론산", "판테놀 (두피용)"},
+        1: {"히알루론산", "판테놀 (두피용)", "판테놀", "소듐PCA"},
         2: {"나이아신아마이드", "비타민C", "비타민C 유도체"},
         3: {"바이오틴"},
         4: {"징크피리치온", "살리실산", "살리실산(BHA)", "세라마이드",
-            "티트리 오일", "티트리오일", "티트리"},
+            "티트리 오일", "티트리오일", "티트리", "로즈마리 오일", "멘톨"},
     }
     steps = {}
     for ing in ingredients:
@@ -556,27 +602,36 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, ceei_grade, total_ml=
         5: "기타 성분 첨가",
     }
     ordered_steps = [
-        {"step": g, "label": step_labels.get(g, "성분 첨가"), "items": steps[g]}
+        {"label": step_labels.get(g, "성분 첨가"), "items": steps[g]}
         for g in sorted(steps)
     ]
     return {"ratios": ratios, "ml": ml_dict, "steps": ordered_steps, "total_ml": total_ml}
 
 # ── 쿠팡 링크 헬퍼 함수 ───────────────────────────────
-def _find_cp(ing):
-    """완전일치 → 부분일치 순으로 COUPANG_LINKS 탐색, 없으면 {}"""
-    cp = COUPANG_LINKS.get(ing, {})
-    if cp:
-        return cp
+def _find_cp(ing: str) -> dict:
+    """완전일치 → 부분일치 → 쿠팡 검색 자동 링크 순 탐색"""
+    # 1단계: 완전 일치
+    if ing in COUPANG_LINKS:
+        return COUPANG_LINKS[ing]
+    # 2단계: 부분 일치
     for key in COUPANG_LINKS:
         if key in ing or ing in key:
             return COUPANG_LINKS[key]
-    return {}
+    # 3단계: 쿠팡 검색 자동 링크 생성
+    search_query = ing.replace(" ", "+")
+    return {
+        "url": f"https://www.coupang.com/np/search?q={search_query}+원액",
+        "name": ing
+    }
 
 def _cp_link_tag(ing, font_size="8px"):
     url = _find_cp(ing).get("url", "")
     if not url:
         return ""
-    return f'<a href="{url}" target="_blank" style="color:#ff6b35;font-size:{font_size};">🛒</a>'
+    return (
+        f'<a href="{url}" target="_blank" '
+        f'style="color:#ff6b35;font-size:{font_size};text-decoration:none;">🛒</a>'
+    )
 
 def _cp_buy_btn(ing):
     url = _find_cp(ing).get("url", "")
@@ -592,7 +647,7 @@ def _cp_mix_link(ing):
     url = _find_cp(ing).get("url", "")
     if not url:
         return ""
-    return f'<a href="{url}" target="_blank" style="color:#ff6b35;">🛒</a>'
+    return f'<a href="{url}" target="_blank" style="color:#ff6b35;text-decoration:none;">🛒</a>'
 
 # ── 혼합 비율 카드 렌더링 ─────────────────────────────
 def show_mixing_card(mixing, title, is_scalp=False):
@@ -626,12 +681,13 @@ def show_mixing_card(mixing, title, is_scalp=False):
         "color:#0f3460;margin-bottom:0.5rem;'>📋 제조 순서</div>",
         unsafe_allow_html=True
     )
-    for s in mixing["steps"]:
+    # ✅ enumerate(start=1) 로 1부터 번호 표시
+    for display_num, s in enumerate(mixing["steps"], start=1):
         items_str = " + ".join(s["items"])
         st.markdown(
             f"<div style='display:flex;align-items:center;gap:0.5rem;"
             f"padding:0.4rem 0;font-size:0.83rem;color:#333;'>"
-            f"<span class='step-badge'>{s['step']}</span>"
+            f"<span class='step-badge'>{display_num}</span>"
             f"<span><b>{s['label']}</b> — {items_str}</span></div>",
             unsafe_allow_html=True
         )
@@ -817,13 +873,20 @@ def show_skin_result(result, air, region, residence_years_str,
 </div>""", unsafe_allow_html=True)
 
     scores_dict = {
-        "주름": result.get("wrinkle_score",0),
-        "모공": result.get("pore_score",0),
+        "주름":   result.get("wrinkle_score",0),
+        "모공":   result.get("pore_score",0),
         "피부결": result.get("texture_score",0),
         "피부톤": result.get("tone_score",0),
-        "수분": result.get("moisture_score",0),
+        "수분":   result.get("moisture_score",0),
     }
-    priority = sorted(scores_dict.items(), key=lambda x: x[1])[:3]
+    # ✅ 0점 제외 후 정렬, 전체 0점이면 fallback
+    priority = sorted(
+        [(k, v) for k, v in scores_dict.items() if v > 0],
+        key=lambda x: x[1]
+    )[:3]
+    if not priority:
+        priority = sorted(scores_dict.items(), key=lambda x: x[1])[:3]
+
     st.markdown("<div class='card'><div class='card-label'>우선 개선 항목</div>",
                 unsafe_allow_html=True)
     for i, (lbl, score) in enumerate(priority):
@@ -964,7 +1027,14 @@ def show_scalp_result(result, air, region, residence_years_str,
         "수분·유분 밸런스": result.get("moisture_balance_score", 0),
         "모발 손상도":      result.get("hair_damage_score", 0),
     }
-    priority = sorted(priority_scores.items(), key=lambda x: x[1])[:3]
+    # ✅ 0점 제외 후 정렬, 전체 0점이면 fallback
+    priority = sorted(
+        [(k, v) for k, v in priority_scores.items() if v > 0],
+        key=lambda x: x[1]
+    )[:3]
+    if not priority:
+        priority = sorted(priority_scores.items(), key=lambda x: x[1])[:3]
+
     st.markdown("<div class='card'><div class='card-label'>우선 개선 항목 (두피)</div>",
                 unsafe_allow_html=True)
     for i, (lbl, score) in enumerate(priority):
@@ -1049,9 +1119,22 @@ def generate_skin_report_html(result, air, region, residence_years,
             f"background:linear-gradient(90deg,#2e7d32,#4CAF50);'></div></div></div>"
             for ing, pct in sorted(mixing["ratios"].items(), key=lambda x: -x[1])
         ])
+        # ✅ enumerate(start=1) 적용
+        steps_html = "".join([
+            f"<div style='display:flex;align-items:center;gap:6px;"
+            f"padding:4px 0;font-size:9px;border-bottom:1px solid #f0f0f0;'>"
+            f"<span style='background:#0f3460;color:white;border-radius:50%;"
+            f"width:18px;height:18px;display:inline-flex;align-items:center;"
+            f"justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;'>"
+            f"{display_num}</span>"
+            f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
+            for display_num, s in enumerate(mixing["steps"], start=1)
+        ])
         mixing_section = (
             f"<div class='section'><div class='stitle'>맞춤 혼합 비율 (총 {mixing['total_ml']}ml)</div>"
             f"{mix_rows}"
+            f"<div style='margin-top:8px;'><div style='font-size:8px;font-weight:700;"
+            f"color:#0f3460;margin-bottom:5px;'>제조 순서</div>{steps_html}</div>"
             f"<div style='font-size:7px;color:#e65100;padding:5px 8px;"
             f"background:#fff8f0;border-radius:4px;margin-top:6px;'>{COUPANG_DISCLAIMER}</div></div>"
         )
@@ -1204,9 +1287,22 @@ def generate_scalp_report_html(result, air, region, residence_years,
             f"background:linear-gradient(90deg,#1565c0,#42a5f5);'></div></div></div>"
             for ing, pct in sorted(mixing["ratios"].items(), key=lambda x: -x[1])
         ])
+        # ✅ enumerate(start=1) 적용
+        steps_html = "".join([
+            f"<div style='display:flex;align-items:center;gap:6px;"
+            f"padding:4px 0;font-size:9px;border-bottom:1px solid #f0f0f0;'>"
+            f"<span style='background:#1b5e20;color:white;border-radius:50%;"
+            f"width:18px;height:18px;display:inline-flex;align-items:center;"
+            f"justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;'>"
+            f"{display_num}</span>"
+            f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
+            for display_num, s in enumerate(mixing["steps"], start=1)
+        ])
         mixing_section = (
             f"<div class='section'><div class='stitle'>두피 맞춤 혼합 비율 (총 {mixing['total_ml']}ml)</div>"
             f"{mix_rows}"
+            f"<div style='margin-top:8px;'><div style='font-size:8px;font-weight:700;"
+            f"color:#1b5e20;margin-bottom:5px;'>제조 순서</div>{steps_html}</div>"
             f"<div style='font-size:7px;color:#e65100;padding:5px 8px;"
             f"background:#fff8f0;border-radius:4px;margin-top:6px;'>{COUPANG_DISCLAIMER}</div></div>"
         )
@@ -1329,8 +1425,13 @@ def generate_skin_order_html(result, air, region, residence_years,
         "판테놀":         "진정·보습",
         "AHA":            "각질 제거",
         "BHA":            "모공 각질 용해",
+        "살리실산":       "각질 용해",
+        "살리실산(BHA)":  "각질 용해",
         "아데노신":       "주름 개선(식약처)",
         "EGF":            "세포 재생·탄력",
+        "글리세린":       "기초 보습",
+        "알란토인":       "피부 진정·재생",
+        "스쿠알란":       "보습·장벽 강화",
     }
 
     ing_rows_parts = []
@@ -1357,6 +1458,7 @@ def generate_skin_order_html(result, air, region, residence_years,
         )
     ing_rows = "".join(ing_rows_parts)
 
+    # ✅ enumerate(start=1) 적용
     steps_html = ""
     if mixing:
         steps_html = "".join([
@@ -1365,9 +1467,9 @@ def generate_skin_order_html(result, air, region, residence_years,
             f"<span style='background:#0f3460;color:white;border-radius:50%;"
             f"width:20px;height:20px;display:inline-flex;align-items:center;"
             f"justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;'>"
-            f"{s['step']}</span>"
+            f"{display_num}</span>"
             f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
-            for s in mixing["steps"]
+            for display_num, s in enumerate(mixing["steps"], start=1)
         ])
 
     return f"""<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -1455,6 +1557,7 @@ def generate_scalp_order_html(result, air, region, residence_years,
         "살리실산(BHA)":   "두피 각질 용해",
         "바이오틴":        "모발 강화·성장 촉진",
         "판테놀 (두피용)": "두피 진정·보습",
+        "판테놀":          "두피 진정·보습",
         "나이아신아마이드":"두피 피지 조절·진정",
         "비타민C":         "두피 항산화",
         "비타민C 유도체":  "두피 항산화·안정형",
@@ -1463,6 +1566,9 @@ def generate_scalp_order_html(result, air, region, residence_years,
         "티트리 오일":     "두피 항균·항염·진정",
         "티트리오일":      "두피 항균·항염·진정",
         "티트리":          "두피 항균·항염·진정",
+        "로즈마리 오일":   "두피 혈행 촉진·성장",
+        "멘톨":            "두피 청량감·항균",
+        "소듐PCA":         "두피 보습",
     }
 
     ing_rows_parts = []
@@ -1489,6 +1595,7 @@ def generate_scalp_order_html(result, air, region, residence_years,
         )
     ing_rows = "".join(ing_rows_parts)
 
+    # ✅ enumerate(start=1) 적용
     steps_html = ""
     if mixing:
         steps_html = "".join([
@@ -1497,9 +1604,9 @@ def generate_scalp_order_html(result, air, region, residence_years,
             f"<span style='background:#1b5e20;color:white;border-radius:50%;"
             f"width:20px;height:20px;display:inline-flex;align-items:center;"
             f"justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;'>"
-            f"{s['step']}</span>"
+            f"{display_num}</span>"
             f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
-            for s in mixing["steps"]
+            for display_num, s in enumerate(mixing["steps"], start=1)
         ])
 
     return f"""<!DOCTYPE html><html><head><meta charset="utf-8">
