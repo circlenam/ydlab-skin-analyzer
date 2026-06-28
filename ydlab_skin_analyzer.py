@@ -655,12 +655,15 @@ def get_marketing_sheet():
         creds  = Credentials.from_service_account_info(cd,scopes=scopes)
         client = gspread.authorize(creds)
         sh = client.open_by_key(st.secrets.get("GOOGLE_SHEETS_ID",""))
-        try:    ws = sh.worksheet("marketing_opt")
-        except: ws = sh.add_worksheet("marketing_opt",rows=200,cols=4)
-                ws.append_row(["participant_id","email","opt_in_date","region"])
+        try:
+            ws = sh.worksheet("marketing_opt")
+        except Exception:
+            ws = sh.add_worksheet("marketing_opt", rows=200, cols=4)
+            ws.append_row(["participant_id","email","opt_in_date","region"])
         return ws
     except Exception:
         return None
+
 
 def save_marketing_opt(pid, email, region):
     try:
