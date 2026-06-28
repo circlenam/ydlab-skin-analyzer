@@ -1,1281 +1,549 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SKIN-X | YD Lab 피부·두피 환경 분석 플랫폼</title>
-<meta name="description" content="스마트폰 하나로 피부·두피를 분석하고 환경오염 맞춤 화장품을 처방받으세요">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#070d18;
-  --bg2:#0c1628;
-  --bg3:#111f38;
-  --border:#1a3055;
-  --border2:#2a4a7a;
-  --accent:#3b9eff;
-  --accent2:#00d4aa;
-  --warn:#ff8c42;
-  --danger:#ff4560;
-  --text:#dce8f8;
-  --text2:#7a9cc0;
-  --text3:#3d5a7a;
-  --green:#00d4aa;
-  --mono:'IBM Plex Mono',monospace;
-  --sans:'IBM Plex Sans KR',sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:14px;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKIN-X by YD Lab – 피부·두피 환경 분석 플랫폼</title>
+    <meta name="description" content="스마트폰 하나로 피부·두피를 분석하고 환경오염 맞춤 화장품을 처방받으세요">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2E7D6B;
+            --secondary: #F0F7F4;
+            --accent: #FF6B6B;
+            --dark: #1A1A2E;
+            --gray: #6B7280;
+            --white: #FFFFFF;
+            --border: #E5E7EB;
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--dark); line-height: 1.6; }
+        nav { position: fixed; top: 0; width: 100%; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 1000; padding: 0 5%; }
+        .nav-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 64px; }
+        .nav-logo { font-size: 1.4rem; font-weight: 700; color: var(--primary); text-decoration: none; }
+        .nav-logo span { color: var(--accent); }
+        .nav-menu { display: flex; gap: 2rem; list-style: none; }
+        .nav-menu a { text-decoration: none; color: var(--gray); font-size: 0.95rem; transition: color 0.2s; }
+        .nav-menu a:hover { color: var(--primary); }
+        .nav-buttons { display: flex; gap: 0.8rem; }
+        .btn { padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; display: inline-block; }
+        .btn-outline { border: 2px solid var(--primary); color: var(--primary); background: transparent; }
+        .btn-outline:hover { background: var(--primary); color: var(--white); }
+        .btn-primary { background: var(--primary); color: var(--white); border: 2px solid var(--primary); }
+        .btn-primary:hover { background: #245f55; border-color: #245f55; }
+        .btn-large { padding: 0.9rem 2rem; font-size: 1.05rem; border-radius: 10px; }
+        .btn-accent { background: var(--accent); color: var(--white); border: 2px solid var(--accent); }
+        .btn-accent:hover { background: #e05555; border-color: #e05555; }
+        .btn-green { background: #2E7D6B; color: var(--white); border: 2px solid #2E7D6B; }
+        .btn-green:hover { background: #245f55; border-color: #245f55; }
+        section { padding: 90px 5%; }
+        .section-inner { max-width: 1100px; margin: 0 auto; }
+        .section-tag { display: inline-block; background: var(--secondary); color: var(--primary); font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 20px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
+        .section-title { font-size: 2rem; font-weight: 700; line-height: 1.3; margin-bottom: 1rem; color: var(--dark); }
+        .section-sub { font-size: 1.05rem; color: var(--gray); max-width: 600px; margin-bottom: 3rem; }
+        #hero { min-height: 100vh; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364), url('skinx-bg02.png') center/cover no-repeat; background-blend-mode: overlay; display: flex; align-items: center; padding: 100px 5% 80px; position: relative; overflow: hidden; }
+        #hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(46,125,107,0.3) 0%, transparent 70%); border-radius: 50%; }
+        .hero-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(46,125,107,0.2); border: 1px solid rgba(46,125,107,0.5); color: #7ecdc0; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; margin-bottom: 1.5rem; }
+        .hero-title { font-size: 2.8rem; font-weight: 800; color: var(--white); line-height: 1.25; margin-bottom: 1.5rem; }
+        .hero-title .highlight { color: #7ecdc0; }
+        .hero-desc { font-size: 1.1rem; color: rgba(255,255,255,0.75); margin-bottom: 2rem; line-height: 1.8; }
+        .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .hero-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 2rem; backdrop-filter: blur(10px); }
+        .pm-card-title { color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 0.8rem; }
+        .pm-value { font-size: 3.5rem; font-weight: 800; color: var(--accent); line-height: 1; margin-bottom: 0.3rem; }
+        .pm-unit { font-size: 1rem; color: rgba(255,255,255,0.5); margin-bottom: 1rem; }
+        .pm-status { display: inline-block; background: rgba(255,107,107,0.2); color: var(--accent); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; }
+        .pm-effects { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+        .pm-effects li { color: rgba(255,255,255,0.7); font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+        .pm-effects li::before { content: '⚠'; font-size: 0.8rem; }
+        .district-selector { margin-bottom: 1rem; }
+        .district-selector select { width: 100%; padding: 0.6rem 2rem 0.6rem 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); color: var(--white); font-size: 0.9rem; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; font-family: inherit; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='rgba(255,255,255,0.6)' d='M5 7L0 2h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.9rem center; transition: border-color 0.2s; }
+        .district-selector select option { background: #1a1a2e; color: white; }
+        .district-selector select:focus { border-color: #7ecdc0; }
+        #pm-loading { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 0; }
+        .pm-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #7ecdc0; border-radius: 50%; animation: pm-spin 0.8s linear infinite; flex-shrink: 0; }
+        @keyframes pm-spin { to { transform: rotate(360deg); } }
+        .pm-multi { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin: 0.6rem 0; }
+        .pm-multi-item { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 0.35rem 0.6rem; font-size: 0.78rem; color: rgba(255,255,255,0.65); display: flex; justify-content: space-between; align-items: center; }
+        .pm-multi-item .mval { font-weight: 700; color: rgba(255,255,255,0.9); }
+        .pm-dashboard-link { display: block; margin-top: 1rem; text-align: center; font-size: 0.8rem; color: rgba(126,205,192,0.75); text-decoration: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; transition: color 0.2s; }
+        .pm-dashboard-link:hover { color: #7ecdc0; }
+        #stats { background: var(--primary); padding: 50px 5%; }
+        .stats-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center; }
+        .stat-item .number { font-size: 2.2rem; font-weight: 800; color: var(--white); }
+        .stat-item .label { font-size: 0.9rem; color: rgba(255,255,255,0.75); margin-top: 0.3rem; }
+        #about { background: var(--white); }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        .about-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .about-card { background: var(--secondary); border-radius: 14px; padding: 1.5rem; }
+        .about-card .icon { font-size: 1.8rem; margin-bottom: 0.8rem; }
+        .about-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark); }
+        .about-card p { font-size: 0.85rem; color: var(--gray); }
+        #technology { background: var(--secondary); }
+        .tech-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .tech-card { background: var(--white); border-radius: 16px; padding: 2rem; border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; }
+        .tech-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+        .tech-icon { width: 52px; height: 52px; background: var(--secondary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1.2rem; }
+        .tech-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--dark); }
+        .tech-card p { font-size: 0.9rem; color: var(--gray); line-height: 1.7; }
+        .tech-tag { display: inline-block; background: var(--secondary); color: var(--primary); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 6px; margin-top: 1rem; }
+        #howto { background: var(--white); }
+        .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; position: relative; }
+        .steps-grid::before { content: ''; position: absolute; top: 40px; left: 12.5%; width: 75%; height: 2px; background: var(--border); z-index: 0; }
+        .step-card { text-align: center; position: relative; z-index: 1; }
+        .step-number { width: 80px; height: 80px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.2rem; border: 4px solid var(--white); box-shadow: 0 0 0 2px var(--primary); }
+        .step-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .step-card p { font-size: 0.875rem; color: var(--gray); line-height: 1.6; }
+        #sample { background: var(--secondary); }
+        .sample-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+        .sample-screen { background: var(--white); border-radius: 20px; padding: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .sample-screen-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem; }
+        .score-item { background: var(--secondary); border-radius: 10px; padding: 0.8rem; }
+        .score-label { font-size: 0.75rem; color: var(--gray); margin-bottom: 0.3rem; }
+        .score-bar-wrap { background: var(--border); border-radius: 4px; height: 6px; margin-bottom: 0.3rem; }
+        .score-bar { height: 6px; border-radius: 4px; background: var(--primary); }
+        .score-num { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
+        .ceei-box { background: linear-gradient(135deg, var(--primary), #1a5c4f); border-radius: 12px; padding: 1rem; color: var(--white); text-align: center; }
+        .ceei-label { font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.3rem; }
+        .ceei-value { font-size: 2rem; font-weight: 800; }
+        .ceei-desc { font-size: 0.75rem; opacity: 0.7; margin-top: 0.2rem; }
+        .sample-features { display: flex; flex-direction: column; gap: 1.2rem; }
+        .feature-item { display: flex; gap: 1rem; align-items: flex-start; }
+        .feature-icon { width: 44px; height: 44px; background: var(--secondary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .feature-item h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .feature-item p { font-size: 0.85rem; color: var(--gray); }
+        #news { background: var(--white); }
+        .news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .news-card { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s; }
+        .news-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .news-card-header { background: var(--secondary); padding: 1.5rem; font-size: 2rem; text-align: center; }
+        .news-card-body { padding: 1.2rem; }
+        .news-tag { display: inline-block; background: var(--secondary); color: var(--primary); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 6px; margin-bottom: 0.6rem; }
+        .news-card-body h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.5; }
+        .news-card-body p { font-size: 0.85rem; color: var(--gray); }
+        .news-date { font-size: 0.8rem; color: var(--gray); margin-top: 0.8rem; }
 
-/* ── 상단 티커 ── */
-.tech-ticker{background:linear-gradient(90deg,rgba(59,158,255,.08),rgba(0,212,170,.08));border-bottom:1px solid rgba(59,158,255,.15);padding:5px 0;overflow:hidden;white-space:nowrap;}
-.tech-ticker-inner{display:inline-block;animation:ticker 40s linear infinite;font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;}
-@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-.tech-tag{display:inline-block;margin:0 28px;color:var(--accent2);}
-.tech-tag span{color:var(--text3);}
+        /* ── CTA 섹션 ── */
+        #cta { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); text-align: center; }
+        #cta .section-title { color: var(--white); font-size: 2.2rem; }
+        #cta .section-sub { color: rgba(255,255,255,0.7); margin: 0 auto 2rem; }
+        .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.5rem; }
 
-/* ── 헤더 ── */
-header{
-  background:linear-gradient(180deg,#0a1525 0%,transparent 100%);
-  border-bottom:1px solid var(--border);
-  padding:0 28px;height:70px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:1000;
-  backdrop-filter:blur(12px);
-}
-.logo-wrap{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;}
-.logo-badge{
-  background:linear-gradient(135deg,#1a4a8a,#0d3060);
-  border:1px solid rgba(59,158,255,.3);
-  color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;
-  padding:4px 10px;border-radius:4px;letter-spacing:1.5px;
-  display:flex;flex-direction:column;align-items:center;gap:1px;
-}
-.logo-badge-sub{font-size:8px;color:var(--accent2);letter-spacing:2px;}
-.logo-text{font-size:16px;font-weight:700;line-height:1.3;}
-.logo-sub{font-size:11px;color:var(--text2);margin-top:2px;}
-.header-right{display:flex;align-items:center;gap:14px;}
-.live-dot{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--accent2);}
-.live-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent2);animation:livepulse 2s infinite;}
-@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(0,212,170,.5);}70%{box-shadow:0 0 0 6px rgba(0,212,170,0);}100%{box-shadow:0 0 0 0 rgba(0,212,170,0);}}
-.api-badge{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:3px;border:1px solid;transition:all .3s;}
-.api-live{color:var(--accent2);border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.08);}
-.api-loading{color:var(--warn);border-color:rgba(255,140,66,.3);background:rgba(255,140,66,.08);}
-.api-demo{color:var(--text3);border-color:var(--border);background:var(--bg3);}
-.update-time{font-family:var(--mono);font-size:11px;color:var(--text3);}
-.header-nav{display:flex;align-items:center;gap:4px;}
-.header-nav a{
-  font-family:var(--mono);font-size:11px;color:var(--text3);
-  text-decoration:none;padding:5px 10px;border-radius:3px;
-  transition:color .2s,background .2s;
-}
-.header-nav a:hover{color:var(--text);background:var(--bg3);}
-.header-cta{
-  font-family:var(--mono);font-size:11px;font-weight:600;
-  padding:7px 16px;border-radius:4px;
-  background:linear-gradient(135deg,rgba(59,158,255,.2),rgba(0,212,170,.15));
-  border:1px solid rgba(59,158,255,.4);
-  color:var(--accent);text-decoration:none;
-  transition:all .2s;letter-spacing:.5px;
-}
-.header-cta:hover{background:linear-gradient(135deg,rgba(59,158,255,.35),rgba(0,212,170,.25));border-color:var(--accent);}
+        /* ── 분석 시작 박스 (코드 입력 대체) ── */
+        .start-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .start-box p {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+            margin-bottom: 1.4rem;
+            line-height: 1.7;
+        }
+        .start-box .start-notice {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 1rem;
+            line-height: 1.6;
+        }
+        .btn-start {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: #2E7D6B;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn-start:hover { background: #245f55; }
 
-/* ── 기술 배너 ── */
-.tech-banner{
-  background:linear-gradient(135deg,rgba(11,28,55,.9),rgba(7,20,40,.9));
-  border-bottom:1px solid var(--border);
-  padding:8px 28px;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
-}
-.tech-pills{display:flex;gap:6px;flex-wrap:wrap;}
-.tech-pill{font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 10px;border-radius:12px;letter-spacing:.5px;border:1px solid;}
-.pill-a{color:#00d4aa;border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.06);}
-.pill-b{color:#3b9eff;border-color:rgba(59,158,255,.3);background:rgba(59,158,255,.06);}
-.pill-c{color:#ff8c42;border-color:rgba(255,140,66,.3);background:rgba(255,140,66,.06);}
-.pill-d{color:#b088ff;border-color:rgba(176,136,255,.3);background:rgba(176,136,255,.06);}
-.pill-e{color:#ffd600;border-color:rgba(255,214,0,.3);background:rgba(255,214,0,.06);}
-.patent-tag{font-family:var(--mono);font-size:9px;color:var(--warn);border:1px solid rgba(255,140,66,.3);background:rgba(255,140,66,.06);padding:3px 10px;border-radius:3px;letter-spacing:.5px;}
-
-/* ── 경보 바 ── */
-.alert-bar{
-  background:linear-gradient(90deg,rgba(255,69,96,.12),rgba(255,140,66,.08));
-  border-bottom:1px solid rgba(255,69,96,.3);
-  padding:7px 28px;font-size:12px;color:var(--warn);
-  display:none;align-items:center;gap:10px;
-}
-.alert-bar.show{display:flex;}
-.alert-tag{background:var(--danger);color:#fff;font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:2px;flex-shrink:0;}
-
-/* ── 메인 3단 레이아웃 ── */
-.layout{
-  display:grid;
-  grid-template-columns:300px 1fr 300px;
-  min-height:calc(100vh - 120px);
-}
-.panel{
-  background:var(--bg2);border-right:1px solid var(--border);
-  overflow-y:auto;padding:14px;
-  display:flex;flex-direction:column;gap:12px;
-}
-.panel:last-child{border-right:none;border-left:1px solid var(--border);}
-.panel::-webkit-scrollbar{width:3px;}
-.panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* ── 섹션 공통 ── */
-.sec-title{
-  font-family:var(--mono);font-size:11px;font-weight:600;
-  color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;
-  padding-bottom:8px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-}
-.sec-badge{font-size:9px;color:var(--text3);background:var(--bg3);padding:2px 6px;border-radius:2px;font-weight:400;letter-spacing:0;}
-.sec-badge.live{color:var(--accent2);background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);}
-.sec-badge.dev{color:#3b9eff;background:rgba(59,158,255,.08);border:1px solid rgba(59,158,255,.2);}
-.sec-badge.warn{color:var(--warn);background:rgba(255,140,66,.08);border:1px solid rgba(255,140,66,.2);}
-.sec-badge.patent{color:#b088ff;background:rgba(176,136,255,.08);border:1px solid rgba(176,136,255,.2);}
-
-/* ── 공기질 패널 ── */
-.pollutant-item{margin-bottom:10px;}
-.poll-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
-.poll-label{font-size:12px;color:var(--text2);}
-.poll-val{font-family:var(--mono);font-size:16px;font-weight:600;}
-.poll-unit{font-size:9px;color:var(--text3);margin-left:2px;}
-.poll-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
-.poll-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
-.fill-d{background:linear-gradient(90deg,#ff4560,#ff1744);}
-.fill-w{background:linear-gradient(90deg,#ff8c42,#ff6d00);}
-.fill-y{background:linear-gradient(90deg,#ffd600,#ffab00);}
-.fill-o{background:linear-gradient(90deg,#00d4aa,#00bfa5);}
-.poll-grade{font-family:var(--mono);font-size:10px;margin-top:3px;text-align:right;}
-.c-d{color:#ff4560;}.c-w{color:#ff8c42;}.c-y{color:#ffd600;}.c-o{color:#00d4aa;}.c-a{color:var(--accent);}
-
-.station-info{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;padding:9px 12px;
-  font-family:var(--mono);font-size:10px;
-  display:flex;flex-direction:column;gap:4px;
-}
-.si-row{display:flex;justify-content:space-between;color:var(--text3);}
-.si-row span:last-child{color:var(--text2);}
-
-/* ── CEEI·SEEI 지수 ── */
-.index-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.idx-box{
-  border-radius:5px;padding:10px 12px;text-align:center;
-}
-.idx-box.ceei{background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.25);}
-.idx-box.seei{background:rgba(59,158,255,.07);border:1px solid rgba(59,158,255,.25);}
-.idx-name{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:1px;margin-bottom:4px;}
-.ceei .idx-name{color:var(--accent2);}
-.seei .idx-name{color:var(--accent);}
-.idx-val{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);}
-.idx-formula{font-size:9px;color:var(--text3);margin-top:4px;line-height:1.6;}
-.idx-grade{font-family:var(--mono);font-size:10px;font-weight:600;margin-top:5px;padding:2px 8px;border-radius:3px;display:inline-block;}
-.grade-low{background:rgba(0,212,170,.15);color:#00d4aa;}
-.grade-med{background:rgba(255,214,0,.12);color:#ffd600;}
-.grade-high{background:rgba(255,140,66,.15);color:#ff8c42;}
-.grade-vhigh{background:rgba(255,69,96,.15);color:#ff4560;}
-
-/* ── 지역 목록 ── */
-.region-list{display:flex;flex-direction:column;gap:4px;}
-.region-btn{
-  background:var(--bg3);border:1px solid var(--border);
-  color:var(--text2);padding:9px 12px;border-radius:5px;
-  cursor:pointer;display:flex;justify-content:space-between;align-items:center;
-  font-size:13px;font-family:var(--sans);transition:all .15s;
-}
-.region-btn:hover{border-color:var(--accent);color:var(--text);}
-.region-btn.active{background:rgba(59,158,255,.06);border-color:var(--accent);color:var(--text);}
-.region-name{font-weight:600;}
-.region-sub{font-size:10px;color:var(--text3);margin-top:1px;}
-.risk-tag{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;flex-shrink:0;}
-.risk-vhigh{background:rgba(255,69,96,.2);color:#ff4560;border:1px solid rgba(255,69,96,.3);}
-.risk-high{background:rgba(255,140,66,.2);color:#ff8c42;border:1px solid rgba(255,140,66,.3);}
-.risk-mid{background:rgba(255,214,0,.12);color:#ffd600;border:1px solid rgba(255,214,0,.3);}
-.risk-low{background:rgba(0,212,170,.15);color:#00d4aa;border:1px solid rgba(0,212,170,.3);}
-
-/* ── 중앙 패널 ── */
-.center-panel{padding:0;display:flex;flex-direction:column;overflow:hidden;}
-
-/* 히어로 */
-.hero-block{
-  padding:32px 28px 24px;
-  background:linear-gradient(180deg,rgba(11,30,60,.8) 0%,transparent 100%);
-  border-bottom:1px solid var(--border);
-}
-.hero-eyebrow{
-  font-family:var(--mono);font-size:10px;font-weight:600;
-  color:var(--accent2);letter-spacing:2px;text-transform:uppercase;
-  display:flex;align-items:center;gap:8px;margin-bottom:12px;
-}
-.hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--accent2);}
-.hero-title{font-size:26px;font-weight:700;line-height:1.3;margin-bottom:10px;}
-.hero-title .hl-green{color:var(--accent2);}
-.hero-title .hl-blue{color:var(--accent);}
-.hero-desc{font-size:13px;color:var(--text2);line-height:1.8;max-width:560px;margin-bottom:18px;}
-.hero-note{
-  font-family:var(--mono);font-size:9px;color:var(--text3);
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:4px;padding:7px 12px;line-height:1.7;
-  margin-bottom:18px;
-}
-.hero-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.btn-primary{
-  font-family:var(--mono);font-size:11px;font-weight:600;
-  padding:10px 20px;border-radius:4px;
-  background:linear-gradient(135deg,rgba(0,212,170,.25),rgba(59,158,255,.2));
-  border:1px solid rgba(0,212,170,.5);
-  color:var(--accent2);text-decoration:none;
-  transition:all .2s;letter-spacing:.5px;
-}
-.btn-primary:hover{background:linear-gradient(135deg,rgba(0,212,170,.4),rgba(59,158,255,.3));border-color:var(--accent2);}
-.btn-secondary{
-  font-family:var(--mono);font-size:11px;
-  padding:10px 18px;border-radius:4px;
-  background:transparent;border:1px solid var(--border2);
-  color:var(--text2);text-decoration:none;
-  transition:all .2s;
-}
-.btn-secondary:hover{border-color:var(--text2);color:var(--text);}
-
-/* 중앙 스크롤 영역 */
-.center-scroll{overflow-y:auto;flex:1;padding:14px;display:flex;flex-direction:column;gap:12px;}
-.center-scroll::-webkit-scrollbar{width:3px;}
-.center-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* 탭 */
-.tab-bar{display:flex;gap:4px;border-bottom:1px solid var(--border);padding-bottom:0;margin-bottom:0;}
-.tab-btn{
-  font-family:var(--mono);font-size:10px;font-weight:600;
-  padding:8px 14px;border:none;background:transparent;
-  color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
-  margin-bottom:-1px;transition:all .2s;letter-spacing:.5px;
-}
-.tab-btn:hover{color:var(--text2);}
-.tab-btn.active{color:var(--accent2);border-bottom-color:var(--accent2);}
-.tab-content{display:none;padding-top:14px;}
-.tab-content.active{display:block;}
-
-/* 결과 카드 */
-.result-wrap{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:6px;overflow:hidden;
-}
-.result-head{
-  padding:12px 16px;
-  background:linear-gradient(90deg,rgba(0,212,170,.08),rgba(59,158,255,.05));
-  border-bottom:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
-}
-.result-head.scalp-head{
-  background:linear-gradient(90deg,rgba(59,158,255,.08),rgba(176,136,255,.05));
-}
-.rh-title{font-size:13px;font-weight:600;}
-.rh-meta{font-family:var(--mono);font-size:10px;color:var(--text3);}
-.result-body{padding:14px 16px;}
-
-/* 스코어 바 */
-.score-row{margin-bottom:9px;}
-.sr-header{display:flex;justify-content:space-between;margin-bottom:4px;}
-.sr-label{font-size:12px;color:var(--text2);}
-.sr-val{font-family:var(--mono);font-size:13px;font-weight:600;}
-.sr-bar{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;}
-.sr-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
-.sf-good{background:linear-gradient(90deg,#00d4aa,#00bfa5);}
-.sf-med {background:linear-gradient(90deg,#ffd600,#ffab00);}
-.sf-bad {background:linear-gradient(90deg,#ff8c42,#ff6d00);}
-.sf-crit{background:linear-gradient(90deg,#ff4560,#ff1744);}
-
-/* 성분 태그 */
-.ing-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
-.ing-tag{
-  font-family:var(--mono);font-size:9px;font-weight:600;
-  padding:3px 9px;border-radius:3px;border:1px solid;letter-spacing:.3px;
-}
-.it-barrier{color:#00d4aa;border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.07);}
-.it-antioxidant{color:#ff8c42;border-color:rgba(255,140,66,.3);background:rgba(255,140,66,.07);}
-.it-brightening{color:#ffd600;border-color:rgba(255,214,0,.3);background:rgba(255,214,0,.07);}
-.it-moisture{color:#3b9eff;border-color:rgba(59,158,255,.3);background:rgba(59,158,255,.07);}
-.it-scalp{color:#b088ff;border-color:rgba(176,136,255,.3);background:rgba(176,136,255,.07);}
-
-/* 통계 그리드 */
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-.stat-box{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;padding:10px 8px;text-align:center;
-}
-.stat-num{font-family:var(--mono);font-size:20px;font-weight:600;}
-.stat-lbl{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.4;}
-
-/* 논문 로드맵 */
-.roadmap{display:flex;flex-direction:column;gap:5px;}
-.roadmap-step{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;padding:9px 12px;
-  display:flex;align-items:flex-start;gap:10px;
-}
-.roadmap-step.current{border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.04);}
-.roadmap-step.next{border-color:rgba(59,158,255,.2);}
-.roadmap-step.future{opacity:.55;}
-.rm-num{
-  font-family:var(--mono);font-size:9px;font-weight:600;
-  width:22px;height:22px;border-radius:3px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
-}
-.rm-num.c{background:rgba(0,212,170,.2);color:var(--accent2);}
-.rm-num.n{background:rgba(59,158,255,.15);color:var(--accent);}
-.rm-num.f{background:var(--bg);color:var(--text3);border:1px solid var(--border);}
-.rm-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;}
-.rm-detail{font-size:11px;color:var(--text3);line-height:1.6;}
-.rm-tag{font-family:var(--mono);font-size:9px;color:var(--warn);margin-top:4px;}
-
-/* 특허 카드 */
-.patent-card{
-  background:linear-gradient(135deg,rgba(176,136,255,.06),rgba(59,158,255,.04));
-  border:1px solid rgba(176,136,255,.25);
-  border-radius:6px;padding:14px 16px;
-}
-.patent-no{font-family:var(--mono);font-size:11px;color:#b088ff;margin-bottom:6px;letter-spacing:.5px;}
-.patent-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.5;}
-.patent-meta{font-size:11px;color:var(--text3);line-height:1.7;}
-
-/* 뉴스 아이템 */
-.news-item{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;padding:10px 12px;
-  border-left:3px solid;
-}
-.news-item.ni-patent{border-left-color:#b088ff;}
-.news-item.ni-paper {border-left-color:var(--accent);}
-.news-item.ni-system{border-left-color:var(--accent2);}
-.ni-tag{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.5px;margin-bottom:5px;}
-.ni-patent .ni-tag{color:#b088ff;}
-.ni-paper  .ni-tag{color:var(--accent);}
-.ni-system .ni-tag{color:var(--accent2);}
-.ni-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.5;}
-.ni-body{font-size:11px;color:var(--text3);line-height:1.7;}
-.ni-date{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px;}
-
-/* 사용법 스텝 */
-.step-list{display:flex;flex-direction:column;gap:6px;}
-.step-item{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;padding:9px 12px;
-  display:flex;align-items:flex-start;gap:10px;
-}
-.step-item.active-step{border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.04);}
-.step-num{
-  font-family:var(--mono);font-size:10px;font-weight:600;
-  width:22px;height:22px;border-radius:3px;
-  background:rgba(59,158,255,.15);color:var(--accent);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
-}
-.step-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;}
-.step-desc{font-size:11px;color:var(--text3);line-height:1.6;}
-.mode-pills{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;}
-.mode-pill{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 8px;border-radius:3px;border:1px solid;}
-.mp-skin {color:var(--accent2);border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.07);}
-.mp-scalp{color:var(--accent);border-color:rgba(59,158,255,.3);background:rgba(59,158,255,.07);}
-
-/* FAQ */
-.faq-item{
-  background:var(--bg3);border:1px solid var(--border);border-radius:5px;overflow:hidden;
-}
-.faq-q{
-  padding:10px 14px;font-size:12px;font-weight:600;
-  cursor:pointer;display:flex;justify-content:space-between;align-items:center;
-  transition:background .15s;
-}
-.faq-q:hover{background:rgba(59,158,255,.05);}
-.faq-arrow{font-family:var(--mono);font-size:10px;color:var(--accent);transition:transform .3s;}
-.faq-item.open .faq-arrow{transform:rotate(180deg);}
-.faq-a{
-  max-height:0;overflow:hidden;
-  padding:0 14px;font-size:11px;color:var(--text3);line-height:1.75;
-  transition:max-height .35s ease,padding .3s;
-  border-top:0 solid var(--border);
-}
-.faq-item.open .faq-a{max-height:200px;padding:10px 14px;border-top:1px solid var(--border);}
-
-/* 사용법 박스 (두피 세럼) */
-.serum-box{
-  background:rgba(59,158,255,.05);
-  border:1px solid rgba(59,158,155,.25);
-  border-radius:5px;padding:12px 14px;
-}
-.serum-title{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);letter-spacing:1px;margin-bottom:8px;}
-.serum-step{font-size:11px;color:var(--text2);line-height:1.9;padding-left:4px;}
-.serum-caution{font-family:var(--mono);font-size:9px;color:var(--warn);margin-top:8px;line-height:1.6;}
-
-/* 푸터 */
-footer{
-  background:var(--bg2);border-top:1px solid var(--border);
-  padding:20px 28px;
-  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
-}
-.footer-left{font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.7;}
-.footer-left strong{color:var(--text2);}
-.footer-links{display:flex;gap:14px;flex-wrap:wrap;}
-.footer-links a{font-family:var(--mono);font-size:10px;color:var(--text3);text-decoration:none;transition:color .2s;}
-.footer-links a:hover{color:var(--accent2);}
-.footer-disclaimer{width:100%;font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:12px;line-height:1.6;}
-
-/* 반응형 */
-@media(max-width:1100px){
-  .layout{grid-template-columns:260px 1fr 260px;}
-}
-@media(max-width:860px){
-  .layout{grid-template-columns:1fr;}
-  .panel{border-right:none;border-top:1px solid var(--border);}
-  .panel:last-child{border-left:none;}
-}
-@media(max-width:600px){
-  header{padding:0 16px;}
-  .header-nav{display:none;}
-  .hero-block{padding:20px 16px;}
-  .hero-title{font-size:20px;}
-  footer{padding:16px;}
-}
-</style>
+        #faq { background: var(--secondary); }
+        .faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.8rem; }
+        .faq-item { background: var(--white); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+        .faq-question { width: 100%; background: none; border: none; padding: 1.2rem 1.5rem; text-align: left; font-size: 0.95rem; font-weight: 600; color: var(--dark); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .faq-question:hover { background: var(--secondary); }
+        .faq-arrow { transition: transform 0.3s; color: var(--primary); font-size: 1.1rem; }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .faq-answer.open { max-height: 300px; }
+        .faq-answer p { padding: 0 1.5rem 1.2rem; font-size: 0.9rem; color: var(--gray); line-height: 1.8; }
+        footer { background: var(--dark); padding: 3rem 5%; color: rgba(255,255,255,0.5); font-size: 0.85rem; }
+        .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; }
+        .footer-logo { font-size: 1.2rem; font-weight: 700; color: var(--white); margin-bottom: 0.5rem; }
+        .footer-info { line-height: 1.9; }
+        .footer-links { display: flex; gap: 1.5rem; }
+        .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; }
+        .footer-links a:hover { color: var(--white); }
+        @media (max-width: 768px) {
+            .nav-menu { display: none; }
+            .hero-inner { grid-template-columns: 1fr; }
+            .hero-title { font-size: 2rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .about-grid { grid-template-columns: 1fr; }
+            .tech-grid { grid-template-columns: 1fr; }
+            .steps-grid { grid-template-columns: repeat(2, 1fr); }
+            .steps-grid::before { display: none; }
+            .sample-grid { grid-template-columns: 1fr; }
+            .news-grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 1.6rem; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- ══ 상단 티커 ══ -->
-<div class="tech-ticker">
-  <div class="tech-ticker-inner">
-    <span class="tech-tag">🔬 SKIN-X <span>·</span> AI 피부·두피 환경 분석 플랫폼</span>
-    <span class="tech-tag">🌫️ CEEI <span>·</span> PM2.5 × 거주기간 누적 노출지수</span>
-    <span class="tech-tag">💆 SEEI <span>·</span> 4오염물질 가중 두피 환경지수</span>
-    <span class="tech-tag">🤖 Claude Vision <span>·</span> 피부 5지표 · 두피 7지표 정량화</span>
-    <span class="tech-tag">📄 특허출원 <span>·</span> 제10-2026-0107210호</span>
-    <span class="tech-tag">📊 SCI 논문 준비 중 <span>·</span> Cosmetics MDPI 타겟</span>
-    <span class="tech-tag">🔬 SKIN-X <span>·</span> AI 피부·두피 환경 분석 플랫폼</span>
-    <span class="tech-tag">🌫️ CEEI <span>·</span> PM2.5 × 거주기간 누적 노출지수</span>
-    <span class="tech-tag">💆 SEEI <span>·</span> 4오염물질 가중 두피 환경지수</span>
-    <span class="tech-tag">🤖 Claude Vision <span>·</span> 피부 5지표 · 두피 7지표 정량화</span>
-    <span class="tech-tag">📄 특허출원 <span>·</span> 제10-2026-0107210호</span>
-    <span class="tech-tag">📊 SCI 논문 준비 중 <span>·</span> Cosmetics MDPI 타겟</span>
-  </div>
-</div>
-
-<!-- ══ 헤더 ══ -->
-<header>
-  <a href="#" class="logo-wrap">
-    <div class="logo-badge">
-      SKIN-X
-      <span class="logo-badge-sub">by YD Lab</span>
+<!-- ===== 네비게이션 ===== -->
+<nav>
+    <div class="nav-inner">
+        <a href="#hero" class="nav-logo">SKIN-<span style="color:#FF6B6B;">X</span></a>
+        <ul class="nav-menu">
+            <li><a href="#about">회사소개</a></li>
+            <li><a href="#technology">기술소개</a></li>
+            <li><a href="#howto">사용법</a></li>
+            <li><a href="#news">연구소식</a></li>
+            <li><a href="#faq">FAQ</a></li>
+        </ul>
+        <div class="nav-buttons">
+            <a href="#cta" class="btn btn-outline">분석 시작</a>
+            <a href="#" onclick="alert('네이버 스마트스토어 입점 계획 중입니다!')" class="btn btn-primary">키트 구매 (계획 중)</a>
+        </div>
     </div>
-    <div>
-      <div class="logo-text">피부·두피 환경 분석 플랫폼</div>
-      <div class="logo-sub">재능대학교 AI-바이오분석특화연구소</div>
+</nav>
+
+<!-- ===== 히어로 섹션 ===== -->
+<section id="hero">
+    <div class="hero-inner">
+        <div class="hero-content">
+            <div class="hero-badge">🔬 특허 출원 중 · AI 피부·두피 분석</div>
+            <h1 class="hero-title">
+                오늘 미세먼지가<br>
+                당신의 <span class="highlight">피부와 두피</span>를<br>
+                공격하고 있습니다
+            </h1>
+            <p class="hero-desc">
+                스마트폰 유무선 연결 현미경 하나로<br>
+                실시간 환경오염 데이터와 연동된<br>
+                AI 피부·두피 분석과 맞춤 화장품 처방을 받으세요.
+            </p>
+            <div class="hero-buttons">
+                <a href="#" onclick="alert('네이버 스마트스토어 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-primary btn-large">
+                    📦 키트 구매하기 (계획 중)
+                </a>
+                <a href="#cta" class="btn btn-outline btn-large" style="color:white; border-color:white;">
+                    🔬 분석 시작하기
+                </a>
+            </div>
+        </div>
+
+        <!-- 실시간 PM2.5 카드 -->
+        <div class="hero-card">
+            <p class="pm-card-title">📍 현재 내 지역 대기 상태</p>
+            <div class="district-selector">
+                <select id="districtSelect" onchange="loadDistrictAir()">
+                    <option value="">▼ 인천 거주 구를 선택하세요</option>
+                    <option value="namdong">인천 남동구</option>
+                    <option value="bupyeong">인천 부평구</option>
+                    <option value="seo">인천 서구</option>
+                    <option value="jung">인천 중구</option>
+                    <option value="yeonsu">인천 연수구</option>
+                    <option value="gyeyang">인천 계양구</option>
+                </select>
+            </div>
+            <div id="pm-loading" style="display:none">
+                <div class="pm-spinner"></div>
+                <span style="color:rgba(255,255,255,0.6); font-size:0.9rem">데이터 불러오는 중...</span>
+            </div>
+            <div id="pm-placeholder">
+                <div style="text-align:center; padding:1rem 0; color:rgba(255,255,255,0.3)">
+                    <div style="font-size:2.2rem; margin-bottom:0.5rem">🏙️</div>
+                    <div style="font-size:0.85rem; line-height:1.6">거주 구를 선택하면<br>에어코리아 실측값을 표시합니다</div>
+                </div>
+            </div>
+            <div id="pm-data" style="display:none">
+                <div class="pm-value" id="pm-value">--</div>
+                <div class="pm-unit">
+                    μg/m³ · PM2.5
+                    <span id="pm-updated" style="display:block; font-size:0.75rem; opacity:0.55; margin-top:0.2rem"></span>
+                </div>
+                <span class="pm-status" id="pm-status"></span>
+                <div class="pm-multi" id="pm-multi"></div>
+                <ul class="pm-effects" id="pm-effects"></ul>
+            </div>
+            <div id="pm-error" style="display:none; color:rgba(255,255,255,0.5); font-size:0.85rem; margin-top:0.5rem; text-align:center; line-height:1.8"></div>
+        </div>
     </div>
-  </a>
-  <nav class="header-nav">
-    <a href="#section-air">대기현황</a>
-    <a href="#section-index">환경지수</a>
-    <a href="#section-howto">사용법</a>
-    <a href="#section-result">분석예시</a>
-    <a href="#section-research">연구소식</a>
-    <a href="#section-faq">FAQ</a>
-  </nav>
-  <div class="header-right">
-    <div class="live-dot">에어코리아 실측</div>
-    <span class="api-badge api-loading" id="apiBadge">로딩중…</span>
-    <span class="update-time" id="updateTime">--:--</span>
-    <a href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/" target="_blank" class="header-cta">▶ 분석 시작</a>
-  </div>
-</header>
+</section>
 
-<!-- ══ 기술 배너 ══ -->
-<div class="tech-banner">
-  <div class="tech-pills">
-    <span class="tech-pill pill-a">🔬 Claude Vision AI</span>
-    <span class="tech-pill pill-b">🌫️ 에어코리아 실측 PM2.5·PM10·NO₂·O₃</span>
-    <span class="tech-pill pill-c">📊 CEEI (피부) + SEEI (두피)</span>
-    <span class="tech-pill pill-d">🧪 맞춤 화장품 성분 처방</span>
-    <span class="tech-pill pill-e">💾 Google Sheets 48컬럼 자동 저장</span>
-  </div>
-  <span class="patent-tag">특허출원 · 제10-2026-0107210호</span>
-</div>
-
-<!-- ══ 경보 바 ══ -->
-<div class="alert-bar" id="alertBar">
-  <span class="alert-tag">PM2.5 경보</span>
-  <span id="alertMsg">현재 PM2.5 농도가 높습니다. 외출 시 마스크 착용을 권고합니다.</span>
-</div>
-
-<!-- ══ 메인 3단 레이아웃 ══ -->
-<div class="layout">
-
-  <!-- ████ 왼쪽 패널 ████ -->
-  <div class="panel">
-
-    <!-- 실시간 대기질 -->
-    <div id="section-air">
-      <div class="sec-title">
-        실시간 대기질
-        <span class="sec-badge live" id="airBadge">로딩중</span>
-      </div>
-
-      <div class="pollutant-item">
-        <div class="poll-header">
-          <span class="poll-label">PM2.5 (초미세먼지)</span>
-          <span class="poll-val c-d" id="pm25v">--<span class="poll-unit">㎍/m³</span></span>
-        </div>
-        <div class="poll-bar"><div class="poll-fill fill-d" id="pm25bar" style="width:0%"></div></div>
-        <div class="poll-grade" id="pm25g">--</div>
-      </div>
-
-      <div class="pollutant-item">
-        <div class="poll-header">
-          <span class="poll-label">PM10 (미세먼지)</span>
-          <span class="poll-val c-w" id="pm10v">--<span class="poll-unit">㎍/m³</span></span>
-        </div>
-        <div class="poll-bar"><div class="poll-fill fill-w" id="pm10bar" style="width:0%"></div></div>
-        <div class="poll-grade" id="pm10g">--</div>
-      </div>
-
-      <div class="pollutant-item">
-        <div class="poll-header">
-          <span class="poll-label">NO₂ (이산화질소)</span>
-          <span class="poll-val c-y" id="no2v">--<span class="poll-unit">ppm</span></span>
-        </div>
-        <div class="poll-bar"><div class="poll-fill fill-y" id="no2bar" style="width:0%"></div></div>
-        <div class="poll-grade" id="no2g">--</div>
-      </div>
-
-      <div class="pollutant-item">
-        <div class="poll-header">
-          <span class="poll-label">O₃ (오존)</span>
-          <span class="poll-val c-o" id="o3v">--<span class="poll-unit">ppm</span></span>
-        </div>
-        <div class="poll-bar"><div class="poll-fill fill-o" id="o3bar" style="width:0%"></div></div>
-        <div class="poll-grade" id="o3g">--</div>
-      </div>
-
-      <div class="station-info" id="stationInfo">
-        <div class="si-row"><span>측정소</span><span id="stName">--</span></div>
-        <div class="si-row"><span>갱신시각</span><span id="stTime">--</span></div>
-        <div class="si-row"><span>데이터 출처</span><span>에어코리아</span></div>
-      </div>
+<!-- ===== 통계 배너 ===== -->
+<section id="stats">
+    <div class="stats-grid">
+        <div class="stat-item"><div class="number">5가지</div><div class="label">피부 지표 정량 분석</div></div>
+        <div class="stat-item"><div class="number">3가지</div><div class="label">두피 지표 분석</div></div>
+        <div class="stat-item"><div class="number">600+</div><div class="label">전국 대기오염 측정소 연동</div></div>
+        <div class="stat-item"><div class="number">CEEI</div><div class="label">환경노출지수 독자 알고리즘</div></div>
     </div>
+</section>
 
-    <!-- 인천 지역별 CEEI -->
-    <div>
-      <div class="sec-title">인천 지역별 CEEI <span class="sec-badge">참고값</span></div>
-      <div class="region-list">
-        <div class="region-btn active" onclick="selectRegion(this,'중구','24.2')">
-          <div><div class="region-name">중구 (인천국제공항)</div><div class="region-sub">PM2.5 연평균 24.2 ㎍/m³</div></div>
-          <span class="risk-tag risk-high">높음</span>
+<!-- ===== 회사 소개 ===== -->
+<section id="about">
+    <div class="section-inner">
+        <div class="about-grid">
+            <div>
+                <span class="section-tag">About Us</span>
+                <h2 class="section-title">환경과 피부의 연결을<br>처음으로 과학화했습니다</h2>
+                <p class="section-sub">바이오테크 융합전공 연구팀이 개발한 세계 최초 환경오염 연동 AI 피부·두피 분석 플랫폼입니다. PM2.5, NO₂ 등 실시간 대기오염 데이터와 스마트폰 현미경 이미지를 결합해 맞춤형 화장품 처방까지 제공합니다.</p>
+                <a href="#technology" class="btn btn-primary">기술 자세히 보기</a>
+            </div>
+            <div class="about-cards">
+                <div class="about-card"><div class="icon">🎓</div><h4>대학 연구 기반</h4><p>바이오테크 융합전공 연구팀 개발</p></div>
+                <div class="about-card"><div class="icon">📄</div><h4>특허 출원</h4><p>핵심 기술 국내외 특허 출원 진행 중</p></div>
+                <div class="about-card"><div class="icon">🔬</div><h4>논문 발표</h4><p>KCI·SCI 학술지 투고 준비 중</p></div>
+                <div class="about-card"><div class="icon">🌏</div><h4>글로벌 확장</h4><p>한국·일본 동시 서비스 예정</p></div>
+            </div>
         </div>
-        <div class="region-btn" onclick="selectRegion(this,'남동구','24.2')">
-          <div><div class="region-name">남동구 (남동산단)</div><div class="region-sub">PM2.5 연평균 24.2 ㎍/m³</div></div>
-          <span class="risk-tag risk-high">높음</span>
-        </div>
-        <div class="region-btn" onclick="selectRegion(this,'서구','23.5')">
-          <div><div class="region-name">서구 (청라·검단)</div><div class="region-sub">PM2.5 연평균 23.5 ㎍/m³</div></div>
-          <span class="risk-tag risk-mid">보통</span>
-        </div>
-        <div class="region-btn" onclick="selectRegion(this,'연수구','22.0')">
-          <div><div class="region-name">연수구 (송도)</div><div class="region-sub">PM2.5 연평균 22.0 ㎍/m³</div></div>
-          <span class="risk-tag risk-mid">보통</span>
-        </div>
-        <div class="region-btn" onclick="selectRegion(this,'부평구','23.8')">
-          <div><div class="region-name">부평구</div><div class="region-sub">PM2.5 연평균 23.8 ㎍/m³</div></div>
-          <span class="risk-tag risk-mid">보통</span>
-        </div>
-        <div class="region-btn" onclick="selectRegion(this,'미추홀구','23.1')">
-          <div><div class="region-name">미추홀구</div><div class="region-sub">PM2.5 연평균 23.1 ㎍/m³</div></div>
-          <span class="risk-tag risk-mid">보통</span>
-        </div>
-      </div>
     </div>
+</section>
 
-  </div><!-- /왼쪽 패널 -->
-
-
-  <!-- ████ 중앙 패널 ████ -->
-  <div class="center-panel">
-
-    <!-- 히어로 -->
-    <div class="hero-block">
-      <div class="hero-eyebrow">SKIN-X Platform · YD Lab</div>
-      <h1 class="hero-title">
-        <span class="hl-green">AI</span> + <span class="hl-blue">에어코리아 실측 데이터</span>로<br>
-        피부·두피 환경 부담을 정량화합니다
-      </h1>
-      <p class="hero-desc">
-        스마트폰 현미경 사진 한 장으로 피부·두피 상태를 0~100점으로 정량화하고,
-        거주 지역의 실측 대기오염 데이터를 반영한 <strong>CEEI·SEEI 환경노출지수</strong>와
-        <strong>맞춤 화장품 성분 처방</strong>을 즉시 제공합니다.
-      </p>
-      <div class="hero-note">
-        ※ 이탈리아 EII(Perugini et al., Cosmetics 2025) 등 기존 설문 기반 지수와 달리,
-        에어코리아 실측 API + 스마트폰 현미경 이미지를 결합한 실측 기반 환경노출 분석 시스템.
-        특허출원 제10-2026-0107210호 (2026.06.12).
-      </div>
-      <div class="hero-actions">
-        <a href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/" target="_blank" class="btn-primary">▶ 분석 앱 바로가기</a>
-        <a href="#section-howto" class="btn-secondary">📖 사용법 보기</a>
-        <a href="#section-result" class="btn-secondary">🔍 분석 예시</a>
-      </div>
+<!-- ===== 기술 소개 ===== -->
+<section id="technology">
+    <div class="section-inner">
+        <span class="section-tag">Technology</span>
+        <h2 class="section-title">세 가지 핵심 기술</h2>
+        <p class="section-sub">세계 어디에도 없는 환경·피부·두피 삼중 통합 분석 플랫폼입니다</p>
+        <div class="tech-grid">
+            <div class="tech-card"><div class="tech-icon">🌫</div><h3>실시간 환경오염 연동</h3><p>에어코리아 전국 600여 개 측정소의 PM2.5, PM10, NO₂, O₃ 데이터를 실시간으로 수집해 사용자 위치 기반 환경노출지수(CEEI)를 산출합니다.</p><span class="tech-tag">특허 출원 중</span></div>
+            <div class="tech-card"><div class="tech-icon">🔬</div><h3>스마트폰 현미경 AI 분석</h3><p>저가 스마트폰 현미경과 LLM 비전 AI를 결합해 피부 5가지 지표(주름·모공·결·톤·수분)와 두피 3가지 지표를 0~100점으로 정량화합니다.</p><span class="tech-tag">특허 출원 중</span></div>
+            <div class="tech-card"><div class="tech-icon">💊</div><h3>맞춤형 화장품 처방 생성</h3><p>분석 결과와 CEEI를 결합해 개인별 환경노출 상태에 최적화된 맞춤형 화장품 제조 의뢰서를 자동으로 생성합니다.</p><span class="tech-tag">특허 출원 중</span></div>
+        </div>
     </div>
+</section>
 
-    <!-- 탭 영역 -->
-    <div class="center-scroll">
-
-      <!-- 탭 바 -->
-      <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('overview',this)">개요</button>
-        <button class="tab-btn" onclick="switchTab('skin',this)">피부 분석 예시</button>
-        <button class="tab-btn" onclick="switchTab('scalp',this)">두피 분석 예시</button>
-        <button class="tab-btn" onclick="switchTab('howto',this)" id="section-howto">사용법</button>
-        <button class="tab-btn" onclick="switchTab('research',this)" id="section-research">연구소식</button>
-        <button class="tab-btn" onclick="switchTab('faq',this)" id="section-faq">FAQ</button>
-      </div>
-
-      <!-- ── 탭: 개요 ── -->
-      <div class="tab-content active" id="tab-overview">
-
-        <div class="stat-grid" style="margin-bottom:12px">
-          <div class="stat-box">
-            <div class="stat-num c-o">5</div>
-            <div class="stat-lbl">피부 분석 지표<br>(주름·모공·결·톤·수분)</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num c-a">7</div>
-            <div class="stat-lbl">두피 분석 지표<br>(각질·모공·모발굵기·두피색·수분밸런스·모발손상·탈모위험)</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num c-w">2</div>
-            <div class="stat-lbl">환경노출지수<br>CEEI (피부) · SEEI (두피)</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num" style="color:#b088ff">600+</div>
-            <div class="stat-lbl">에어코리아 측정소<br>전국 실측 연동</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num c-y">48</div>
-            <div class="stat-lbl">Google Sheets<br>자동 저장 컬럼</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num c-d">IRB</div>
-            <div class="stat-lbl">논문 연구 설계<br>교란변수 기록 포함</div>
-          </div>
+<!-- ===== 사용법 ===== -->
+<section id="howto">
+    <div class="section-inner">
+        <span class="section-tag">How to Use</span>
+        <h2 class="section-title">4단계로 완성되는 분석</h2>
+        <p class="section-sub">키트 하나로 누구나 전문가 수준의 피부·두피 분석을 받을 수 있습니다</p>
+        <div class="steps-grid">
+            <div class="step-card"><div class="step-number">📦</div><h3>키트 개봉</h3><p>스마트폰 유무선 연결 현미경과 코드 카드를 확인합니다</p></div>
+            <div class="step-card"><div class="step-number">📱</div><h3>분석기 접속</h3><p>아래 분석 시작 버튼을 클릭해 분석기로 이동합니다</p></div>
+            <div class="step-card"><div class="step-number">🔑</div><h3>이벤트 코드 입력</h3><p>분석기 입장 화면에서 행사장에서 받은 이벤트 코드를 입력합니다</p></div>
+            <div class="step-card"><div class="step-number">📊</div><h3>결과 확인·처방</h3><p>AI가 분석한 점수와 환경노출지수, 맞춤 화장품 처방을 확인합니다</p></div>
         </div>
-
-        <!-- CEEI·SEEI 설명 -->
-        <div id="section-index">
-          <div class="sec-title" style="margin-bottom:10px">환경노출지수 — CEEI · SEEI <span class="sec-badge live">핵심 기술</span></div>
-          <div class="index-grid" style="margin-bottom:10px">
-            <div class="idx-box ceei">
-              <div class="idx-name">CEEI (피부)</div>
-              <div class="idx-val" id="ceeiVal">--</div>
-              <div class="idx-formula">PM2.5 연평균<br>× 거주기간(년)</div>
-              <span class="idx-grade grade-med" id="ceeiGrade">--</span>
-            </div>
-            <div class="idx-box seei">
-              <div class="idx-name">SEEI (두피)</div>
-              <div class="idx-val" id="seeiVal">--</div>
-              <div class="idx-formula">가중합(PM2.5×0.40<br>+PM10×0.25+NO₂×0.20<br>+O₃×0.15) × 거주기간<br>× 계절·UV·습도 보정</div>
-              <span class="idx-grade grade-med" id="seeiGrade">--</span>
-            </div>
-          </div>
-          <div class="station-info">
-            <div class="si-row"><span>선택 지역</span><span id="selRegion">중구</span></div>
-            <div class="si-row"><span>PM2.5 연평균</span><span id="selPm25">24.2 ㎍/m³</span></div>
-            <div class="si-row"><span>거주기간 예시</span><span>5년 기준 계산</span></div>
-            <div class="si-row"><span>출처</span><span>에어코리아 공식 자료</span></div>
-          </div>
-        </div>
-
-        <!-- 기술 카드 4개 -->
-        <div class="sec-title" style="margin:12px 0 8px">핵심 기술 구성</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-
-          <div style="background:rgba(0,212,170,.05);border:1px solid rgba(0,212,170,.2);border-radius:6px;padding:12px 13px">
-            <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:var(--accent2);letter-spacing:1px;margin-bottom:6px">LLM VISION AI</div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:5px">Claude Sonnet 기반 분석</div>
-            <div style="font-size:11px;color:var(--text3);line-height:1.6">피부 5지표·두피 7지표를 0~100점으로 정량화. 구조화 JSON 출력.</div>
-          </div>
-
-          <div style="background:rgba(59,158,255,.05);border:1px solid rgba(59,158,255,.2);border-radius:6px;padding:12px 13px">
-            <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:var(--accent);letter-spacing:1px;margin-bottom:6px">환경 연동</div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:5px">에어코리아 실측 API</div>
-            <div style="font-size:11px;color:var(--text3);line-height:1.6">PM2.5·PM10·NO₂·O₃ 실시간 연동. 기상청 UV·습도 3단계 fallback.</div>
-          </div>
-
-          <div style="background:rgba(255,140,66,.05);border:1px solid rgba(255,140,66,.2);border-radius:6px;padding:12px 13px">
-            <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:var(--warn);letter-spacing:1px;margin-bottom:6px">맞춤 처방</div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:5px">성분 자동 조합</div>
-            <div style="font-size:11px;color:var(--text3);line-height:1.6">CEEI/SEEI 등급 기반 항산화·장벽·미백 성분 처방. 30mL 세럼 레시피 생성.</div>
-          </div>
-
-          <div style="background:rgba(176,136,255,.05);border:1px solid rgba(176,136,255,.2);border-radius:6px;padding:12px 13px">
-            <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:#b088ff;letter-spacing:1px;margin-bottom:6px">데이터 파이프라인</div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:5px">연구용 자동 저장</div>
-            <div style="font-size:11px;color:var(--text3);line-height:1.6">48컬럼 Google Sheets 자동 저장. 교란변수(자외선차단제·흡연·수면) 기록.</div>
-          </div>
-
-        </div>
-      </div><!-- /tab-overview -->
-
-      <!-- ── 탭: 피부 분석 예시 ── -->
-      <div class="tab-content" id="tab-skin" id="section-result">
-        <div class="result-wrap">
-          <div class="result-head">
-            <div>
-              <div class="rh-title">🌿 피부 분석 결과 예시</div>
-              <div class="rh-meta">30대 여성 · 인천 서구 · 거주 5년 · 볼(좌), 이마</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">CEEI (피부)</div>
-              <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--accent2)">117.5</div>
-              <span class="idx-grade grade-med">⚠ 보통-높음</span>
-            </div>
-          </div>
-          <div class="result-body">
-
-            <!-- 공기칩 -->
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(255,214,0,.1);border:1px solid rgba(255,214,0,.25);color:#ffd600">PM2.5 23㎍/m³ 보통</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);color:#00d4aa">PM10 38㎍/m³ 좋음</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);color:#00d4aa">NO₂ 0.018ppm 좋음</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);color:#00d4aa">에어코리아 실측 ✓</span>
-            </div>
-
-            <!-- 피부 스코어 -->
-            <div style="margin-bottom:14px">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">SKIN SCORE</div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">주름</span><span class="sr-val c-y">62</span></div><div class="sr-bar"><div class="sr-fill sf-med" style="width:62%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">모공</span><span class="sr-val c-y">58</span></div><div class="sr-bar"><div class="sr-fill sf-med" style="width:58%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">피부결</span><span class="sr-val c-o">71</span></div><div class="sr-bar"><div class="sr-fill sf-good" style="width:71%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">피부톤</span><span class="sr-val c-y">55</span></div><div class="sr-bar"><div class="sr-fill sf-med" style="width:55%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">수분</span><span class="sr-val c-w">48</span></div><div class="sr-bar"><div class="sr-fill sf-bad" style="width:48%"></div></div></div>
-            </div>
-
-            <!-- 추천 성분 -->
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px">RECOMMENDED INGREDIENTS</div>
-            <div class="ing-wrap" style="margin-bottom:14px">
-              <span class="ing-tag it-antioxidant">비타민C</span>
-              <span class="ing-tag it-antioxidant">레스베라트롤</span>
-              <span class="ing-tag it-brightening">나이아신아마이드</span>
-              <span class="ing-tag it-moisture">히알루론산</span>
-              <span class="ing-tag it-barrier">세라마이드</span>
-              <span class="ing-tag it-barrier">알로에베라</span>
-            </div>
-
-            <!-- 생활습관 -->
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px">LIFESTYLE COVARIATES (논문 교란변수)</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);color:var(--text2)">🧴 자외선차단제 매일</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);color:var(--text2)">🚭 비흡연</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);color:var(--text2)">😴 수면 6시간</span>
-            </div>
-
-          </div>
-        </div>
-      </div><!-- /tab-skin -->
-
-      <!-- ── 탭: 두피 분석 예시 ── -->
-      <div class="tab-content" id="tab-scalp">
-        <div class="result-wrap">
-          <div class="result-head scalp-head">
-            <div>
-              <div class="rh-title">💆 두피 분석 결과 예시</div>
-              <div class="rh-meta">40대 남성 · 인천 남동구 · 거주 10년 · 정수리, 측두부</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">SEEI (두피)</div>
-              <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--accent)">198.4</div>
-              <span class="idx-grade grade-high">🔴 높음</span>
-            </div>
-          </div>
-          <div class="result-body">
-
-            <!-- 공기칩 -->
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(255,214,0,.1);border:1px solid rgba(255,214,0,.25);color:#ffd600">PM2.5 28㎍/m³ 보통</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(255,214,0,.1);border:1px solid rgba(255,214,0,.25);color:#ffd600">PM10 55㎍/m³ 보통</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);color:#00d4aa">NO₂ 0.022ppm 좋음</span>
-              <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);color:#00d4aa">에어코리아 실측 ✓</span>
-            </div>
-
-            <!-- 두피 스코어 -->
-            <div style="margin-bottom:14px">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">SCALP SCORE (7지표)</div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">각질</span><span class="sr-val c-d">45</span></div><div class="sr-bar"><div class="sr-fill sf-crit" style="width:45%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">두피 모공</span><span class="sr-val c-y">52</span></div><div class="sr-bar"><div class="sr-fill sf-med" style="width:52%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">모발굵기</span><span class="sr-val c-y">60</span></div><div class="sr-bar"><div class="sr-fill sf-med" style="width:60%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">두피색</span><span class="sr-val c-y">55</span></div><div class="sr-bar"><div class="sr-fill sf-med" style="width:55%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">수분밸런스</span><span class="sr-val c-w">40</span></div><div class="sr-bar"><div class="sr-fill sf-bad" style="width:40%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">모발손상</span><span class="sr-val c-w">38</span></div><div class="sr-bar"><div class="sr-fill sf-bad" style="width:38%"></div></div></div>
-              <div class="score-row"><div class="sr-header"><span class="sr-label">탈모위험</span><span class="sr-val c-d">35</span></div><div class="sr-bar"><div class="sr-fill sf-crit" style="width:35%"></div></div></div>
-            </div>
-
-            <!-- 추천 성분 -->
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px">RECOMMENDED INGREDIENTS</div>
-            <div class="ing-wrap" style="margin-bottom:14px">
-              <span class="ing-tag it-antioxidant">로즈마리</span>
-              <span class="ing-tag it-antioxidant">비타민E</span>
-              <span class="ing-tag it-scalp">티트리 오일</span>
-              <span class="ing-tag it-moisture">판테놀</span>
-              <span class="ing-tag it-scalp">살리실산</span>
-              <span class="ing-tag it-scalp">바이오틴</span>
-            </div>
-
-            <!-- 두피 세럼 사용법 -->
-            <div class="serum-box">
-              <div class="serum-title">💧 30mL 맞춤 두피 세럼 사용법</div>
-              <div class="serum-step">
-                ① 샴푸 후 타월로 두피를 가볍게 닦아 물기 제거 (완전 건조 ✗)<br>
-                ② 세럼 1~2mL를 두피에 직접 도포 또는 스프레이<br>
-                ③ 손가락 끝으로 1~2분간 두드리며 흡수<br>
-                ④ 미지근한 바람으로 자연 건조 (드라이기 열풍 ✗)<br>
-                ⑤ Leave-on 타입 · 씻어내지 않음 · 취침 전 권장
-              </div>
-              <div class="serum-caution">
-                ※ 살리실산 1% 초과 시 주 2~3회 제한 · 티트리 오일 희석 필수<br>
-                ※ 이상 반응 즉시 중단 · 의료 처방 대체 아님
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div><!-- /tab-scalp -->
-
-      <!-- ── 탭: 사용법 ── -->
-      <div class="tab-content" id="tab-howto">
-        <div class="sec-title" style="margin-bottom:10px">5단계 분석 프로세스 <span class="sec-badge live">체험 이벤트</span></div>
-        <div class="step-list">
-          <div class="step-item active-step">
-            <div class="step-num">01</div>
-            <div>
-              <div class="step-title">이벤트 코드 입력</div>
-              <div class="step-desc">체험 이벤트 참가 시 안내받은 코드를 입력합니다. 코드 없이는 분석에 접속할 수 없습니다.</div>
-            </div>
-          </div>
-          <div class="step-item">
-            <div class="step-num">02</div>
-            <div>
-              <div class="step-title">분석 모드 선택</div>
-              <div class="step-desc">분석 목적에 따라 모드를 선택합니다.</div>
-              <div class="mode-pills">
-                <span class="mode-pill mp-skin">🌿 피부 분석</span>
-                <span class="mode-pill mp-scalp">💆 두피 분석</span>
-              </div>
-            </div>
-          </div>
-          <div class="step-item">
-            <div class="step-num">03</div>
-            <div>
-              <div class="step-title">기본 정보 · 생활습관 입력</div>
-              <div class="step-desc">성별·연령·거주 지역·거주기간 입력 후, 자외선차단제 사용 여부·흡연·수면시간을 기록합니다. (논문 교란변수 통제용)</div>
-            </div>
-          </div>
-          <div class="step-item">
-            <div class="step-num">04</div>
-            <div>
-              <div class="step-title">현미경 사진 촬영 · 업로드</div>
-              <div class="step-desc">스마트폰 클립형 현미경(50x~100x)으로 촬영한 사진을 업로드합니다. 부위별 1~3장 권장.</div>
-            </div>
-          </div>
-          <div class="step-item">
-            <div class="step-num">05</div>
-            <div>
-              <div class="step-title">AI 분석 · 처방 결과 확인</div>
-              <div class="step-desc">약 15~30초 후 피부·두피 스코어, CEEI·SEEI 등급, 맞춤 성분 처방, 세럼 레시피를 확인합니다.</div>
-            </div>
-          </div>
-        </div>
-      </div><!-- /tab-howto -->
-
-      <!-- ── 탭: 연구소식 ── -->
-      <div class="tab-content" id="tab-research">
-
-        <div class="patent-card" style="margin-bottom:10px">
-          <div class="patent-no">특허출원번호 · 제10-2026-0107210호</div>
-          <div class="patent-title">환경오염 연동 AI 피부·두피 분석 및 화장품 제안 시스템</div>
-          <div class="patent-meta">
-            출원일: 2026년 6월 12일 · 출원인: 재능대학교 산학협력단<br>
-            발명자: 남정훈, 홍수지, 홍수영 · 대리인: 특허법인무한 (송영건 변리사)<br>
-            청구항: CEEI 알고리즘, 스마트폰 현미경 AI 분석, 맞춤 처방 생성 시스템 포함
-          </div>
-        </div>
-
-        <div class="news-item ni-paper" style="margin-bottom:7px">
-          <div class="ni-tag">SCI 논문 · 준비중</div>
-          <div class="ni-title">CEEI 기반 AI 피부 분석 유효성 검증 — Cosmetics (MDPI) 타겟</div>
-          <div class="ni-body">100명 데이터 확보 후 투고 예정. EII(Perugini et al., Cosmetics 2025) 대비 에어코리아 실측 API 기반 객관적 지수의 우위성을 주요 기여로 제시. IRB 승인 후 데이터 수집 진행 예정.</div>
-          <div class="ni-date">2026년 하반기 예정</div>
-        </div>
-
-        <div class="news-item ni-system" style="margin-bottom:7px">
-          <div class="ni-tag">시스템 업데이트</div>
-          <div class="ni-title">SEEI v3 — 두피 전용 복합 환경노출지수 정식 도입</div>
-          <div class="ni-body">기존 CEEI(피부)와 별도로 두피 전용 SEEI 적용 시작. PM2.5·PM10·NO₂·O₃ 4종 오염물질 가중합에 계절·UV·습도 보정 추가. Google Sheets 48컬럼 자동 헤더 관리 로직 개선.</div>
-          <div class="ni-date">2026-06-28</div>
-        </div>
-
-        <div class="sec-title" style="margin:12px 0 8px">논문 투고 로드맵</div>
-        <div class="roadmap">
-          <div class="roadmap-step current">
-            <div class="rm-num c">P1</div>
-            <div>
-              <div class="rm-title">파일럿 논문 — Cosmetics (MDPI, IF ~3.0)</div>
-              <div class="rm-detail">30~50명 데이터 · AI vs 전문가 ICC 검증 · CEEI 등급별 피부 스코어 비교</div>
-              <div class="rm-tag">▶ 진행중 · 3~6개월 목표</div>
-            </div>
-          </div>
-          <div class="roadmap-step next">
-            <div class="rm-num n">P2</div>
-            <div>
-              <div class="rm-title">상관관계 논문 — IJERPH (IF ~4.0)</div>
-              <div class="rm-detail">100명 이상 · 지역별 CEEI 그룹 비교 · ANOVA/Pearson r 분석</div>
-              <div class="rm-tag">6~12개월 목표</div>
-            </div>
-          </div>
-          <div class="roadmap-step future">
-            <div class="rm-num f">P3</div>
-            <div>
-              <div class="rm-title">고영향력 SCIE — BJD / J Invest Dermatol</div>
-              <div class="rm-detail">200명 이상 · 종단 데이터 (3개월 간격 반복 측정) · 다변량 시계열 분석</div>
-              <div class="rm-tag">12~24개월 목표</div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /tab-research -->
-
-      <!-- ── 탭: FAQ ── -->
-      <div class="tab-content" id="tab-faq">
-        <div style="display:flex;flex-direction:column;gap:6px">
-
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">이벤트 코드는 어떻게 받나요?<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">YD Lab 체험 이벤트 현장(재능대학교 행사, 뷰티·화장품 박람회 등)에서 안내받을 수 있습니다. 온라인 문의: ydlab@jeiu.ac.kr</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">어떤 현미경을 사용해야 하나요?<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">스마트폰 카메라에 부착하는 클립형 현미경 렌즈(50x~100x)를 사용합니다. 행사 현장에서 기기를 제공하며, 개인 구매 시 1~3만원대 제품으로 이용 가능합니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">CEEI와 SEEI는 어떻게 다른가요?<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">CEEI(피부)는 PM2.5 연평균 × 거주기간으로 산출하는 단순 누적 노출지수입니다. SEEI(두피)는 PM2.5·PM10·NO₂·O₃ 4종 오염물질 가중합에 계절·UV지수·습도 보정을 추가 적용해 두피 환경 부담을 더 정밀하게 측정합니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">분석 결과는 의료 진단인가요?<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">아닙니다. AI 기반 피부·두피 상태 정량화 및 연구 목적 도구입니다. 의료적 진단·처방을 대체하지 않으며, 이상이 의심되면 피부과 전문의를 방문하세요.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">수집 데이터는 어디에 사용되나요?<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">IRB 승인 후 환경오염-피부 상관관계 SCI 논문 연구에 익명으로 활용됩니다. 개인 특정 불가 형태로 처리되며, 마케팅 동의 시에만 별도 연락이 발송됩니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">피부·두피 분석을 동시에 받을 수 있나요?<span class="faq-arrow">▼</span></div>
-            <div class="faq-a">현재는 한 세션에 피부 또는 두피 중 하나의 모드만 선택할 수 있습니다. 두 가지 모두 원하시면 코드를 재입력하거나 별도 세션으로 진행해 주세요.</div>
-          </div>
-
-        </div>
-      </div><!-- /tab-faq -->
-
-    </div><!-- /center-scroll -->
-  </div><!-- /center-panel -->
-
-
-  <!-- ████ 오른쪽 패널 ████ -->
-  <div class="panel">
-
-    <!-- CEEI·SEEI 계산기 -->
-    <div>
-      <div class="sec-title">CEEI · SEEI 계산기 <span class="sec-badge live">인터랙티브</span></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">거주기간 선택</div>
-          <select id="yearSel" onchange="calcIndex()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:4px;font-family:var(--sans);font-size:13px;">
-            <option value="0">선택</option>
-            <option value="0.5">1년 미만</option>
-            <option value="1">1~2년</option>
-            <option value="4">3~5년</option>
-            <option value="7" selected>5~10년</option>
-            <option value="12">10년 이상</option>
-          </select>
-        </div>
-        <div id="calcResult" style="display:flex;flex-direction:column;gap:6px">
-          <!-- JS로 채워짐 -->
-        </div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.6;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px">
-          CEEI = PM2.5_연평균 × 거주기간(년)<br>
-          SEEI = (PM2.5×0.40 + PM10×0.25<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ NO₂×0.20 + O₃×0.15)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;× 거주기간 × 계절보정 × UV × 습도
-        </div>
-      </div>
     </div>
+</section>
 
-    <!-- 인용 문헌 -->
-    <div>
-      <div class="sec-title">주요 인용 문헌 <span class="sec-badge dev">논문용</span></div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:9px 11px">
-          <div style="font-family:var(--mono);font-size:9px;color:var(--accent2);margin-bottom:4px">EII · 피부 노출지수</div>
-          <div style="font-size:11px;color:var(--text);margin-bottom:3px;line-height:1.5">Perugini et al. (2025). Exposure Intensity Index (EII): A New Tool to Assess the Pollution Exposure Level of the Skin.</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Cosmetics, 12(5), 215. MDPI</div>
+<!-- ===== 분석 예시 ===== -->
+<section id="sample">
+    <div class="section-inner">
+        <div class="sample-grid">
+            <div class="sample-screen">
+                <div class="sample-screen-header">
+                    <div class="dot" style="background:#ff5f57"></div>
+                    <div class="dot" style="background:#febc2e"></div>
+                    <div class="dot" style="background:#28c840"></div>
+                    <span style="font-size:0.8rem;color:#999;margin-left:0.5rem">AI 분석 결과</span>
+                </div>
+                <div class="score-grid">
+                    <div class="score-item"><div class="score-label">주름</div><div class="score-bar-wrap"><div class="score-bar" style="width:72%"></div></div><div class="score-num">72점</div></div>
+                    <div class="score-item"><div class="score-label">모공</div><div class="score-bar-wrap"><div class="score-bar" style="width:58%"></div></div><div class="score-num">58점</div></div>
+                    <div class="score-item"><div class="score-label">피부결</div><div class="score-bar-wrap"><div class="score-bar" style="width:81%"></div></div><div class="score-num">81점</div></div>
+                    <div class="score-item"><div class="score-label">수분</div><div class="score-bar-wrap"><div class="score-bar" style="width:64%"></div></div><div class="score-num">64점</div></div>
+                </div>
+                <div class="ceei-box">
+                    <div class="ceei-label">환경노출지수 (CEEI)</div>
+                    <div class="ceei-value">47.3</div>
+                    <div class="ceei-desc">오늘 PM2.5 47μg/m³ 기준 · 주의 단계</div>
+                </div>
+            </div>
+            <div class="sample-features">
+                <span class="section-tag">Sample Result</span>
+                <h2 class="section-title">이런 결과를 받게 됩니다</h2>
+                <div class="feature-item"><div class="feature-icon">📊</div><div><h4>5가지 피부 지표 점수화</h4><p>주름·모공·피부결·톤·수분을 0~100점으로 정량화해 변화를 추적합니다</p></div></div>
+                <div class="feature-item"><div class="feature-icon">🌫</div><div><h4>환경노출지수 (CEEI) 산출</h4><p>오늘 내 지역 대기오염이 피부에 미치는 영향을 수치로 확인합니다</p></div></div>
+                <div class="feature-item"><div class="feature-icon">💊</div><div><h4>맞춤 화장품 처방서 생성</h4><p>분석 결과 기반으로 제조 의뢰서가 자동 생성되어 공방에 바로 주문 가능합니다</p></div></div>
+                <div class="feature-item"><div class="feature-icon">📈</div><div><h4>시계열 변화 추적</h4><p>매주·매월 분석 결과를 비교해 피부 변화 트렌드를 확인합니다</p></div></div>
+            </div>
         </div>
-
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:9px 11px">
-          <div style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-bottom:4px">누적 노출지수 방법론</div>
-          <div style="font-size:11px;color:var(--text);margin-bottom:3px;line-height:1.5">Checkoway et al. (1997). Exposure and dose modelling in occupational epidemiology.</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">PMC2078465 · 직업역학 CEI 공식 근거</div>
-        </div>
-
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:9px 11px">
-          <div style="font-family:var(--mono);font-size:9px;color:var(--warn);margin-bottom:4px">PM2.5 · 피부 노화</div>
-          <div style="font-size:11px;color:var(--text);margin-bottom:3px;line-height:1.5">Long-Term PM2.5 Exposure and Clinical Skin Aging (2025). MDPI Life, 16(1), 61.</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">PMC12843363 · 산화스트레스·AhR 경로</div>
-        </div>
-
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:9px 11px">
-          <div style="font-family:var(--mono);font-size:9px;color:#b088ff;margin-bottom:4px">SEES · 환경 노출 통합 점수</div>
-          <div style="font-size:11px;color:var(--text);margin-bottom:3px;line-height:1.5">Dréno et al. (2026). Skin Environmental Exposure Score (SEES). PMC13076557.</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">UV·열·오존·PM2.5 퍼지 로직 통합 지수</div>
-        </div>
-
-      </div>
     </div>
+</section>
 
-    <!-- 바로가기 -->
-    <div>
-      <div class="sec-title">바로가기 <span class="sec-badge">링크</span></div>
-      <div style="display:flex;flex-direction:column;gap:5px">
-        <a href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/" target="_blank" style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.25);border-radius:4px;padding:9px 12px;text-decoration:none;display:flex;justify-content:space-between;align-items:center;transition:background .15s;" onmouseover="this.style.background='rgba(0,212,170,.15)'" onmouseout="this.style.background='rgba(0,212,170,.08)'">
-          <span style="font-size:12px;font-weight:600;color:var(--accent2)">▶ 분석 앱 실행</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">streamlit →</span>
-        </a>
-        <a href="https://www.airkorea.or.kr" target="_blank" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:9px 12px;text-decoration:none;display:flex;justify-content:space-between;align-items:center;transition:background .15s;" onmouseover="this.style.background='rgba(59,158,255,.08)'" onmouseout="this.style.background='var(--bg3)'">
-          <span style="font-size:12px;color:var(--text2)">🌫️ 에어코리아</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">→</span>
-        </a>
-        <a href="https://www.data.go.kr" target="_blank" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:9px 12px;text-decoration:none;display:flex;justify-content:space-between;align-items:center;transition:background .15s;" onmouseover="this.style.background='rgba(59,158,255,.08)'" onmouseout="this.style.background='var(--bg3)'">
-          <span style="font-size:12px;color:var(--text2)">📡 공공데이터포털</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">→</span>
-        </a>
-        <a href="mailto:ydlab@jeiu.ac.kr" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:9px 12px;text-decoration:none;display:flex;justify-content:space-between;align-items:center;transition:background .15s;" onmouseover="this.style.background='rgba(176,136,255,.08)'" onmouseout="this.style.background='var(--bg3)'">
-          <span style="font-size:12px;color:var(--text2)">✉️ 이벤트 문의</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">→</span>
-        </a>
-      </div>
+<!-- ===== 연구·소식 ===== -->
+<section id="news">
+    <div class="section-inner">
+        <span class="section-tag">News & Research</span>
+        <h2 class="section-title">연구 소식</h2>
+        <p class="section-sub">논문·특허·언론 보도 등 최신 소식을 전합니다</p>
+        <div class="news-grid">
+            <div class="news-card"><div class="news-card-header">📄</div><div class="news-card-body"><span class="news-tag">특허</span><h3>핵심 기술 3건 국내 특허 출원 진행 중</h3><p>CEEI 산출 알고리즘, 스마트폰 현미경 AI 분석 시스템, 맞춤 처방 생성 방법 특허 출원</p><div class="news-date">2026년 예정</div></div></div>
+            <div class="news-card"><div class="news-card-header">🔬</div><div class="news-card-body"><span class="news-tag">논문</span><h3>KCI 등재지 기술 논문 투고 준비 중</h3><p>스마트폰 기반 AI 피부 분석 시스템 설계 및 구현 논문 작성 중</p><div class="news-date">2026년 예정</div></div></div>
+            <div class="news-card"><div class="news-card-header">🌏</div><div class="news-card-body"><span class="news-tag">사업</span><h3>일본 Qoo10 입점 및 서비스 확장 예정</h3><p>한국·일본 동시 서비스를 통한 글로벌 피부 환경 데이터 구축 진행 중</p><div class="news-date">2026년 예정</div></div></div>
+        </div>
     </div>
+</section>
 
-  </div><!-- /오른쪽 패널 -->
+<!-- ===== CTA 섹션 ===== -->
+<section id="cta">
+    <div class="section-inner" style="text-align:center">
+        <span class="section-tag" style="background:rgba(255,255,255,0.1);color:#7ecdc0">Get Started</span>
+        <h2 class="section-title">지금 바로 시작하세요</h2>
+        <p class="section-sub" style="margin:0 auto 2rem">
+            아래 버튼을 클릭해 분석기로 이동한 후<br>
+            행사장에서 받은 이벤트 코드를 입력하면 바로 분석을 시작할 수 있습니다
+        </p>
+        <div class="cta-buttons">
+            <a href="#" onclick="alert('네이버 스마트스토어 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-accent btn-large">📦 키트 구매하기 (계획 중)</a>
+            <a href="#" onclick="alert('일본 Qoo10 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-outline btn-large" style="color:white;border-color:white;">🇯🇵 일본 구매 Qoo10 (계획 중)</a>
+        </div>
 
-</div><!-- /layout -->
+        <!-- ✅ 코드 입력 제거 → 분석기 바로 이동 버튼으로 교체 -->
+        <div class="start-box">
+            <p>
+                🔬 <strong style="color:white;">AI 피부·두피 분석기</strong><br>
+                버튼을 클릭하면 분석기로 이동합니다.<br>
+                분석기 입장 시 <strong style="color:#7ecdc0;">이벤트 코드</strong>가 필요합니다.
+            </p>
+            <a href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/" 
+               target="_blank" class="btn-start">
+                🔬 AI 분석기 시작하기
+            </a>
+            <p class="start-notice">
+                🎟️ 오픈랩 이벤트 참여자 — 행사장에서 받은 코드 입력<br>
+                🛒 키트 구매자 — 키트 동봉 코드 입력
+            </p>
+        </div>
+    </div>
+</section>
 
+<!-- ===== FAQ ===== -->
+<section id="faq">
+    <div class="section-inner">
+        <span class="section-tag">FAQ</span>
+        <h2 class="section-title" style="text-align:center">자주 묻는 질문</h2>
+        <div class="faq-list">
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">어떤 스마트폰에서도 사용할 수 있나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>안드로이드 및 iOS 모두 지원합니다. 저가형 유무선 연결가능 현미경을 스마트폰 카메라에 장착하고 브라우저에서 플랫폼에 접속하면 별도 앱 설치 없이 바로 사용 가능합니다.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">무료 이용 기간이 끝나면 어떻게 되나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>무료 기간 만료 후에는 분석 기능이 잠기지만 기존 분석 결과 이력은 계속 열람 가능합니다. 월 구독(9,900원)으로 전환하면 이력 보존과 함께 무제한 분석이 가능합니다.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">이벤트 코드는 어디서 받나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>오픈랩 이벤트 참여자는 행사장 현장에서 코드를 받으실 수 있습니다. 키트 구매자는 키트 박스 안에 동봉된 코드 카드를 확인해 주세요. 분석기 접속 후 입장 화면에서 코드를 입력하시면 바로 시작됩니다.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">두피 분석도 같은 현미경으로 할 수 있나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>네, 동일한 유무선 연결 스마트폰 현미경으로 피부와 두피 모두 분석 가능합니다. 두피 부위에 현미경을 대고 촬영하면 모공 상태, 두피 각질, 모발 굵기 등을 분석해드립니다.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">개인정보는 어떻게 관리되나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>촬영된 이미지와 분석 결과는 암호화하여 저장되며, 제3자에게 제공되지 않습니다. 연구 목적으로 익명화된 데이터를 활용할 수 있으며, 이는 회원가입 시 별도 동의를 받습니다.</p></div></div>
+        </div>
+    </div>
+</section>
 
-<!-- ══ 푸터 ══ -->
+<!-- ===== 푸터 ===== -->
 <footer>
-  <div class="footer-left">
-    <strong>SKIN-X by YD Lab</strong> · 재능대학교 산학협력단<br>
-    특허출원 제10-2026-0107210호 · 2026.06.12
-  </div>
-  <div class="footer-links">
-    <a href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/" target="_blank">분석 앱</a>
-    <a href="https://www.airkorea.or.kr" target="_blank">에어코리아</a>
-    <a href="https://www.jeiu.ac.kr" target="_blank">재능대학교</a>
-    <a href="mailto:ydlab@jeiu.ac.kr">문의</a>
-  </div>
-  <div class="footer-disclaimer">
-    본 서비스는 AI 기반 피부·두피 상태 분석 도구로, 의료적 진단·처방을 대체하지 않습니다.
-    대기 데이터 출처: 한국환경공단 에어코리아(airkorea.or.kr). 분석 결과는 연구 목적으로만 활용됩니다.
-  </div>
+    <div class="footer-inner">
+        <div>
+            <div class="footer-logo">SKIN-<span style="color:#FF6B6B;">X</span> <span style="font-size:0.8rem;opacity:0.7;">by YD Lab</span></div>
+            <div class="footer-info">
+                (주)와이디랩 · 대표: 남정훈 · 사업자등록번호: 등록 예정<br>
+                이메일: circlenam@naver.com<br>
+                © 2026 SKIN-<span style="color:#FF6B6B;">X</span> by YD Lab · 재능대학교 AI-바이오분석특화연구소. All rights reserved.
+            </div>
+        </div>
+        <div class="footer-links">
+            <a href="#">개인정보처리방침</a>
+            <a href="#">이용약관</a>
+            <a href="#">공지사항</a>
+        </div>
+    </div>
 </footer>
 
-
-<!-- ══ JavaScript ══ -->
 <script>
-/* ── 지역 PM2.5 테이블 ── */
-const REGION_PM25 = {
-  '중구':'24.2','남동구':'24.2','서구':'23.5',
-  '연수구':'22.0','부평구':'23.8','미추홀구':'23.1'
-};
-let currentRegion = '중구';
-let currentPm25Avg = 24.2;
-let liveAirData = {};
-
-/* ── 에어코리아 JSON 로드 ── */
-async function loadAirData() {
-  try {
-    const r = await fetch('https://circlenam.github.io/ydlab/data/airdata.json', {cache:'no-store'});
-    if(!r.ok) throw new Error('fetch failed');
-    const d = await r.json();
-    liveAirData = d;
-    renderAir(d, false);
-    document.getElementById('apiBadge').textContent = 'LIVE';
-    document.getElementById('apiBadge').className = 'api-badge api-live';
-    const now = new Date();
-    document.getElementById('updateTime').textContent =
-      now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-    calcIndex();
-  } catch(e) {
-    console.warn('Air load failed:', e);
-    document.getElementById('apiBadge').textContent = 'DEMO';
-    document.getElementById('apiBadge').className = 'api-badge api-demo';
-    document.getElementById('updateTime').textContent = '--:--';
-  }
+// ===== FAQ 토글 =====
+function toggleFaq(btn) {
+    const answer = btn.nextElementSibling;
+    const arrow  = btn.querySelector('.faq-arrow');
+    const isOpen = answer.classList.contains('open');
+    document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('open'));
+    document.querySelectorAll('.faq-arrow').forEach(a => { a.textContent = '＋'; a.style.transform = 'rotate(0deg)'; });
+    if (!isOpen) { answer.classList.add('open'); arrow.textContent = '－'; }
 }
 
-function renderAir(d, isMock) {
-  const pm25 = parseFloat(d.pm25 ?? d.PM25 ?? 0);
-  const pm10 = parseFloat(d.pm10 ?? d.PM10 ?? 0);
-  const no2  = parseFloat(d.no2  ?? d.NO2  ?? 0);
-  const o3   = parseFloat(d.o3   ?? d.O3   ?? 0);
-  const station = d.station ?? d.stationName ?? '인천';
-  const updated = d.updated ?? d.dataTime ?? '--';
+// ===== 네비게이션 스크롤 =====
+window.addEventListener('scroll', function() {
+    document.querySelector('nav').style.boxShadow = window.scrollY > 50 ? '0 2px 20px rgba(0,0,0,0.1)' : 'none';
+});
 
-  setVal('pm25v', pm25, '㎍/m³');
-  setVal('pm10v', pm10, '㎍/m³');
-  setVal('no2v',  no2,  'ppm');
-  setVal('o3v',   o3,   'ppm');
+// ===== 실시간 대기질 =====
+const AIR_JSON_URL = 'https://circlenam.github.io/ydlab/data/airdata.json';
 
-  const pm25pct = Math.min(pm25/75*100, 100);
-  const pm10pct = Math.min(pm10/150*100, 100);
-  const no2pct  = Math.min(no2/0.1*100, 100);
-  const o3pct   = Math.min(o3/0.1*100, 100);
-
-  setBar('pm25bar', pm25pct);
-  setBar('pm10bar', pm10pct);
-  setBar('no2bar',  no2pct);
-  setBar('o3bar',   o3pct);
-
-  document.getElementById('pm25g').textContent = gradeStr(pm25, [15,35,75], ['좋음','보통','나쁨','매우나쁨']);
-  document.getElementById('pm25g').className = 'poll-grade ' + gradeClass(pm25, [15,35,75]);
-  document.getElementById('pm10g').textContent = gradeStr(pm10, [30,80,150], ['좋음','보통','나쁨','매우나쁨']);
-  document.getElementById('pm10g').className = 'poll-grade ' + gradeClass(pm10, [30,80,150]);
-  document.getElementById('no2g').textContent  = gradeStr(no2,  [0.03,0.06,0.1], ['좋음','보통','나쁨','매우나쁨']);
-  document.getElementById('no2g').className  = 'poll-grade ' + gradeClass(no2,  [0.03,0.06,0.1]);
-  document.getElementById('o3g').textContent   = gradeStr(o3,   [0.06,0.09,0.15], ['좋음','보통','나쁨','매우나쁨']);
-  document.getElementById('o3g').className   = 'poll-grade ' + gradeClass(o3,   [0.06,0.09,0.15]);
-
-  document.getElementById('stName').textContent = station;
-  document.getElementById('stTime').textContent = updated;
-  document.getElementById('airBadge').textContent = isMock ? 'DEMO' : 'LIVE';
-  document.getElementById('airBadge').className = isMock ? 'sec-badge' : 'sec-badge live';
-
-  // PM2.5 경보
-  if(pm25 > 35) {
-    document.getElementById('alertBar').classList.add('show');
-    document.getElementById('alertMsg').textContent =
-      `현재 ${station} PM2.5 ${pm25}㎍/m³ — 나쁨 단계. 외출 시 마스크 착용 권고.`;
-  } else {
-    document.getElementById('alertBar').classList.remove('show');
-  }
+function pmGrade(v) {
+    if (v === null || isNaN(v)) return { label:'--', color:'#aaa', badge:'rgba(150,150,150,0.2)', effects:[] };
+    if (v <= 15) return { label:'좋음',     color:'#4CAF50', badge:'rgba(76,175,80,0.2)',    effects:['오늘 대기 상태가 좋습니다 😊','야외 활동하기 좋은 날입니다'] };
+    if (v <= 35) return { label:'보통',     color:'#FFC107', badge:'rgba(255,193,7,0.2)',    effects:['피부 보습 관리를 권장합니다','자외선 차단제 함께 사용하세요'] };
+    if (v <= 75) return { label:'나쁨',     color:'#FF6B6B', badge:'rgba(255,107,107,0.2)', effects:['피부 장벽 약화 위험','두피 모공 막힘 위험','오늘 맞춤 케어가 필요합니다'] };
+    return             { label:'매우나쁨', color:'#9C27B0', badge:'rgba(156,39,176,0.2)',  effects:['피부 장벽 심각한 손상 위험','두피 염증 유발 가능','외출 자제 권장','즉각적인 피부 케어 필요'] };
 }
 
-function setVal(id, val, unit) {
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.innerHTML = (val||'--') + `<span class="poll-unit">${unit}</span>`;
+async function loadDistrictAir() {
+    const id = document.getElementById('districtSelect').value;
+    if (!id) return;
+
+    document.getElementById('pm-placeholder').style.display = 'none';
+    document.getElementById('pm-data').style.display        = 'none';
+    document.getElementById('pm-error').style.display       = 'none';
+    document.getElementById('pm-loading').style.display     = 'flex';
+
+    try {
+        const res = await fetch(AIR_JSON_URL + '?t=' + Date.now(), { cache: 'no-cache' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const json = await res.json();
+
+        const st = json.stations.find(s => s.id === id);
+        if (!st || !st.live) throw new Error('no live data');
+
+        const grade = pmGrade(st.pm25);
+
+        const pmValEl = document.getElementById('pm-value');
+        pmValEl.textContent = Math.round(st.pm25);
+        pmValEl.style.color = grade.color;
+
+        const stEl = document.getElementById('pm-status');
+        stEl.textContent      = '⚠ ' + grade.label;
+        stEl.style.background = grade.badge;
+        stEl.style.color      = grade.color;
+
+        document.getElementById('pm-updated').textContent =
+            '📡 에어코리아 실측 · ' + (json.updated || '');
+
+        document.getElementById('pm-multi').innerHTML = [
+            { label:'PM10', val: Math.round(st.pm10 || 0), unit:'μg/m³' },
+            { label:'NO₂',  val: st.no2  ? st.no2.toFixed(3)  : '--', unit:'ppm' },
+            { label:'O₃',   val: st.o3   ? st.o3.toFixed(3)   : '--', unit:'ppm' },
+            { label:'측정소', val: st.station_matched || st.name, unit:'' },
+        ].map(m =>
+            `<div class="pm-multi-item"><span>${m.label}</span><span class="mval">${m.val}${m.unit ? ' '+m.unit : ''}</span></div>`
+        ).join('');
+
+        document.getElementById('pm-effects').innerHTML =
+            grade.effects.map(e => `<li>${e}</li>`).join('');
+
+        document.getElementById('pm-loading').style.display = 'none';
+        document.getElementById('pm-data').style.display    = 'block';
+
+    } catch (err) {
+        console.error('[SKIN-X air]', err);
+        document.getElementById('pm-loading').style.display = 'none';
+        document.getElementById('pm-error').style.display   = 'block';
+        document.getElementById('pm-error').innerHTML =
+            `⚠ 데이터를 불러올 수 없습니다<br>
+             <a href="https://ydlabbio.com" target="_blank" style="color:#7ecdc0; font-size:0.8rem">
+             ydlabbio.com에서 직접 확인하기 →</a>`;
+    }
 }
-function setBar(id, pct) {
-  const el = document.getElementById(id);
-  if(el) el.style.width = pct + '%';
-}
-function gradeStr(v, th, labels) {
-  if(!v) return '데이터 없음';
-  if(v<=th[0]) return labels[0];
-  if(v<=th[1]) return labels[1];
-  if(v<=th[2]) return labels[2];
-  return labels[3];
-}
-function gradeClass(v, th) {
-  if(!v) return 'c-o';
-  if(v<=th[0]) return 'c-o';
-  if(v<=th[1]) return 'c-y';
-  if(v<=th[2]) return 'c-w';
-  return 'c-d';
-}
-
-/* ── 지역 선택 ── */
-function selectRegion(btn, name, pm25avg) {
-  document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentRegion = name;
-  currentPm25Avg = parseFloat(pm25avg);
-  document.getElementById('selRegion').textContent = name;
-  document.getElementById('selPm25').textContent = pm25avg + ' ㎍/m³';
-  calcIndex();
-}
-
-/* ── CEEI·SEEI 계산 ── */
-function calcIndex() {
-  const years = parseFloat(document.getElementById('yearSel').value) || 0;
-  if(years === 0) {
-    document.getElementById('calcResult').innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--text3)">거주기간을 선택하세요</div>';
-    document.getElementById('ceeiVal').textContent = '--';
-    document.getElementById('seeiVal').textContent = '--';
-    return;
-  }
-
-  const ceei = (currentPm25Avg * years).toFixed(1);
-  const ceeiNum = parseFloat(ceei);
-  const ceeiGrade = ceeiNum < 50 ? '낮음' : ceeiNum < 100 ? '보통' : ceeiNum < 200 ? '높음' : '매우높음';
-  const ceeiGradeClass = ceeiNum < 50 ? 'grade-low' : ceeiNum < 100 ? 'grade-med' : ceeiNum < 200 ? 'grade-high' : 'grade-vhigh';
-
-  const pm25 = parseFloat(liveAirData.pm25 ?? 23);
-  const pm10 = parseFloat(liveAirData.pm10 ?? 38);
-  const no2  = parseFloat(liveAirData.no2  ?? 0.018) * 1882;
-  const o3   = parseFloat(liveAirData.o3   ?? 0.031) * 1962;
-  const weighted = pm25*0.40 + pm10*0.25 + no2*0.20 + o3*0.15;
-  const month = new Date().getMonth()+1;
-  const seasonMap = {1:1.1,2:1.1,3:1.0,4:1.0,5:1.0,6:1.2,7:1.3,8:1.3,9:1.0,10:1.0,11:1.1,12:1.1};
-  const sc = seasonMap[month] || 1.0;
-  const seei = (weighted * years * sc).toFixed(1);
-  const seeiNum = parseFloat(seei);
-  const seeiGrade = seeiNum < 50 ? '낮음' : seeiNum < 100 ? '보통' : seeiNum < 200 ? '높음' : '매우높음';
-  const seeiGradeClass = seeiNum < 50 ? 'grade-low' : seeiNum < 100 ? 'grade-med' : seeiNum < 200 ? 'grade-high' : 'grade-vhigh';
-
-  document.getElementById('ceeiVal').textContent = ceei;
-  document.getElementById('ceeiGrade').textContent = ceeiGrade;
-  document.getElementById('ceeiGrade').className = 'idx-grade ' + ceeiGradeClass;
-  document.getElementById('seeiVal').textContent = seei;
-  document.getElementById('seeiGrade').textContent = seeiGrade;
-  document.getElementById('seeiGrade').className = 'idx-grade ' + seeiGradeClass;
-
-  document.getElementById('calcResult').innerHTML = `
-    <div style="background:var(--bg3);border:1px solid rgba(0,212,170,.2);border-radius:4px;padding:8px 10px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--accent2);margin-bottom:4px">CEEI (피부)</div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text)">${ceei}</div>
-      <span class="idx-grade ${ceeiGradeClass}" style="margin-top:4px;display:inline-block">${ceeiGrade}</span>
-    </div>
-    <div style="background:var(--bg3);border:1px solid rgba(59,158,255,.2);border-radius:4px;padding:8px 10px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-bottom:4px">SEEI (두피)</div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text)">${seei}</div>
-      <span class="idx-grade ${seeiGradeClass}" style="margin-top:4px;display:inline-block">${seeiGrade}</span>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">계절보정×${sc.toFixed(1)}</div>
-    </div>
-  `;
-}
-
-/* ── 탭 전환 ── */
-function switchTab(id, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-'+id).classList.add('active');
-}
-
-/* ── FAQ 토글 ── */
-function toggleFaq(el) {
-  const item = el.closest('.faq-item');
-  const wasOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-  if(!wasOpen) item.classList.add('open');
-}
-
-/* ── 초기 실행 ── */
-calcIndex();
-loadAirData();
-setInterval(loadAirData, 5*60*1000);
 </script>
 
 </body>
