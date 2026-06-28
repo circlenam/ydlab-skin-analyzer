@@ -456,33 +456,80 @@ def fetch_kma_uv(region):
     return {"uv_index":est,"mock":True}
 
 def fetch_kma_humidity(region):
-    """기상청 단기예보 - 습도(REH)"""
+    """
+    기상청 습도 실측값 조회 (24시간 동작)
+    1순위: 초단기실황 REH (가장 최신, 매시 정각+30분 발표)
+    2순위: 단기예보 REH (자정 이후에도 전날 23시 예보 활용)
+    3순위: 계절 기반 모의값
+    """
     key    = st.secrets.get("KMA_API_KEY","")
     nx, ny = KMA_GRID.get(region,(54,124))
     now    = datetime.now()
-    base_date = now.strftime("%Y%m%d")
-    base_hours = [2,5,8,11,14,17,20,23]
-    base_hour  = max([h for h in base_hours if h <= now.hour],default=23)
-    base_time  = f"{base_hour:02d}00"
+
     if key:
+        # ── 1순위: 초단기실황 (매시 발표, 밤에도 동작) ──────
         try:
-            url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
-            params = dict(serviceKey=key,pageNo=1,numOfRows=100,dataType="JSON",
-                          base_date=base_date,base_time=base_time,nx=nx,ny=ny)
-            r     = requests.get(url,params=params,timeout=8)
+            url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst"
+            # 초단기실황은 매시 40분 이후 현재 시각 사용, 그 이전은 1시간 전
+            if now.minute < 40:
+                from datetime import timedelta
+                obs_time = now - timedelta(hours=1)
+            else:
+                obs_time = now
+            params = dict(serviceKey=key, pageNo=1, numOfRows=10, dataType="JSON",
+                          base_date=obs_time.strftime("%Y%m%d"),
+                          base_time=obs_time.strftime("%H00"),
+                          nx=nx, ny=ny)
+            r     = requests.get(url, params=params, timeout=8)
             items = (r.json().get("response",{}).get("body",{})
                               .get("items",{}).get("item",[]))
             for item in items:
                 if item.get("category") == "REH":
-                    return {"humidity":float(item.get("fcstValue",50)),"mock":False}
+                    return {"humidity": float(item.get("obsrValue", 50)), "mock": False}
         except Exception:
             pass
-    # 모의값: 계절별 추정
+
+        # ── 2순위: 단기예보 (자정 이후 전날 23시 활용) ───────
+        try:
+            from datetime import timedelta
+            base_hours = [2, 5, 8, 11, 14, 17, 20, 23]
+            candidates = [h for h in base_hours if h <= now.hour]
+            if candidates:
+                base_hour = max(candidates)
+                base_date = now.strftime("%Y%m%d")
+            else:
+                # 자정(0~1시): 전날 23시 예보 사용
+                base_hour = 23
+                base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
+            base_time = f"{base_hour:02d}00"
+
+            url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+            params = dict(serviceKey=key, pageNo=1, numOfRows=100, dataType="JSON",
+                          base_date=base_date, base_time=base_time, nx=nx, ny=ny)
+            r     = requests.get(url, params=params, timeout=8)
+            items = (r.json().get("response",{}).get("body",{})
+                              .get("items",{}).get("item",[]))
+            # 현재 시각에 가장 가까운 REH 예보값 선택
+            now_str = now.strftime("%Y%m%d%H%M")[:10]  # YYYYMMDDhh
+            reh_items = [i for i in items if i.get("category") == "REH"]
+            if reh_items:
+                # 현재 시각 이후 첫 번째 예보값
+                reh_items.sort(key=lambda x: x.get("fcstDate","") + x.get("fcstTime",""))
+                for item in reh_items:
+                    fdt = item.get("fcstDate","") + item.get("fcstTime","")[:2]
+                    if fdt >= now_str:
+                        return {"humidity": float(item.get("fcstValue", 50)), "mock": False}
+                # 없으면 마지막 값
+                return {"humidity": float(reh_items[-1].get("fcstValue", 50)), "mock": False}
+        except Exception:
+            pass
+
+    # ── 3순위: 계절 기반 모의값 ──────────────────────────────
     month = now.month
-    if month in [6,7,8]:   hum = random.randint(65,85)
-    elif month in [12,1,2]: hum = random.randint(30,50)
-    else:                   hum = random.randint(45,65)
-    return {"humidity":float(hum),"mock":True}
+    if month in [6,7,8]:    hum = random.randint(65, 85)
+    elif month in [12,1,2]: hum = random.randint(30, 50)
+    else:                   hum = random.randint(45, 65)
+    return {"humidity": float(hum), "mock": True}
 
 # ══════════════════════════════════════════════════════════════
 # AI 분석
