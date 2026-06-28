@@ -1,13 +1,13 @@
 """
 YD Lab 피부·두피 분석 앱 (특허 출원 중)
-v3.0 - SEEI + 기상청 UV지수·습도 통합
+v3.1 - 버그수정 + 교란변수 추가 + 헤더 안정화
 설치: pip install streamlit anthropic pillow requests pandas gspread google-auth
 실행: streamlit run ydlab_skin_analyzer.py
 
 secrets.toml 필요 항목:
   ANTHROPIC_API_KEY = "..."
-  AIRKOREA_API_KEY  = "..."   # 에어코리아 (PM2.5·PM10·NO₂·O₃)
-  KMA_API_KEY       = "..."   # 기상청 (UV지수·습도) ← 신규
+  AIRKOREA_API_KEY  = "..."
+  KMA_API_KEY       = "..."
   ACCESS_PASSWORD   = "YDLAB2025"
   ADMIN_PASSWORD    = "ydlab2024"
   GOOGLE_SHEETS_ID  = "..."
@@ -55,8 +55,6 @@ html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
 .chip-warn { background:#fff3e0; color:#e65100; }
 .chip-bad  { background:#fce4ec; color:#c62828; }
 .chip-neu  { background:#f1f3f4; color:#5f6368; }
-.chip-uv   { background:#fff8e1; color:#f57f17; }
-.chip-hum  { background:#e3f2fd; color:#1565c0; }
 .score-box { text-align:center; padding:0.8rem 0.5rem; border-radius:10px;
     background:#f8f9fa; border:1px solid #e4e8ee; }
 .score-num { font-size:2rem; font-weight:700; font-family:'DM Mono',monospace; line-height:1; }
@@ -110,6 +108,8 @@ html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
     border: 1px solid #a5d6a7; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
 .kma-box { background: linear-gradient(135deg, #fff8e1, #e3f2fd);
     border: 1px solid #ffe082; border-radius: 10px; padding: 0.8rem; margin-top:0.6rem; }
+.confound-card { background:#f8f9fa; border:1px solid #e4e8ee; border-radius:10px;
+    padding:1rem; margin-bottom:1rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -119,12 +119,10 @@ html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
 PM25_ALERT_THRESHOLD       = 35
 CEEI_ANTIOXIDANT_THRESHOLD = 150
 
-# SEEI 가중치 (에어코리아)
 SEEI_WEIGHTS = {"pm25": 0.40, "pm10": 0.25, "no2": 0.20, "o3": 0.15}
 NO2_PPM_TO_UGM3 = 1882.0
 O3_PPM_TO_UGM3  = 1962.0
 
-# 계절보정 (월별)
 SEASON_CORRECTION = {
     1:1.1, 2:1.1, 3:1.0, 4:1.0, 5:1.0,
     6:1.2, 7:1.3, 8:1.3, 9:1.0, 10:1.0, 11:1.1, 12:1.1,
@@ -141,7 +139,6 @@ RESIDENCE_YEAR_MAP = {
 SKIN_BODY_PARTS  = ["이마","눈가","볼","코","턱","입가","목","손등"]
 SCALP_BODY_PARTS = ["두피 (정수리)","두피 (측두부)","두피 (후두부)"]
 
-# 에어코리아 측정소
 STATION_CANDIDATES = {
     "인천 (중구)":["신흥","중구","항동"], "서구 (청라·검단)":["청라","서구","검단"],
     "부평구":["부평","갈산","산곡"], "계양구":["계산","계양","효성"],
@@ -150,7 +147,6 @@ STATION_CANDIDATES = {
     "서울":["중구","종로구"], "기타":["중구"],
 }
 
-# 기상청 생활기상지수 지점코드 (areaNo)
 KMA_AREA_CODE = {
     "인천 (중구)":"2811000000", "서구 (청라·검단)":"2815000000",
     "부평구":"2813700000", "계양구":"2814500000",
@@ -159,7 +155,6 @@ KMA_AREA_CODE = {
     "서울":"1100000000", "기타":"2800000000",
 }
 
-# 기상청 단기예보 격자좌표 (nx, ny)
 KMA_GRID = {
     "인천 (중구)":(53,124), "서구 (청라·검단)":(51,125),
     "부평구":(54,125), "계양구":(53,126),
@@ -168,7 +163,6 @@ KMA_GRID = {
     "서울":(60,127), "기타":(54,124),
 }
 
-# 쿠팡 링크
 COUPANG_LINKS = {
     "히알루론산":{"url":"https://link.coupang.com/a/eTyrjnNNN6","name":"히알루론산 원액"},
     "세라마이드":{"url":"https://link.coupang.com/a/eTyBwMM8l2","name":"세라마이드 원액"},
@@ -334,7 +328,6 @@ def calc_ceei(pm25_avg, residence_years):
         return (ceei,"매우높음",f"<span class='chip chip-bad'>CEEI {ceei} [매우높음]</span>","매우 높은 누적 노출 — 피부과 상담 및 기능성 화장품 집중 케어 권장")
 
 def uv_index_grade(uv):
-    """기상청 자외선지수 등급 및 SEEI 보정계수"""
     if uv is None: return ("알수없음", 1.0, "#888888")
     uv = float(uv)
     if uv < 3:    return ("낮음",    1.0,  "#2e7d32")
@@ -344,29 +337,21 @@ def uv_index_grade(uv):
     else:         return ("위험",    1.5,  "#7b1fa2")
 
 def humidity_correction(hum):
-    """습도에 따른 두피 상태 보정계수"""
     if hum is None: return 1.0
     h = float(hum)
-    if h >= 80:   return 1.3   # 매우 고습 → 두피 지루 심화
-    elif h >= 70: return 1.2   # 고습
-    elif h >= 40: return 1.0   # 적정
-    elif h >= 30: return 1.1   # 약간 건조
-    else:         return 1.2   # 건조 → 두피 각질
+    if h >= 80:   return 1.3
+    elif h >= 70: return 1.2
+    elif h >= 40: return 1.0
+    elif h >= 30: return 1.1
+    else:         return 1.2
 
 def calc_seei(air, residence_years, uv_data=None, humidity_data=None):
-    """
-    SEEI v3 = (PM2.5×W1 + PM10×W2 + NO₂×W3 + O₃×W4)
-              × 거주기간 × 계절보정 × UV보정 × 습도보정
-    Returns: (seei, grade, chip, msg, components, season, uv_val, uv_gstr, hum_val, hum_corr)
-    """
     pm25 = float(air.get("pm25") or 0)
     pm10 = float(air.get("pm10") or 0)
     no2  = float(air.get("no2")  or 0) * NO2_PPM_TO_UGM3
     o3   = float(air.get("o3")   or 0) * O3_PPM_TO_UGM3
-
     month  = datetime.now().month
     season = SEASON_CORRECTION.get(month, 1.0)
-
     components = {
         "PM2.5": round(pm25 * SEEI_WEIGHTS["pm25"], 1),
         "PM10":  round(pm10 * SEEI_WEIGHTS["pm10"], 1),
@@ -374,15 +359,11 @@ def calc_seei(air, residence_years, uv_data=None, humidity_data=None):
         "O₃":    round(o3   * SEEI_WEIGHTS["o3"],   1),
     }
     composite = sum(components.values())
-
-    uv_val       = uv_data.get("uv_index") if uv_data else None
+    uv_val              = uv_data.get("uv_index") if uv_data else None
     uv_gstr, uv_corr, uv_color = uv_index_grade(uv_val)
-
     hum_val  = humidity_data.get("humidity") if humidity_data else None
     hum_corr = humidity_correction(hum_val)
-
     seei = round(composite * residence_years * season * uv_corr * hum_corr, 1)
-
     if seei < 50:
         grade="낮음"; chip=f"<span class='chip chip-good'>SEEI {seei} [낮음]</span>"
         msg="복합 환경 노출 영향 낮음 — 기본 두피 보습·청결 유지"
@@ -395,20 +376,19 @@ def calc_seei(air, residence_years, uv_data=None, humidity_data=None):
     else:
         grade="매우높음"; chip=f"<span class='chip chip-bad'>SEEI {seei} [매우높음]</span>"
         msg="매우 높은 누적 복합 노출 — 두피 전문 케어 및 피부과 상담 권장"
-
     return (seei, grade, chip, msg, components, season, uv_val, uv_gstr, hum_val, hum_corr)
 
 # ══════════════════════════════════════════════════════════════
 # 데이터 수집 함수
 # ══════════════════════════════════════════════════════════════
 def fetch_air(region):
-    """에어코리아 PM2.5·PM10·O₃·NO₂"""
     key = st.secrets.get("AIRKOREA_API_KEY","")
     url = "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty"
     for station in STATION_CANDIDATES.get(region,["중구"]):
         if not key: break
         try:
-            params = dict(serviceKey=key,stationName=station,dataTerm="DAILY",pageNo=1,numOfRows=1,returnType="json",ver="1.3")
+            params = dict(serviceKey=key,stationName=station,dataTerm="DAILY",
+                          pageNo=1,numOfRows=1,returnType="json",ver="1.3")
             r = requests.get(url,params=params,timeout=8)
             items = r.json()["response"]["body"]["items"]
             if not (items and isinstance(items,list)): continue
@@ -418,16 +398,15 @@ def fetch_air(region):
                 return float(v) if v and str(v).strip() not in ["-","","None"] else None
             pm25 = _s("pm25Value")
             if pm25 is None: continue
-            return dict(pm25=pm25,pm10=_s("pm10Value") or 0.0,
-                        o3=_s("o3Value") or 0.0,no2=_s("no2Value") or 0.0,
-                        station=station,fetch_time=datetime.now().strftime("%Y-%m-%d %H:%M"),mock=False)
+            return dict(pm25=pm25, pm10=_s("pm10Value") or 0.0,
+                        o3=_s("o3Value") or 0.0, no2=_s("no2Value") or 0.0,
+                        station=station, fetch_time=datetime.now().strftime("%Y-%m-%d %H:%M"), mock=False)
         except Exception: continue
-    return dict(pm25=float(random.randint(12,65)),pm10=float(random.randint(18,85)),
-                o3=round(random.uniform(0.010,0.080),3),no2=round(random.uniform(0.010,0.050),3),
-                station="모의데이터",fetch_time=datetime.now().strftime("%Y-%m-%d %H:%M"),mock=True)
+    return dict(pm25=float(random.randint(12,65)), pm10=float(random.randint(18,85)),
+                o3=round(random.uniform(0.010,0.080),3), no2=round(random.uniform(0.010,0.050),3),
+                station="모의데이터", fetch_time=datetime.now().strftime("%Y-%m-%d %H:%M"), mock=True)
 
 def fetch_kma_uv(region):
-    """기상청 생활기상지수 - 자외선지수 (UV)"""
     key     = st.secrets.get("KMA_API_KEY","")
     area_no = KMA_AREA_CODE.get(region,"2800000000")
     today   = datetime.now().strftime("%Y%m%d")
@@ -444,7 +423,6 @@ def fetch_kma_uv(region):
                 return {"uv_index":float(uv_val),"mock":False}
         except Exception:
             pass
-    # 모의값: 시간대별 추정
     hour = datetime.now().hour
     if   6  <= hour <= 8:  est = 2.0
     elif 9  <= hour <= 11: est = 5.0
@@ -456,30 +434,17 @@ def fetch_kma_uv(region):
     return {"uv_index":est,"mock":True}
 
 def fetch_kma_humidity(region):
-    """
-    기상청 습도 실측값 조회 (24시간 동작)
-    1순위: 초단기실황 REH (가장 최신, 매시 정각+30분 발표)
-    2순위: 단기예보 REH (자정 이후에도 전날 23시 예보 활용)
-    3순위: 계절 기반 모의값
-    """
     key    = st.secrets.get("KMA_API_KEY","")
     nx, ny = KMA_GRID.get(region,(54,124))
     now    = datetime.now()
-
     if key:
-        # ── 1순위: 초단기실황 (매시 발표, 밤에도 동작) ──────
         try:
+            from datetime import timedelta
             url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst"
-            # 초단기실황은 매시 40분 이후 현재 시각 사용, 그 이전은 1시간 전
-            if now.minute < 40:
-                from datetime import timedelta
-                obs_time = now - timedelta(hours=1)
-            else:
-                obs_time = now
+            obs_time = now - timedelta(hours=1) if now.minute < 40 else now
             params = dict(serviceKey=key, pageNo=1, numOfRows=10, dataType="JSON",
                           base_date=obs_time.strftime("%Y%m%d"),
-                          base_time=obs_time.strftime("%H00"),
-                          nx=nx, ny=ny)
+                          base_time=obs_time.strftime("%H00"), nx=nx, ny=ny)
             r     = requests.get(url, params=params, timeout=8)
             items = (r.json().get("response",{}).get("body",{})
                               .get("items",{}).get("item",[]))
@@ -488,43 +453,31 @@ def fetch_kma_humidity(region):
                     return {"humidity": float(item.get("obsrValue", 50)), "mock": False}
         except Exception:
             pass
-
-        # ── 2순위: 단기예보 (자정 이후 전날 23시 활용) ───────
         try:
             from datetime import timedelta
             base_hours = [2, 5, 8, 11, 14, 17, 20, 23]
             candidates = [h for h in base_hours if h <= now.hour]
             if candidates:
-                base_hour = max(candidates)
-                base_date = now.strftime("%Y%m%d")
+                base_hour = max(candidates); base_date = now.strftime("%Y%m%d")
             else:
-                # 자정(0~1시): 전날 23시 예보 사용
-                base_hour = 23
-                base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
-            base_time = f"{base_hour:02d}00"
-
+                base_hour = 23; base_date = (now - timedelta(days=1)).strftime("%Y%m%d")
             url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
             params = dict(serviceKey=key, pageNo=1, numOfRows=100, dataType="JSON",
-                          base_date=base_date, base_time=base_time, nx=nx, ny=ny)
+                          base_date=base_date, base_time=f"{base_hour:02d}00", nx=nx, ny=ny)
             r     = requests.get(url, params=params, timeout=8)
             items = (r.json().get("response",{}).get("body",{})
                               .get("items",{}).get("item",[]))
-            # 현재 시각에 가장 가까운 REH 예보값 선택
-            now_str = now.strftime("%Y%m%d%H%M")[:10]  # YYYYMMDDhh
-            reh_items = [i for i in items if i.get("category") == "REH"]
+            now_str = now.strftime("%Y%m%d%H%M")[:10]
+            reh_items = sorted([i for i in items if i.get("category") == "REH"],
+                               key=lambda x: x.get("fcstDate","") + x.get("fcstTime",""))
+            for item in reh_items:
+                fdt = item.get("fcstDate","") + item.get("fcstTime","")[:2]
+                if fdt >= now_str:
+                    return {"humidity": float(item.get("fcstValue", 50)), "mock": False}
             if reh_items:
-                # 현재 시각 이후 첫 번째 예보값
-                reh_items.sort(key=lambda x: x.get("fcstDate","") + x.get("fcstTime",""))
-                for item in reh_items:
-                    fdt = item.get("fcstDate","") + item.get("fcstTime","")[:2]
-                    if fdt >= now_str:
-                        return {"humidity": float(item.get("fcstValue", 50)), "mock": False}
-                # 없으면 마지막 값
                 return {"humidity": float(reh_items[-1].get("fcstValue", 50)), "mock": False}
         except Exception:
             pass
-
-    # ── 3순위: 계절 기반 모의값 ──────────────────────────────
     month = now.month
     if month in [6,7,8]:    hum = random.randint(65, 85)
     elif month in [12,1,2]: hum = random.randint(30, 50)
@@ -540,7 +493,8 @@ def analyze_skin(images, api_key, body_parts=None):
         content = [{"type":"image","source":{"type":"base64","media_type":"image/jpeg","data":img_to_b64(img)}} for img in images]
         parts_str = f"\n\n[촬영 부위]: {', '.join(body_parts)}" if body_parts else ""
         content.append({"type":"text","text":SKIN_ANALYSIS_PROMPT+parts_str})
-        msg = client.messages.create(model="claude-haiku-4-5",max_tokens=1200,messages=[{"role":"user","content":content}])
+        msg = client.messages.create(model="claude-haiku-4-5",max_tokens=1200,
+                                     messages=[{"role":"user","content":content}])
         return json.loads(re.sub(r"```json|```","",msg.content[0].text.strip()).strip())
     except Exception as e:
         st.error(f"피부 분석 오류: {e}"); return None
@@ -551,7 +505,8 @@ def analyze_scalp(images, api_key, body_parts=None):
         content = [{"type":"image","source":{"type":"base64","media_type":"image/jpeg","data":img_to_b64(img)}} for img in images]
         parts_str = f"\n\n[촬영 부위]: {', '.join(body_parts)}" if body_parts else ""
         content.append({"type":"text","text":SCALP_ANALYSIS_PROMPT+parts_str})
-        msg = client.messages.create(model="claude-haiku-4-5",max_tokens=1200,messages=[{"role":"user","content":content}])
+        msg = client.messages.create(model="claude-haiku-4-5",max_tokens=1200,
+                                     messages=[{"role":"user","content":content}])
         return json.loads(re.sub(r"```json|```","",msg.content[0].text.strip()).strip())
     except Exception as e:
         st.error(f"두피 분석 오류: {e}"); return None
@@ -564,8 +519,8 @@ def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=20):
           "비타민C 유도체":15,"펩타이드":15,"아데노신":10,"레티놀":8,"AHA":10,"BHA":8,
           "EGF":5,"글리세린":20,"알란토인":10,"스쿠알란":10}
     boost = {"낮음":1.0,"보통":1.2,"높음":1.5,"매우높음":1.8}.get(ceei_grade,1.0)
-    antioxidants = {"비타민C","비타민C 유도체","나이아신아마이드","펩타이드","레티놀"}
-    sensitive_red= {"레티놀","AHA","BHA"}
+    antioxidants  = {"비타민C","비타민C 유도체","나이아신아마이드","펩타이드","레티놀"}
+    sensitive_red = {"레티놀","AHA","BHA"}
     is_s = skin_type in ["민감성","건성"]
     weights = {}
     for ing in ingredients:
@@ -578,14 +533,18 @@ def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=20):
     diff = 100-sum(ratios.values())
     if diff and ratios: ratios[max(ratios,key=ratios.get)] += diff
     ml_dict = {ing:round(total_ml*pct/100,1) for ing,pct in ratios.items()}
-    OG = {1:{"히알루론산","판테놀","글리세린"},2:{"나이아신아마이드","비타민C","비타민C 유도체","펩타이드"},
-          3:{"아데노신","EGF","레티놀","알란토인"},4:{"세라마이드","AHA","BHA","스쿠알란"}}
+    OG = {1:{"히알루론산","판테놀","글리세린"},
+          2:{"나이아신아마이드","비타민C","비타민C 유도체","펩타이드"},
+          3:{"아데노신","EGF","레티놀","알란토인"},
+          4:{"세라마이드","AHA","BHA","스쿠알란"}}
     steps = {}
     for ing in ingredients:
         g = next((k for k,s in OG.items() if ing in s),5); steps.setdefault(g,[]).append(ing)
     SL = {1:"수용성 베이스 혼합 (기초 보습층)",2:"기능성 성분 첨가 (항산화·미백·탄력)",
           3:"유효 성분 첨가 (고기능 활성 성분)",4:"지용성·특수 성분 첨가 (장벽·각질 관리)",5:"기타 성분 첨가"}
-    return {"ratios":ratios,"ml":ml_dict,"steps":[{"label":SL.get(g,"성분 첨가"),"items":steps[g]} for g in sorted(steps)],"total_ml":total_ml}
+    return {"ratios":ratios,"ml":ml_dict,
+            "steps":[{"label":SL.get(g,"성분 첨가"),"items":steps[g]} for g in sorted(steps)],
+            "total_ml":total_ml}
 
 def generate_scalp_mixing_guide(ingredients, scalp_result, seei_grade, total_ml=20):
     BW = {"징크피리치온":25,"살리실산":20,"살리실산(BHA)":20,"바이오틴":20,
@@ -618,14 +577,18 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, seei_grade, total_ml=
     if diff and ratios: ratios[max(ratios,key=ratios.get)] += diff
     ml_dict = {ing:round(total_ml*pct/100,1) for ing,pct in ratios.items()}
     OG = {1:{"히알루론산","판테놀 (두피용)","판테놀","소듐PCA"},
-          2:{"나이아신아마이드","비타민C","비타민C 유도체"},3:{"바이오틴"},
-          4:{"징크피리치온","살리실산","살리실산(BHA)","세라마이드","티트리 오일","티트리오일","티트리","로즈마리 오일","멘톨"}}
+          2:{"나이아신아마이드","비타민C","비타민C 유도체"},
+          3:{"바이오틴"},
+          4:{"징크피리치온","살리실산","살리실산(BHA)","세라마이드",
+             "티트리 오일","티트리오일","티트리","로즈마리 오일","멘톨"}}
     steps = {}
     for ing in ingredients:
         g = next((k for k,s in OG.items() if ing in s),5); steps.setdefault(g,[]).append(ing)
     SL = {1:"두피 베이스 혼합 (보습·진정층)",2:"기능성 성분 첨가 (항산화·피지 조절)",
           3:"모발 강화 성분 첨가 (성장·강화)",4:"특수 성분 첨가 (항균·각질·장벽)",5:"기타 성분 첨가"}
-    return {"ratios":ratios,"ml":ml_dict,"steps":[{"label":SL.get(g,"성분 첨가"),"items":steps[g]} for g in sorted(steps)],"total_ml":total_ml}
+    return {"ratios":ratios,"ml":ml_dict,
+            "steps":[{"label":SL.get(g,"성분 첨가"),"items":steps[g]} for g in sorted(steps)],
+            "total_ml":total_ml}
 
 # ══════════════════════════════════════════════════════════════
 # 혼합 카드 렌더링
@@ -636,7 +599,7 @@ def show_mixing_card(mixing, title, is_scalp=False):
     st.markdown(f"<div class='card-label' style='color:#1a5276;'>{title}</div>", unsafe_allow_html=True)
     rows = ""
     for ing,pct in sorted(mixing["ratios"].items(),key=lambda x:-x[1]):
-        ml = mixing["ml"].get(ing,0)
+        ml  = mixing["ml"].get(ing,0)
         url = _find_cp(ing).get("url","")
         btn = f"<a href='{url}' target='_blank' class='coupang-btn'>🛒 구매</a>" if url else ""
         rows += (f"<div class='mixing-row'><span class='mixing-ing'>{ing}{btn}</span>"
@@ -646,7 +609,9 @@ def show_mixing_card(mixing, title, is_scalp=False):
     st.markdown("<div style='margin-top:1rem;font-size:0.82rem;font-weight:700;color:#0f3460;margin-bottom:0.5rem;'>📋 제조 순서</div>", unsafe_allow_html=True)
     for dn,s in enumerate(mixing["steps"],start=1):
         st.markdown(f"<div style='display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;font-size:0.83rem;color:#333;'>"
-                    f"<span class='step-badge'>{dn}</span><span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>", unsafe_allow_html=True)
+                    f"<span class='step-badge'>{dn}</span>"
+                    f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>",
+                    unsafe_allow_html=True)
     st.markdown(f"<div class='partners-notice'>{COUPANG_DISCLAIMER}</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -658,8 +623,8 @@ FIELDS = [
     "timestamp","participant_id","age_group","gender","region","residence_years",
     "skin_concern","body_parts","photo_count","analysis_mode",
     "pm25","pm10","o3","no2","air_station","air_source",
-    "uv_index","uv_grade","uv_mock",          # ← 기상청 UV (신규)
-    "humidity","humidity_mock",               # ← 기상청 습도 (신규)
+    "uv_index","uv_grade","uv_mock",
+    "humidity","humidity_mock",
     "ceei_score","ceei_grade",
     "seei_score","seei_grade","season_correction","uv_correction","humidity_correction_val",
     "overall_score","skin_type","key_concerns","recommended_ingredients",
@@ -667,7 +632,8 @@ FIELDS = [
     "scalp_keratin_score","scalp_pore_score","scalp_hair_thickness_score",
     "scalp_color_score","scalp_moisture_balance_score",
     "scalp_hair_damage_score","scalp_hair_loss_risk_score","scalp_comment",
-    "consent","research_consent","marketing_opt_in"
+    "sunscreen","smoking","sleep_hours",
+    "consent","research_consent","marketing_opt_in",
 ]
 
 def get_sheet():
@@ -678,7 +644,8 @@ def get_sheet():
         creds  = Credentials.from_service_account_info(cd,scopes=scopes)
         client = gspread.authorize(creds)
         return client.open_by_key(st.secrets.get("GOOGLE_SHEETS_ID","")).sheet1
-    except Exception: return None
+    except Exception:
+        return None
 
 def get_marketing_sheet():
     try:
@@ -689,59 +656,79 @@ def get_marketing_sheet():
         client = gspread.authorize(creds)
         sh = client.open_by_key(st.secrets.get("GOOGLE_SHEETS_ID",""))
         try:    ws = sh.worksheet("marketing_opt")
-        except: ws = sh.add_worksheet("marketing_opt",rows=200,cols=4); ws.append_row(["participant_id","email","opt_in_date","region"])
+        except: ws = sh.add_worksheet("marketing_opt",rows=200,cols=4)
+                ws.append_row(["participant_id","email","opt_in_date","region"])
         return ws
-    except Exception: return None
+    except Exception:
+        return None
 
-def save_marketing_opt(pid,email,region):
+def save_marketing_opt(pid, email, region):
     try:
         ws = get_marketing_sheet()
-        if ws: ws.append_row([pid,email,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),region])
-    except Exception: pass
+        if ws: ws.append_row([pid, email, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), region])
+    except Exception:
+        pass
 
 def ensure_header(sheet):
+    """헤더가 없거나 잘못된 경우 FIELDS로 교체"""
     try:
-        if sheet.row_values(1) == []: sheet.append_row(FIELDS)
-    except Exception: pass
+        existing = sheet.row_values(1)
+        if not existing:
+            sheet.insert_row(FIELDS, 1)
+        elif existing != FIELDS:
+            sheet.delete_rows(1)
+            sheet.insert_row(FIELDS, 1)
+    except Exception as e:
+        st.warning(f"헤더 확인 오류: {e}")
 
 def save_record(r):
     try:
         sheet = get_sheet()
-        if sheet: ensure_header(sheet); sheet.append_row([r.get(k,"") for k in FIELDS])
-    except Exception: pass
+        if sheet:
+            ensure_header(sheet)
+            sheet.append_row([r.get(k,"") for k in FIELDS])
+    except Exception:
+        pass
     header = not DATA_FILE.exists()
     with open(DATA_FILE,"a",newline="",encoding="utf-8-sig") as f:
-        w = csv.DictWriter(f,fieldnames=FIELDS)
+        w = csv.DictWriter(f, fieldnames=FIELDS)
         if header: w.writeheader()
-        w.writerow({k:r.get(k,"") for k in FIELDS})
+        w.writerow({k: r.get(k,"") for k in FIELDS})
 
 def show_air_status(air, uv_data=None, humidity_data=None):
     is_mock = air.get("mock")
-    uv_mock = (uv_data or {}).get("mock",True) if uv_data else True
-    hum_mock= (humidity_data or {}).get("mock",True) if humidity_data else True
-    air_txt = f"✅ 에어코리아 실측 · {air.get('station','')} · {air.get('fetch_time','')}" if not is_mock else "⚠️ 에어코리아: 모의 데이터"
-    kma_txt = ""
+    uv_mock  = (uv_data or {}).get("mock", True)
+    air_txt  = (f"✅ 에어코리아 실측 · {air.get('station','')} · {air.get('fetch_time','')}"
+                if not is_mock else "⚠️ 에어코리아: 모의 데이터")
+    kma_txt  = ""
     if uv_data or humidity_data:
         kma_src = "✅ 기상청 실측" if not uv_mock else "⚠️ 기상청: 모의 데이터"
         kma_txt = f" | {kma_src}"
     css = "air-real" if not is_mock else "air-mock"
-    st.markdown(f"<div class='{css}'>{air_txt}{kma_txt} · PM2.5 {air.get('pm25','-')}㎍/m³ · PM10 {air.get('pm10','-')}㎍/m³ · NO₂ {air.get('no2','-')}ppm · O₃ {air.get('o3','-')}ppm</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='{css}'>{air_txt}{kma_txt} · "
+        f"PM2.5 {air.get('pm25','-')}㎍/m³ · PM10 {air.get('pm10','-')}㎍/m³ · "
+        f"NO₂ {air.get('no2','-')}ppm · O₃ {air.get('o3','-')}ppm</div>",
+        unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
 # 결과 렌더링 - 피부
 # ══════════════════════════════════════════════════════════════
-def show_skin_result(result, air, region, residence_years_str, participant_id, age_group, gender, selected_parts):
-    pm25_avg = REGION_PM25_AVG.get(region,22.0)
-    yrs      = RESIDENCE_YEAR_MAP.get(residence_years_str,0)
-    ceei,ceei_grade,ceei_chip,ceei_msg = calc_ceei(pm25_avg,yrs)
+def show_skin_result(result, air, region, residence_years_str, participant_id,
+                     age_group, gender, selected_parts):
+    pm25_avg = REGION_PM25_AVG.get(region, 22.0)
+    yrs      = RESIDENCE_YEAR_MAP.get(residence_years_str, 0)
+    ceei, ceei_grade, ceei_chip, ceei_msg = calc_ceei(pm25_avg, yrs)
     pm25_val = air.get("pm25")
-    alert    = get_pollution_alert(pm25_val,ceei)
-    overall  = result.get("overall_score",0)
-    skin_type= result.get("skin_type","")
-    ings     = result.get("recommended_ingredients",[])
+    alert    = get_pollution_alert(pm25_val, ceei)
+    overall  = result.get("overall_score", 0)
+    skin_type= result.get("skin_type", "")
+    ings     = result.get("recommended_ingredients", [])
 
-    st.markdown("<div class='patent-banner'>🔐 본 기술은 특허 출원 중입니다 (CEEI·SEEI 알고리즘)</div>", unsafe_allow_html=True)
-    st.markdown("<div class='medical-disclaimer'>⚠️ 본 분석 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='patent-banner'>🔐 본 기술은 특허 출원 중입니다 (CEEI·SEEI 알고리즘)</div>",
+                unsafe_allow_html=True)
+    st.markdown("<div class='medical-disclaimer'>⚠️ 본 분석 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다.</div>",
+                unsafe_allow_html=True)
     show_air_status(air)
 
     st.markdown(f"""<div class='card'>
@@ -760,23 +747,37 @@ def show_skin_result(result, air, region, residence_years_str, participant_id, a
 </div>""", unsafe_allow_html=True)
     if alert: st.warning(alert)
 
-    metrics = [("주름",result.get("wrinkle_score",0),result.get("wrinkle_comment","")),
-               ("모공",result.get("pore_score",0),result.get("pore_comment","")),
-               ("피부결",result.get("texture_score",0),result.get("texture_comment","")),
-               ("피부톤",result.get("tone_score",0),result.get("tone_comment","")),
-               ("수분",result.get("moisture_score",0),result.get("moisture_comment",""))]
+    metrics = [
+        ("주름",  result.get("wrinkle_score",0),  result.get("wrinkle_comment","")),
+        ("모공",  result.get("pore_score",0),      result.get("pore_comment","")),
+        ("피부결",result.get("texture_score",0),   result.get("texture_comment","")),
+        ("피부톤",result.get("tone_score",0),       result.get("tone_comment","")),
+        ("수분",  result.get("moisture_score",0),  result.get("moisture_comment","")),
+    ]
     cols = st.columns(5)
     for i,(lbl,val,cmt) in enumerate(metrics):
         with cols[i]:
-            st.markdown(f"<div class='score-box'><div class='score-num' style='color:{score_color(val)};'>{val}</div>"
-                        f"<div class='score-lbl'>{lbl}</div><div style='font-size:0.68rem;color:#999;margin-top:0.3rem;line-height:1.3;'>{cmt}</div></div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='score-box'>"
+                f"<div class='score-num' style='color:{score_color(val)};'>{val}</div>"
+                f"<div class='score-lbl'>{lbl}</div>"
+                f"<div style='font-size:0.68rem;color:#999;margin-top:0.3rem;line-height:1.3;'>{cmt}</div>"
+                f"</div>", unsafe_allow_html=True)
 
-    ing_html = "".join([f"<span class='ingredient-chip'>{ing} {_cp_link_tag(ing,fs='0.7rem')}</span>" for ing in ings])
-    st.markdown(f"<div class='card'><div class='card-label'>AI 추천 화장품 성분</div><div style='margin-bottom:0.8rem;'>{ing_html}</div><div class='result-text'>{result.get('care_advice','')}</div></div>", unsafe_allow_html=True)
+    ing_html = "".join([
+        f"<span class='ingredient-chip'>{ing} {_cp_link_tag(ing,fs='0.7rem')}</span>"
+        for ing in ings])
+    st.markdown(
+        f"<div class='card'><div class='card-label'>AI 추천 화장품 성분</div>"
+        f"<div style='margin-bottom:0.8rem;'>{ing_html}</div>"
+        f"<div class='result-text'>{result.get('care_advice','')}</div></div>",
+        unsafe_allow_html=True)
 
     if ings:
-        mixing = generate_mixing_guide(ings,skin_type,ceei_grade)
-        show_mixing_card(mixing,f"🧪 피부 맞춤 혼합 비율 — 총 {mixing['total_ml']}ml · {skin_type}",is_scalp=False)
+        mixing = generate_mixing_guide(ings, skin_type, ceei_grade)
+        show_mixing_card(mixing,
+                         f"🧪 피부 맞춤 혼합 비율 — 총 {mixing['total_ml']}ml · {skin_type}",
+                         is_scalp=False)
 
     st.markdown(f"""<div class='card'><div class='card-label'>CEEI — 피부 누적 환경노출지수</div>
   <div style='display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.7rem;'>
@@ -787,45 +788,57 @@ def show_skin_result(result, air, region, residence_years_str, participant_id, a
   <div class='result-text'>{ceei_msg}</div>
 </div>""", unsafe_allow_html=True)
 
-    scores = {"주름":result.get("wrinkle_score",0),"모공":result.get("pore_score",0),
-              "피부결":result.get("texture_score",0),"피부톤":result.get("tone_score",0),"수분":result.get("moisture_score",0)}
-    pri = sorted([(k,v) for k,v in scores.items() if v>0],key=lambda x:x[1])[:3]
-    if not pri: pri = sorted(scores.items(),key=lambda x:x[1])[:3]
+    scores = {"주름":result.get("wrinkle_score",0), "모공":result.get("pore_score",0),
+              "피부결":result.get("texture_score",0), "피부톤":result.get("tone_score",0),
+              "수분":result.get("moisture_score",0)}
+    pri = sorted([(k,v) for k,v in scores.items() if v>0], key=lambda x:x[1])[:3]
+    if not pri: pri = sorted(scores.items(), key=lambda x:x[1])[:3]
     st.markdown("<div class='card'><div class='card-label'>우선 개선 항목</div>", unsafe_allow_html=True)
     for i,(lbl,sc) in enumerate(pri):
         cm = "집중 케어 필요" if sc<40 else "개선 권장" if sc<60 else "유지 관리"
-        st.markdown(f"<div class='priority-item'><span class='priority-num'>{i+1}</span><span class='priority-label'>{lbl}</span>"
-                    f"<span class='priority-score' style='color:{score_color(sc)};'>{sc}점</span><span class='priority-msg'>{cm}</span></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='priority-item'><span class='priority-num'>{i+1}</span>"
+            f"<span class='priority-label'>{lbl}</span>"
+            f"<span class='priority-score' style='color:{score_color(sc)};'>{sc}점</span>"
+            f"<span class='priority-msg'>{cm}</span></div>",
+            unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
-    mixing = generate_mixing_guide(ings,skin_type,ceei_grade)
-    c1,c2 = st.columns(2)
+    mixing = generate_mixing_guide(ings, skin_type, ceei_grade)
+    c1,c2  = st.columns(2)
     with c1:
         html = generate_skin_report_html(result,air,region,yrs,participant_id,age_group,gender,mixing)
-        st.download_button("📄 피부 분석 리포트",data=html.encode("utf-8"),file_name=f"YDLab_피부리포트_{datetime.now().strftime('%Y%m%d_%H%M')}.html",mime="text/html",use_container_width=True,key="k_skin_report")
+        st.download_button("📄 피부 분석 리포트", data=html.encode("utf-8"),
+                           file_name=f"YDLab_피부리포트_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                           mime="text/html", use_container_width=True, key="k_skin_report")
     with c2:
         html2 = generate_skin_order_html(result,air,region,yrs,participant_id,age_group,gender,mixing)
-        st.download_button("🧪 피부 공방 주문서",data=html2.encode("utf-8"),file_name=f"YDLab_피부주문서_{datetime.now().strftime('%Y%m%d_%H%M')}.html",mime="text/html",use_container_width=True,key="k_skin_order")
+        st.download_button("🧪 피부 공방 주문서", data=html2.encode("utf-8"),
+                           file_name=f"YDLab_피부주문서_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                           mime="text/html", use_container_width=True, key="k_skin_order")
 
 # ══════════════════════════════════════════════════════════════
-# 결과 렌더링 - 두피 (SEEI v3 + UV + 습도)
+# 결과 렌더링 - 두피
 # ══════════════════════════════════════════════════════════════
-def show_scalp_result(result, air, region, residence_years_str, participant_id, age_group, gender, selected_parts,
-                      uv_data=None, humidity_data=None):
-    pm25_avg = REGION_PM25_AVG.get(region,22.0)
-    yrs      = RESIDENCE_YEAR_MAP.get(residence_years_str,0)
-    ceei,ceei_grade,ceei_chip,_ = calc_ceei(pm25_avg,yrs)
-    seei,seei_grade,seei_chip,seei_msg,seei_comp,season_corr,uv_val,uv_gstr,hum_val,hum_corr = calc_seei(air,yrs,uv_data,humidity_data)
-    _,uv_corr,uv_color = uv_index_grade(uv_val)
-    pm25_val = air.get("pm25")
-    overall  = result.get("overall_score",0)
-    scalp_type=result.get("scalp_type","")
-    ings     = result.get("recommended_ingredients",[])
+def show_scalp_result(result, air, region, residence_years_str, participant_id,
+                      age_group, gender, selected_parts, uv_data=None, humidity_data=None):
+    pm25_avg = REGION_PM25_AVG.get(region, 22.0)
+    yrs      = RESIDENCE_YEAR_MAP.get(residence_years_str, 0)
+    ceei, ceei_grade, ceei_chip, _ = calc_ceei(pm25_avg, yrs)
+    seei,seei_grade,seei_chip,seei_msg,seei_comp,season_corr,uv_val,uv_gstr,hum_val,hum_corr = \
+        calc_seei(air, yrs, uv_data, humidity_data)
+    _, uv_corr, uv_color = uv_index_grade(uv_val)
+    pm25_val   = air.get("pm25")
+    overall    = result.get("overall_score", 0)
+    scalp_type = result.get("scalp_type", "")
+    ings       = result.get("recommended_ingredients", [])
 
-    st.markdown("<div class='patent-banner'>🔐 본 기술은 특허 출원 중입니다 (CEEI·SEEI 알고리즘 · 기상청 연동)</div>", unsafe_allow_html=True)
-    st.markdown("<div class='medical-disclaimer'>⚠️ 본 분석 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다. 탈모 진행도는 참고용입니다.</div>", unsafe_allow_html=True)
-    show_air_status(air,uv_data,humidity_data)
+    st.markdown("<div class='patent-banner'>🔐 본 기술은 특허 출원 중입니다 (CEEI·SEEI 알고리즘 · 기상청 연동)</div>",
+                unsafe_allow_html=True)
+    st.markdown("<div class='medical-disclaimer'>⚠️ 본 분석 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다. 탈모 진행도는 참고용입니다.</div>",
+                unsafe_allow_html=True)
+    show_air_status(air, uv_data, humidity_data)
 
     st.markdown(f"""<div class='card' style='border-color:#a5d6a7;'>
   <div class='card-label'>💆 두피 분석 종합 결과</div>
@@ -843,45 +856,59 @@ def show_scalp_result(result, air, region, residence_years_str, participant_id, 
 </div>""", unsafe_allow_html=True)
 
     scalp_metrics = [
-        ("각질 상태",result.get("keratin_score",0),result.get("keratin_comment","")),
-        ("모공·피지",result.get("pore_score",0),result.get("pore_comment","")),
-        ("모발 굵기",result.get("hair_thickness_score",0),result.get("hair_thickness_comment","")),
-        ("두피 색상·염증",result.get("scalp_color_score",0),result.get("scalp_color_comment","")),
-        ("수분·유분 밸런스",result.get("moisture_balance_score",0),result.get("moisture_balance_comment","")),
-        ("모발 손상도",result.get("hair_damage_score",0),result.get("hair_damage_comment","")),
+        ("각질 상태",       result.get("keratin_score",0),         result.get("keratin_comment","")),
+        ("모공·피지",       result.get("pore_score",0),            result.get("pore_comment","")),
+        ("모발 굵기",       result.get("hair_thickness_score",0),   result.get("hair_thickness_comment","")),
+        ("두피 색상·염증",  result.get("scalp_color_score",0),      result.get("scalp_color_comment","")),
+        ("수분·유분 밸런스",result.get("moisture_balance_score",0), result.get("moisture_balance_comment","")),
+        ("모발 손상도",     result.get("hair_damage_score",0),      result.get("hair_damage_comment","")),
     ]
     st.markdown("<div class='scalp-card'>", unsafe_allow_html=True)
     st.markdown("**💆 두피 분석 6지표**")
     cols = st.columns(3)
     for i,(lbl,val,cmt) in enumerate(scalp_metrics):
         with cols[i%3]:
-            st.markdown(f"<div class='score-box' style='background:#f0faf4;border-color:#a5d6a7;'>"
-                        f"<div class='score-num' style='color:{score_color(val)};'>{val}</div>"
-                        f"<div class='score-lbl'>{lbl}</div>"
-                        f"<div style='font-size:0.68rem;color:#999;margin-top:0.3rem;line-height:1.3;'>{cmt}</div></div>", unsafe_allow_html=True)
-    hl = result.get("hair_loss_risk_score",0); hlc = result.get("hair_loss_risk_comment","")
-    st.markdown(f"<div style='margin-top:0.8rem;background:#fff8f0;border:1px solid #ffcc80;border-radius:8px;padding:0.7rem 1rem;font-size:0.82rem;'>"
-                f"<b>⚠️ 탈모 진행도 (참고용)</b>: <span style='font-weight:700;color:{score_color(hl)};'>{hl}점</span> — {hlc}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='score-box' style='background:#f0faf4;border-color:#a5d6a7;'>"
+                f"<div class='score-num' style='color:{score_color(val)};'>{val}</div>"
+                f"<div class='score-lbl'>{lbl}</div>"
+                f"<div style='font-size:0.68rem;color:#999;margin-top:0.3rem;line-height:1.3;'>{cmt}</div>"
+                f"</div>", unsafe_allow_html=True)
+    hl  = result.get("hair_loss_risk_score", 0)
+    hlc = result.get("hair_loss_risk_comment", "")
+    st.markdown(
+        f"<div style='margin-top:0.8rem;background:#fff8f0;border:1px solid #ffcc80;"
+        f"border-radius:8px;padding:0.7rem 1rem;font-size:0.82rem;'>"
+        f"<b>⚠️ 탈모 진행도 (참고용)</b>: "
+        f"<span style='font-weight:700;color:{score_color(hl)};'>{hl}점</span> — {hlc}</div>",
+        unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    ing_html = "".join([f"<span class='scalp-ingredient-chip'>{ing} {_cp_link_tag(ing,fs='0.7rem')}</span>" for ing in ings])
-    st.markdown(f"<div class='card' style='border-color:#a5d6a7;'><div class='card-label'>AI 추천 두피·모발 성분</div><div style='margin-bottom:0.8rem;'>{ing_html}</div><div class='result-text'>{result.get('care_advice','')}</div></div>", unsafe_allow_html=True)
+    ing_html = "".join([
+        f"<span class='scalp-ingredient-chip'>{ing} {_cp_link_tag(ing,fs='0.7rem')}</span>"
+        for ing in ings])
+    st.markdown(
+        f"<div class='card' style='border-color:#a5d6a7;'>"
+        f"<div class='card-label'>AI 추천 두피·모발 성분</div>"
+        f"<div style='margin-bottom:0.8rem;'>{ing_html}</div>"
+        f"<div class='result-text'>{result.get('care_advice','')}</div></div>",
+        unsafe_allow_html=True)
 
     if ings:
-        mixing = generate_scalp_mixing_guide(ings,result,seei_grade)
-        show_mixing_card(mixing,f"🧪 두피 맞춤 혼합 비율 — 총 {mixing['total_ml']}ml · {scalp_type} · SEEI {seei_grade}",is_scalp=True)
+        mixing = generate_scalp_mixing_guide(ings, result, seei_grade)
+        show_mixing_card(mixing,
+                         f"🧪 두피 맞춤 혼합 비율 — 총 {mixing['total_ml']}ml · {scalp_type} · SEEI {seei_grade}",
+                         is_scalp=True)
 
-    # ── SEEI 카드 (v3: UV·습도 포함) ───────────────────────
     comp_boxes = "".join([
         f"<div style='background:white;border:1px solid #c8e6c9;border-radius:8px;padding:0.6rem;text-align:center;'>"
         f"<div style='font-weight:700;color:#1b5e20;font-size:0.88rem;'>{v}</div>"
         f"<div style='color:#888;font-size:0.68rem;margin-top:0.2rem;'>{k} 기여도</div></div>"
-        for k,v in seei_comp.items()
-    ])
-    uv_display  = f"{uv_val:.1f}" if uv_val is not None else "--"
-    hum_display = f"{hum_val:.0f}%" if hum_val is not None else "--"
-    uv_mock_txt = "" if not (uv_data or {}).get("mock",True) else " (추정)"
-    hum_mock_txt= "" if not (humidity_data or {}).get("mock",True) else " (추정)"
+        for k,v in seei_comp.items()])
+    uv_display   = f"{uv_val:.1f}" if uv_val is not None else "--"
+    hum_display  = f"{hum_val:.0f}%" if hum_val is not None else "--"
+    uv_mock_txt  = "" if not (uv_data or {}).get("mock",True) else " (추정)"
+    hum_mock_txt = "" if not (humidity_data or {}).get("mock",True) else " (추정)"
 
     st.markdown(f"""<div class='seei-box'>
   <div style='font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:#1b5e20;font-weight:700;
@@ -893,11 +920,9 @@ def show_scalp_result(result, air, region, residence_years_str, participant_id, 
     <span class='chip chip-neu'>거주 {yrs}년</span>
     <span class='chip chip-neu'>계절보정 ×{season_corr}</span>
   </div>
-  <!-- 4대 오염원 -->
   <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:0.8rem;'>
     {comp_boxes}
   </div>
-  <!-- 기상청 UV·습도 -->
   <div class='kma-box'>
     <div style='font-size:0.72rem;font-weight:700;color:#5f6368;margin-bottom:0.5rem;'>🌤 기상청 데이터</div>
     <div style='display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;'>
@@ -919,32 +944,47 @@ def show_scalp_result(result, air, region, residence_years_str, participant_id, 
   <div style='font-size:0.84rem;color:#444;line-height:1.7;margin-top:0.5rem;'>{seei_msg}</div>
 </div>""", unsafe_allow_html=True)
 
-    pri_scores = {"각질 상태":result.get("keratin_score",0),"모공·피지":result.get("pore_score",0),
-                  "모발 굵기":result.get("hair_thickness_score",0),"두피 색상·염증":result.get("scalp_color_score",0),
-                  "수분·유분 밸런스":result.get("moisture_balance_score",0),"모발 손상도":result.get("hair_damage_score",0)}
-    pri = sorted([(k,v) for k,v in pri_scores.items() if v>0],key=lambda x:x[1])[:3]
-    if not pri: pri = sorted(pri_scores.items(),key=lambda x:x[1])[:3]
+    pri_scores = {
+        "각질 상태":       result.get("keratin_score",0),
+        "모공·피지":       result.get("pore_score",0),
+        "모발 굵기":       result.get("hair_thickness_score",0),
+        "두피 색상·염증":  result.get("scalp_color_score",0),
+        "수분·유분 밸런스":result.get("moisture_balance_score",0),
+        "모발 손상도":     result.get("hair_damage_score",0),
+    }
+    pri = sorted([(k,v) for k,v in pri_scores.items() if v>0], key=lambda x:x[1])[:3]
+    if not pri: pri = sorted(pri_scores.items(), key=lambda x:x[1])[:3]
     st.markdown("<div class='card'><div class='card-label'>우선 개선 항목 (두피)</div>", unsafe_allow_html=True)
     for i,(lbl,sc) in enumerate(pri):
         cm = "집중 케어 필요" if sc<40 else "개선 권장" if sc<60 else "유지 관리"
-        st.markdown(f"<div class='priority-item'><span class='priority-num'>{i+1}</span><span class='priority-label'>{lbl}</span>"
-                    f"<span class='priority-score' style='color:{score_color(sc)};'>{sc}점</span><span class='priority-msg'>{cm}</span></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='priority-item'><span class='priority-num'>{i+1}</span>"
+            f"<span class='priority-label'>{lbl}</span>"
+            f"<span class='priority-score' style='color:{score_color(sc)};'>{sc}점</span>"
+            f"<span class='priority-msg'>{cm}</span></div>",
+            unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
-    mixing = generate_scalp_mixing_guide(ings,result,seei_grade)
-    c1,c2 = st.columns(2)
+    mixing = generate_scalp_mixing_guide(ings, result, seei_grade)
+    c1,c2  = st.columns(2)
     with c1:
-        html = generate_scalp_report_html(result,air,region,yrs,participant_id,age_group,gender,mixing,
-                                           seei,seei_grade,seei_msg,seei_comp,season_corr,uv_val,uv_gstr,uv_corr,hum_val,hum_corr)
-        st.download_button("📄 두피 분석 리포트",data=html.encode("utf-8"),file_name=f"YDLab_두피리포트_{datetime.now().strftime('%Y%m%d_%H%M')}.html",mime="text/html",use_container_width=True,key="k_scalp_report")
+        html = generate_scalp_report_html(
+            result,air,region,yrs,participant_id,age_group,gender,mixing,
+            seei,seei_grade,seei_msg,seei_comp,season_corr,uv_val,uv_gstr,uv_corr,hum_val,hum_corr)
+        st.download_button("📄 두피 분석 리포트", data=html.encode("utf-8"),
+                           file_name=f"YDLab_두피리포트_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                           mime="text/html", use_container_width=True, key="k_scalp_report")
     with c2:
-        html2= generate_scalp_order_html(result,air,region,yrs,participant_id,age_group,gender,mixing,
-                                          seei,seei_grade,seei_msg,uv_val,uv_gstr,hum_val)
-        st.download_button("🧪 두피 공방 주문서",data=html2.encode("utf-8"),file_name=f"YDLab_두피주문서_{datetime.now().strftime('%Y%m%d_%H%M')}.html",mime="text/html",use_container_width=True,key="k_scalp_order")
+        html2 = generate_scalp_order_html(
+            result,air,region,yrs,participant_id,age_group,gender,mixing,
+            seei,seei_grade,seei_msg,uv_val,uv_gstr,hum_val)
+        st.download_button("🧪 두피 공방 주문서", data=html2.encode("utf-8"),
+                           file_name=f"YDLab_두피주문서_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                           mime="text/html", use_container_width=True, key="k_scalp_order")
 
 # ══════════════════════════════════════════════════════════════
-# HTML 리포트/주문서 (간결 버전)
+# HTML 리포트/주문서
 # ══════════════════════════════════════════════════════════════
 def _html_head(title, bg):
     return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><title>{title}</title>
@@ -963,285 +1003,426 @@ table{{width:100%;border-collapse:collapse;font-size:11px;}}th{{background:{bg};
 
 def _mixing_html(mixing, color):
     if not mixing: return ""
-    rows = "".join([f"<div style='display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:9px;'>"
-                    f"<span style='flex:1;font-weight:600;'>{ing} {_cp_mix_link(ing)}</span>"
-                    f"<span style='font-weight:700;color:{color};min-width:35px;'>{pct}%</span>"
-                    f"<span style='color:#888;min-width:40px;'>{mixing['ml'].get(ing,0)}ml</span>"
-                    f"<div style='flex:2;background:#e4e8ee;border-radius:3px;height:6px;'>"
-                    f"<div style='width:{pct}%;height:6px;border-radius:3px;background:{color};'></div></div></div>"
-                    for ing,pct in sorted(mixing["ratios"].items(),key=lambda x:-x[1])])
-    steps = "".join([f"<div style='display:flex;align-items:center;gap:6px;padding:4px 0;font-size:9px;border-bottom:1px solid #f0f0f0;'>"
-                     f"<span style='background:{color};color:white;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;'>{dn}</span>"
-                     f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
-                     for dn,s in enumerate(mixing["steps"],start=1)])
+    rows = "".join([
+        f"<div style='display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:9px;'>"
+        f"<span style='flex:1;font-weight:600;'>{ing} {_cp_mix_link(ing)}</span>"
+        f"<span style='font-weight:700;color:{color};min-width:35px;'>{pct}%</span>"
+        f"<span style='color:#888;min-width:40px;'>{mixing['ml'].get(ing,0)}ml</span>"
+        f"<div style='flex:2;background:#e4e8ee;border-radius:3px;height:6px;'>"
+        f"<div style='width:{pct}%;height:6px;border-radius:3px;background:{color};'></div></div></div>"
+        for ing,pct in sorted(mixing["ratios"].items(), key=lambda x:-x[1])])
+    steps = "".join([
+        f"<div style='display:flex;align-items:center;gap:6px;padding:4px 0;font-size:9px;border-bottom:1px solid #f0f0f0;'>"
+        f"<span style='background:{color};color:white;border-radius:50%;width:18px;height:18px;"
+        f"display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;'>{dn}</span>"
+        f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
+        for dn,s in enumerate(mixing["steps"],start=1)])
     return (f"<div class='section'><div class='stitle'>맞춤 혼합 비율 (총 {mixing['total_ml']}ml)</div>{rows}"
             f"<div style='margin-top:8px;font-size:8px;font-weight:700;color:{color};margin-bottom:5px;'>제조 순서</div>{steps}"
             f"<div style='font-size:7px;color:#e65100;padding:5px 8px;background:#fff8f0;border-radius:4px;margin-top:6px;'>{COUPANG_DISCLAIMER}</div></div>")
 
 def generate_skin_report_html(result, air, region, residence_years, pid, age, gender, mixing=None):
-    overall=result.get("overall_score",0); st_=result.get("skin_type","")
-    ings=result.get("recommended_ingredients",[]); pm25_avg=REGION_PM25_AVG.get(region,22.0)
-    ceei,cg,_,cm=calc_ceei(pm25_avg,residence_years)
+    overall  = result.get("overall_score",0); st_ = result.get("skin_type","")
+    ings     = result.get("recommended_ingredients",[])
+    pm25_avg = REGION_PM25_AVG.get(region,22.0)
+    ceei,cg,_,cm = calc_ceei(pm25_avg, residence_years)
     def sc(s): return "#2e7d32" if s>=70 else "#e65100" if s>=40 else "#c62828"
-    mets=[("주름",result.get("wrinkle_score",0),result.get("wrinkle_comment","")),
-          ("모공",result.get("pore_score",0),result.get("pore_comment","")),
-          ("피부결",result.get("texture_score",0),result.get("texture_comment","")),
-          ("피부톤",result.get("tone_score",0),result.get("tone_comment","")),
-          ("수분",result.get("moisture_score",0),result.get("moisture_comment",""))]
-    sboxes="".join([f"<div style='flex:1;background:#f8f9fa;border:1px solid #e4e8ee;border-radius:7px;padding:9px 5px;text-align:center;'>"
-                    f"<div style='font-size:22px;font-weight:700;color:{sc(v)};'>{v}</div>"
-                    f"<div style='font-size:8px;color:#666;margin-top:2px;'>{l}</div>"
-                    f"<div style='font-size:7px;color:#999;margin-top:3px;'>{c}</div></div>" for l,v,c in mets])
-    ing_h="".join([f"<span style='background:#eef2ff;color:#3730a3;border-radius:4px;padding:3px 9px;font-size:9px;font-weight:500;display:inline-block;margin:2px;'>{i} {_cp_link_tag(i)}</span>" for i in ings])
-    gc={"낮음":"#2e7d32","보통":"#1565c0","높음":"#e65100","매우높음":"#c62828"}.get(cg,"#333")
-    is_mock=air.get("mock",True); atxt=f"📡 에어코리아 실측 · {air.get('station','')} · {air.get('fetch_time','')}" if not is_mock else "⚠️ 모의 데이터"
-    return (_html_head("YD Lab 피부 분석 리포트","#0f3460")+
-            f"""<div class="header"><div><h1>🧴 YD Lab 피부 분석 리포트</h1><div class="sub">재능대학교 바이오테크과 · CEEI·SEEI 특허 출원 중</div></div><div style="font-size:10px;opacity:0.75;">{datetime.now().strftime("%Y년 %m월 %d일")}</div></div>
-<div class="body"><div style="font-size:9px;font-weight:600;padding:5px 10px;border-radius:4px;margin-bottom:12px;background:{'#e8f5e9' if not is_mock else '#fff3e0'};color:{'#2e7d32' if not is_mock else '#e65100'};">{atxt}</div>
+    mets = [("주름",  result.get("wrinkle_score",0),  result.get("wrinkle_comment","")),
+            ("모공",  result.get("pore_score",0),      result.get("pore_comment","")),
+            ("피부결",result.get("texture_score",0),   result.get("texture_comment","")),
+            ("피부톤",result.get("tone_score",0),       result.get("tone_comment","")),
+            ("수분",  result.get("moisture_score",0),  result.get("moisture_comment",""))]
+    sboxes = "".join([
+        f"<div style='flex:1;background:#f8f9fa;border:1px solid #e4e8ee;border-radius:7px;padding:9px 5px;text-align:center;'>"
+        f"<div style='font-size:22px;font-weight:700;color:{sc(v)};'>{v}</div>"
+        f"<div style='font-size:8px;color:#666;margin-top:2px;'>{l}</div>"
+        f"<div style='font-size:7px;color:#999;margin-top:3px;'>{c}</div></div>"
+        for l,v,c in mets])
+    ing_h = "".join([
+        f"<span style='background:#eef2ff;color:#3730a3;border-radius:4px;padding:3px 9px;"
+        f"font-size:9px;font-weight:500;display:inline-block;margin:2px;'>{i} {_cp_link_tag(i)}</span>"
+        for i in ings])
+    gc      = {"낮음":"#2e7d32","보통":"#1565c0","높음":"#e65100","매우높음":"#c62828"}.get(cg,"#333")
+    is_mock = air.get("mock",True)
+    atxt    = f"📡 에어코리아 실측 · {air.get('station','')} · {air.get('fetch_time','')}" if not is_mock else "⚠️ 모의 데이터"
+    return (_html_head("YD Lab 피부 분석 리포트","#0f3460") +
+            f"""<div class="header"><div><h1>🧴 YD Lab 피부 분석 리포트</h1>
+<div class="sub">재능대학교 바이오테크과 · CEEI 특허 출원 중</div></div>
+<div style="font-size:10px;opacity:0.75;">{datetime.now().strftime("%Y년 %m월 %d일")}</div></div>
+<div class="body">
+<div style="font-size:9px;font-weight:600;padding:5px 10px;border-radius:4px;margin-bottom:12px;
+background:{'#e8f5e9' if not is_mock else '#fff3e0'};color:{'#2e7d32' if not is_mock else '#e65100'};">{atxt}</div>
 <div style="font-size:10px;color:#555;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid #e4e8ee;">
-<span>코드: {pid}</span>&nbsp;&nbsp;<span>{age}</span>&nbsp;&nbsp;<span>{gender}</span>&nbsp;&nbsp;<span>{region}</span>&nbsp;&nbsp;<span>거주 {residence_years}년</span></div>
+<span>코드: {pid}</span>&nbsp;&nbsp;<span>{age}</span>&nbsp;&nbsp;<span>{gender}</span>&nbsp;&nbsp;
+<span>{region}</span>&nbsp;&nbsp;<span>거주 {residence_years}년</span></div>
 <div class="section"><div class="stitle">종합 결과</div>
-<div style="display:flex;align-items:center;gap:18px;"><div style="font-size:44px;font-weight:700;color:{sc(overall)};line-height:1;">{overall}</div>
-<div><div style="font-size:13px;font-weight:600;margin-bottom:5px;">피부 타입: {st_}</div><div style="font-size:9px;color:#555;line-height:1.65;">{result.get("summary","")}</div></div></div></div>
-<div class="section"><div class="stitle">피부 5지표</div><div style="display:flex;gap:7px;">{sboxes}</div></div>
-<div class="section"><div class="stitle">추천 성분</div><div style="margin-bottom:7px;">{ing_h}</div><div style="font-size:9px;color:#555;line-height:1.6;">{result.get("care_advice","")}</div></div>
+<div style="display:flex;align-items:center;gap:18px;">
+<div style="font-size:44px;font-weight:700;color:{sc(overall)};line-height:1;">{overall}</div>
+<div><div style="font-size:13px;font-weight:600;margin-bottom:5px;">피부 타입: {st_}</div>
+<div style="font-size:9px;color:#555;line-height:1.65;">{result.get("summary","")}</div></div></div></div>
+<div class="section"><div class="stitle">피부 5지표</div>
+<div style="display:flex;gap:7px;">{sboxes}</div></div>
+<div class="section"><div class="stitle">추천 성분</div>
+<div style="margin-bottom:7px;">{ing_h}</div>
+<div style="font-size:9px;color:#555;line-height:1.6;">{result.get("care_advice","")}</div></div>
 {_mixing_html(mixing,"#2e7d32")}
 <div class="section"><div class="stitle">CEEI — 피부 환경노출지수</div>
-<div><span class="chip">PM2.5 {air.get('pm25','-')}㎍/m³</span><span class="chip">PM10 {air.get('pm10','-')}㎍/m³</span><span class="chip">O₃ {air.get('o3','-')}ppm</span><span class="chip">NO₂ {air.get('no2','-')}ppm</span></div>
+<div><span class="chip">PM2.5 {air.get('pm25','-')}㎍/m³</span>
+<span class="chip">PM10 {air.get('pm10','-')}㎍/m³</span>
+<span class="chip">O₃ {air.get('o3','-')}ppm</span>
+<span class="chip">NO₂ {air.get('no2','-')}ppm</span></div>
 <div style="margin-top:5px;"><span class="chip" style="background:#e8f5e9;color:{gc};">CEEI {ceei} [{cg}]</span></div>
 <div style="font-size:9px;color:#555;margin-top:5px;">{cm}</div></div>
-</div><div class="footer"><span>본 리포트는 참고용이며 의료적 진단을 대체하지 않습니다. 특허 출원 중.</span><span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
+</div><div class="footer">
+<span>본 리포트는 참고용이며 의료적 진단을 대체하지 않습니다. 특허 출원 중.</span>
+<span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
 
 def generate_scalp_report_html(result, air, region, residence_years, pid, age, gender, mixing=None,
-                                seei=0, seei_grade="낮음", seei_msg="", seei_comp=None, season_corr=1.0,
-                                uv_val=None, uv_gstr="알수없음", uv_corr=1.0, hum_val=None, hum_corr=1.0):
-    overall=result.get("overall_score",0); st_=result.get("scalp_type","")
-    ings=result.get("recommended_ingredients",[])
-    seei_comp=seei_comp or {}
+                                seei=0, seei_grade="낮음", seei_msg="", seei_comp=None,
+                                season_corr=1.0, uv_val=None, uv_gstr="알수없음",
+                                uv_corr=1.0, hum_val=None, hum_corr=1.0):
+    overall    = result.get("overall_score",0); st_ = result.get("scalp_type","")
+    ings       = result.get("recommended_ingredients",[])
+    seei_comp  = seei_comp or {}
     def sc(s): return "#2e7d32" if s>=70 else "#e65100" if s>=40 else "#c62828"
-    smets=[("각질",result.get("keratin_score",0),result.get("keratin_comment","")),
-           ("모공·피지",result.get("pore_score",0),result.get("pore_comment","")),
-           ("모발굵기",result.get("hair_thickness_score",0),result.get("hair_thickness_comment","")),
-           ("색상·염증",result.get("scalp_color_score",0),result.get("scalp_color_comment","")),
-           ("수분·유분",result.get("moisture_balance_score",0),result.get("moisture_balance_comment","")),
-           ("손상도",result.get("hair_damage_score",0),result.get("hair_damage_comment",""))]
-    sboxes="".join([f"<div style='flex:1;min-width:80px;background:#f0faf4;border:1px solid #a5d6a7;border-radius:7px;padding:9px 5px;text-align:center;'>"
-                    f"<div style='font-size:22px;font-weight:700;color:{sc(v)};'>{v}</div>"
-                    f"<div style='font-size:8px;color:#666;margin-top:2px;'>{l}</div>"
-                    f"<div style='font-size:7px;color:#999;margin-top:3px;'>{c}</div></div>" for l,v,c in smets])
-    hl=result.get("hair_loss_risk_score",0); hlc=result.get("hair_loss_risk_comment","")
-    ing_h="".join([f"<span style='background:#f0faf4;color:#2e7d32;border-radius:4px;padding:3px 9px;font-size:9px;font-weight:500;display:inline-block;margin:2px;'>{i} {_cp_link_tag(i)}</span>" for i in ings])
-    sg={"낮음":"#2e7d32","보통":"#1565c0","높음":"#e65100","매우높음":"#c62828"}.get(seei_grade,"#333")
-    comp_h="".join([f"<span class='chip' style='background:#f0faf4;color:#1b5e20;'>{k}: {v}</span>" for k,v in seei_comp.items()])
-    is_mock=air.get("mock",True); atxt=f"📡 에어코리아 실측 · {air.get('station','')} · {air.get('fetch_time','')}" if not is_mock else "⚠️ 모의 데이터"
-    uv_d=f"{uv_val:.1f}" if uv_val is not None else "--"
-    hum_d=f"{hum_val:.0f}%" if hum_val is not None else "--"
-    return (_html_head("YD Lab 두피 분석 리포트","#1b5e20")+
-            f"""<div class="header"><div><h1>💆 YD Lab 두피 분석 리포트</h1><div class="sub">재능대학교 바이오테크과 · CEEI·SEEI 특허 출원 중 · 기상청 연동</div></div><div style="font-size:10px;opacity:0.75;">{datetime.now().strftime("%Y년 %m월 %d일")}</div></div>
-<div class="body"><div style="font-size:9px;font-weight:600;padding:5px 10px;border-radius:4px;margin-bottom:12px;background:{'#e8f5e9' if not is_mock else '#fff3e0'};color:{'#2e7d32' if not is_mock else '#e65100'};">{atxt}</div>
+    smets = [("각질",    result.get("keratin_score",0),         result.get("keratin_comment","")),
+             ("모공·피지",result.get("pore_score",0),            result.get("pore_comment","")),
+             ("모발굵기", result.get("hair_thickness_score",0),   result.get("hair_thickness_comment","")),
+             ("색상·염증",result.get("scalp_color_score",0),      result.get("scalp_color_comment","")),
+             ("수분·유분",result.get("moisture_balance_score",0), result.get("moisture_balance_comment","")),
+             ("손상도",   result.get("hair_damage_score",0),      result.get("hair_damage_comment",""))]
+    sboxes = "".join([
+        f"<div style='flex:1;min-width:80px;background:#f0faf4;border:1px solid #a5d6a7;"
+        f"border-radius:7px;padding:9px 5px;text-align:center;'>"
+        f"<div style='font-size:22px;font-weight:700;color:{sc(v)};'>{v}</div>"
+        f"<div style='font-size:8px;color:#666;margin-top:2px;'>{l}</div>"
+        f"<div style='font-size:7px;color:#999;margin-top:3px;'>{c}</div></div>"
+        for l,v,c in smets])
+    hl   = result.get("hair_loss_risk_score",0)
+    hlc  = result.get("hair_loss_risk_comment","")
+    ing_h = "".join([
+        f"<span style='background:#f0faf4;color:#2e7d32;border-radius:4px;padding:3px 9px;"
+        f"font-size:9px;font-weight:500;display:inline-block;margin:2px;'>{i} {_cp_link_tag(i)}</span>"
+        for i in ings])
+    sg     = {"낮음":"#2e7d32","보통":"#1565c0","높음":"#e65100","매우높음":"#c62828"}.get(seei_grade,"#333")
+    comp_h = "".join([f"<span class='chip' style='background:#f0faf4;color:#1b5e20;'>{k}: {v}</span>"
+                      for k,v in seei_comp.items()])
+    is_mock = air.get("mock",True)
+    atxt    = f"📡 에어코리아 실측 · {air.get('station','')} · {air.get('fetch_time','')}" if not is_mock else "⚠️ 모의 데이터"
+    uv_d    = f"{uv_val:.1f}" if uv_val is not None else "--"
+    hum_d   = f"{hum_val:.0f}%" if hum_val is not None else "--"
+    return (_html_head("YD Lab 두피 분석 리포트","#1b5e20") +
+            f"""<div class="header"><div><h1>💆 YD Lab 두피 분석 리포트</h1>
+<div class="sub">재능대학교 바이오테크과 · CEEI·SEEI 특허 출원 중 · 기상청 연동</div></div>
+<div style="font-size:10px;opacity:0.75;">{datetime.now().strftime("%Y년 %m월 %d일")}</div></div>
+<div class="body">
+<div style="font-size:9px;font-weight:600;padding:5px 10px;border-radius:4px;margin-bottom:12px;
+background:{'#e8f5e9' if not is_mock else '#fff3e0'};color:{'#2e7d32' if not is_mock else '#e65100'};">{atxt}</div>
 <div style="font-size:10px;color:#555;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid #e4e8ee;">
-<span>코드: {pid}</span>&nbsp;&nbsp;<span>{age}</span>&nbsp;&nbsp;<span>{gender}</span>&nbsp;&nbsp;<span>{region}</span>&nbsp;&nbsp;<span>거주 {residence_years}년</span></div>
+<span>코드: {pid}</span>&nbsp;&nbsp;<span>{age}</span>&nbsp;&nbsp;<span>{gender}</span>&nbsp;&nbsp;
+<span>{region}</span>&nbsp;&nbsp;<span>거주 {residence_years}년</span></div>
 <div class="section"><div class="stitle">종합 결과</div>
-<div style="display:flex;align-items:center;gap:18px;"><div style="font-size:44px;font-weight:700;color:{sc(overall)};line-height:1;">{overall}</div>
-<div><div style="font-size:13px;font-weight:600;margin-bottom:5px;">두피 타입: {st_}</div><div style="font-size:9px;color:#555;line-height:1.65;">{result.get("summary","")}</div></div></div></div>
-<div class="section"><div class="stitle">두피 6지표</div><div style="display:flex;gap:7px;flex-wrap:wrap;">{sboxes}</div>
+<div style="display:flex;align-items:center;gap:18px;">
+<div style="font-size:44px;font-weight:700;color:{sc(overall)};line-height:1;">{overall}</div>
+<div><div style="font-size:13px;font-weight:600;margin-bottom:5px;">두피 타입: {st_}</div>
+<div style="font-size:9px;color:#555;line-height:1.65;">{result.get("summary","")}</div></div></div></div>
+<div class="section"><div class="stitle">두피 6지표</div>
+<div style="display:flex;gap:7px;flex-wrap:wrap;">{sboxes}</div>
 <div style="margin-top:8px;background:#fff8f0;border:1px solid #ffcc80;border-radius:6px;padding:6px 10px;font-size:9px;">
 <b>⚠️ 탈모 진행도 (참고용):</b> <span style="font-weight:700;color:{sc(hl)};">{hl}점</span> — {hlc}</div></div>
-<div class="section"><div class="stitle">추천 두피·모발 성분</div><div style="margin-bottom:7px;">{ing_h}</div><div style="font-size:9px;color:#555;line-height:1.6;">{result.get("care_advice","")}</div></div>
+<div class="section"><div class="stitle">추천 두피·모발 성분</div>
+<div style="margin-bottom:7px;">{ing_h}</div>
+<div style="font-size:9px;color:#555;line-height:1.6;">{result.get("care_advice","")}</div></div>
 {_mixing_html(mixing,"#1565c0")}
 <div class="section"><div class="stitle">SEEI v3 — 두피 복합 환경노출지수 (특허 출원 중)</div>
 <div><span class="chip" style="background:#e8f5e9;color:{sg};">SEEI {seei} [{seei_grade}]</span>
-<span class="chip">계절보정 ×{season_corr}</span><span class="chip">UV보정 ×{uv_corr}</span><span class="chip">습도보정 ×{hum_corr}</span></div>
+<span class="chip">계절보정 ×{season_corr}</span>
+<span class="chip">UV보정 ×{uv_corr}</span>
+<span class="chip">습도보정 ×{hum_corr}</span></div>
 <div style="margin:5px 0;">{comp_h}</div>
 <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:6px 10px;margin:5px 0;font-size:9px;">
 ☀️ 자외선지수: <b>{uv_d}</b> [{uv_gstr}] &nbsp;|&nbsp; 💧 습도: <b>{hum_d}</b></div>
-<div style="font-size:8px;color:#888;margin-bottom:4px;">SEEI = (PM2.5×0.40+PM10×0.25+NO₂×0.20+O₃×0.15) × 거주기간 × 계절보정 × UV보정 × 습도보정</div>
+<div style="font-size:8px;color:#888;margin-bottom:4px;">
+SEEI = (PM2.5×0.40+PM10×0.25+NO₂×0.20+O₃×0.15) × 거주기간 × 계절보정 × UV보정 × 습도보정</div>
 <div style="font-size:9px;color:#555;">{seei_msg}</div></div>
-</div><div class="footer"><span>본 리포트는 참고용이며 의료적 진단을 대체하지 않습니다. 특허 출원 중.</span><span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
+</div><div class="footer">
+<span>본 리포트는 참고용이며 의료적 진단을 대체하지 않습니다. 특허 출원 중.</span>
+<span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
 
 def generate_skin_order_html(result, air, region, residence_years, pid, age, gender, mixing=None):
-    code="YDL-SKIN-"+datetime.now().strftime("%Y%m%d")+"-"+''.join(random.choices(string.ascii_uppercase+string.digits,k=4))
-    overall=result.get("overall_score",0); st_=result.get("skin_type",""); ings=result.get("recommended_ingredients",[])
-    pm25_avg=REGION_PM25_AVG.get(region,22.0); ceei,cg,_,cm=calc_ceei(pm25_avg,residence_years); is_mock=air.get("mock",True)
-    total_ml=mixing["total_ml"] if mixing else 20
-    pm = {"히알루론산":"즉각 수분 공급·보습","세라마이드":"피부 장벽 강화","나이아신아마이드":"피부톤·모공 관리",
-          "레티놀":"주름 개선·탄력","비타민C":"항산화·피부톤","비타민C 유도체":"항산화·안정형",
-          "펩타이드":"탄력·항노화","판테놀":"진정·보습","살리실산":"각질 용해","살리실산(BHA)":"각질 용해",
-          "아데노신":"주름 개선(식약처)","EGF":"세포 재생·탄력","글리세린":"기초 보습","알란토인":"피부 진정·재생","스쿠알란":"보습·장벽 강화"}
-    rows="".join([f"<tr style='background:{'#f8faff' if i%2==0 else 'white'}'><td style='padding:8px;border:1px solid #e4e8ee;text-align:center;font-weight:600;color:#0f3460;'>{i+1}</td>"
-                  f"<td style='padding:8px;border:1px solid #e4e8ee;font-weight:700;'>{ing}</td>"
-                  f"<td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>{pm.get(ing,'피부 상태 개선')}</td>"
-                  f"<td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#2e7d32;'>{mixing['ratios'].get(ing,'-') if mixing else '-'}% ({mixing['ml'].get(ing,'-') if mixing else '-'}ml)</td>"
-                  f"<td style='padding:8px;border:1px solid #e4e8ee;font-family:monospace;'>{get_concentration(ing,st_)[0]}</td>"
-                  f"<td style='padding:8px;border:1px solid #e4e8ee;'>{_cp_buy_btn(ing)}</td>"
-                  f"<td style='padding:8px;border:1px solid #e4e8ee;color:#888;font-size:9px;'>{get_concentration(ing,st_)[1]}</td></tr>" for i,ing in enumerate(ings)])
-    steps_h="".join([f"<div style='display:flex;align-items:center;gap:8px;padding:5px 0;font-size:10px;border-bottom:1px solid #f0f0f0;'>"
-                     f"<span style='background:#0f3460;color:white;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;'>{dn}</span>"
-                     f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>" for dn,s in enumerate(mixing["steps"],start=1)]) if mixing else ""
-    return (_html_head(f"YD Lab 피부 공방 주문서 {code}","#0f3460")+
-            f"""<div class="header"><div><h1>🧴 YD Lab 피부 공방 주문서</h1><div style="font-size:9px;opacity:0.6;margin-top:3px;">AI 피부 분석 기반 맞춤형 화장품 제조 요청 · 재능대학교</div></div>
+    code     = "YDL-SKIN-"+datetime.now().strftime("%Y%m%d")+"-"+''.join(random.choices(string.ascii_uppercase+string.digits,k=4))
+    overall  = result.get("overall_score",0); st_ = result.get("skin_type","")
+    ings     = result.get("recommended_ingredients",[])
+    pm25_avg = REGION_PM25_AVG.get(region,22.0)
+    ceei,cg,_,cm = calc_ceei(pm25_avg, residence_years)
+    is_mock  = air.get("mock",True)
+    total_ml = mixing["total_ml"] if mixing else 20
+    pm = {"히알루론산":"즉각 수분 공급·보습","세라마이드":"피부 장벽 강화",
+          "나이아신아마이드":"피부톤·모공 관리","레티놀":"주름 개선·탄력",
+          "비타민C":"항산화·피부톤","비타민C 유도체":"항산화·안정형",
+          "펩타이드":"탄력·항노화","판테놀":"진정·보습",
+          "살리실산":"각질 용해","살리실산(BHA)":"각질 용해",
+          "아데노신":"주름 개선(식약처)","EGF":"세포 재생·탄력",
+          "글리세린":"기초 보습","알란토인":"피부 진정·재생","스쿠알란":"보습·장벽 강화"}
+    rows = "".join([
+        f"<tr style='background:{'#f8faff' if i%2==0 else 'white'}'>"
+        f"<td style='padding:8px;border:1px solid #e4e8ee;text-align:center;font-weight:600;color:#0f3460;'>{i+1}</td>"
+        f"<td style='padding:8px;border:1px solid #e4e8ee;font-weight:700;'>{ing}</td>"
+        f"<td style='padding:8px;border:1px solid #e4e8ee;color:#555;'>{pm.get(ing,'피부 상태 개선')}</td>"
+        f"<td style='padding:8px;border:1px solid #e4e8ee;font-weight:600;color:#2e7d32;'>"
+        f"{mixing['ratios'].get(ing,'-') if mixing else '-'}% ({mixing['ml'].get(ing,'-') if mixing else '-'}ml)</td>"
+        f"<td style='padding:8px;border:1px solid #e4e8ee;font-family:monospace;'>{get_concentration(ing,st_)[0]}</td>"
+        f"<td style='padding:8px;border:1px solid #e4e8ee;'>{_cp_buy_btn(ing)}</td>"
+        f"<td style='padding:8px;border:1px solid #e4e8ee;color:#888;font-size:9px;'>{get_concentration(ing,st_)[1]}</td></tr>"
+        for i,ing in enumerate(ings)])
+    steps_h = "".join([
+        f"<div style='display:flex;align-items:center;gap:8px;padding:5px 0;font-size:10px;border-bottom:1px solid #f0f0f0;'>"
+        f"<span style='background:#0f3460;color:white;border-radius:50%;width:20px;height:20px;"
+        f"display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;'>{dn}</span>"
+        f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
+        for dn,s in enumerate(mixing["steps"],start=1)]) if mixing else ""
+    return (_html_head(f"YD Lab 피부 공방 주문서 {code}","#0f3460") +
+            f"""<div class="header"><div><h1>🧴 YD Lab 피부 공방 주문서</h1>
+<div style="font-size:9px;opacity:0.6;margin-top:3px;">AI 피부 분석 기반 맞춤형 화장품 제조 요청 · 재능대학교</div></div>
 <div style="font-family:monospace;background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:4px;">{code}</div></div>
-<div class="body"><div style="font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;border-bottom:1px solid #e4e8ee;display:flex;gap:20px;flex-wrap:wrap;">
-<span><b>분석일:</b> {datetime.now().strftime("%Y년 %m월 %d일")}</span><span><b>참여자:</b> {pid} {age} {gender}</span>
-<span><b>거주지:</b> {region} {residence_years}년</span><span><b>피부타입:</b> {st_}</span><span><b>종합점수:</b> {overall}점</span><span><b>총 제조량:</b> {total_ml}ml</span></div>
-<div style="margin-bottom:16px;"><div style="font-size:9px;font-weight:700;color:#0f3460;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #0f3460;">성분 처방 · 혼합 비율 · 구매 링크</div>
+<div class="body">
+<div style="font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;border-bottom:1px solid #e4e8ee;display:flex;gap:20px;flex-wrap:wrap;">
+<span><b>분석일:</b> {datetime.now().strftime("%Y년 %m월 %d일")}</span>
+<span><b>참여자:</b> {pid} {age} {gender}</span>
+<span><b>거주지:</b> {region} {residence_years}년</span>
+<span><b>피부타입:</b> {st_}</span>
+<span><b>종합점수:</b> {overall}점</span>
+<span><b>총 제조량:</b> {total_ml}ml</span></div>
+<div style="margin-bottom:16px;">
+<div style="font-size:9px;font-weight:700;color:#0f3460;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #0f3460;">
+성분 처방 · 혼합 비율 · 구매 링크</div>
 <table><tr><th>#</th><th>성분명</th><th>목적</th><th>혼합비율</th><th>권장농도</th><th>구매링크</th><th>제조참고</th></tr>{rows}</table></div>
-<div style="margin-bottom:16px;"><div style="font-size:9px;font-weight:700;color:#0f3460;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #0f3460;">제조 순서</div>
-{steps_h}<div style="font-size:8px;color:#e65100;padding:6px 8px;background:#fff8f0;border-radius:4px;margin-top:8px;">{COUPANG_DISCLAIMER}</div></div>
-<div style="font-size:10px;color:#555;"><b>CEEI {ceei} [{cg}]</b> · PM2.5 {air.get('pm25','-')}㎍/m³ · {'에어코리아 실측' if not is_mock else '모의데이터'} · {cm}</div>
-</div><div class="footer"><span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다. 특허 출원 중.</span><span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
+<div style="margin-bottom:16px;">
+<div style="font-size:9px;font-weight:700;color:#0f3460;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #0f3460;">
+제조 순서</div>{steps_h}
+<div style="font-size:8px;color:#e65100;padding:6px 8px;background:#fff8f0;border-radius:4px;margin-top:8px;">{COUPANG_DISCLAIMER}</div></div>
+<div style="font-size:10px;color:#555;">
+<b>CEEI {ceei} [{cg}]</b> · PM2.5 {air.get('pm25','-')}㎍/m³ · {'에어코리아 실측' if not is_mock else '모의데이터'} · {cm}</div>
+</div><div class="footer">
+<span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다. 특허 출원 중.</span>
+<span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
 
 def generate_scalp_order_html(result, air, region, residence_years, pid, age, gender, mixing=None,
-                               seei=0, seei_grade="낮음", seei_msg="", uv_val=None, uv_gstr="알수없음", hum_val=None):
-    code="YDL-SCALP-"+datetime.now().strftime("%Y%m%d")+"-"+''.join(random.choices(string.ascii_uppercase+string.digits,k=4))
-    overall=result.get("overall_score",0); st_=result.get("scalp_type",""); ings=result.get("recommended_ingredients",[])
-    is_mock=air.get("mock",True); total_ml=mixing["total_ml"] if mixing else 20
-    sg={"낮음":"#2e7d32","보통":"#1565c0","높음":"#e65100","매우높음":"#c62828"}.get(seei_grade,"#333")
-    pm={"징크피리치온":"두피 항균·비듬 억제","살리실산":"두피 각질 용해","살리실산(BHA)":"두피 각질 용해",
-        "바이오틴":"모발 강화·성장 촉진","판테놀 (두피용)":"두피 진정·보습","판테놀":"두피 진정·보습",
-        "나이아신아마이드":"두피 피지 조절·진정","비타민C":"두피 항산화","비타민C 유도체":"두피 항산화·안정형",
-        "히알루론산":"두피 수분 공급","세라마이드":"두피 장벽 강화","티트리 오일":"두피 항균·항염·진정",
-        "티트리오일":"두피 항균·항염·진정","티트리":"두피 항균·항염·진정","로즈마리 오일":"두피 혈행 촉진·성장","멘톨":"두피 청량감·항균","소듐PCA":"두피 보습"}
-    rows="".join([f"<tr style='background:{'#f0faf4' if i%2==0 else 'white'}'><td style='padding:8px;border:1px solid #a5d6a7;text-align:center;font-weight:600;color:#1b5e20;'>{i+1}</td>"
-                  f"<td style='padding:8px;border:1px solid #a5d6a7;font-weight:700;'>{ing}</td>"
-                  f"<td style='padding:8px;border:1px solid #a5d6a7;color:#555;'>{pm.get(ing,'두피·모발 상태 개선')}</td>"
-                  f"<td style='padding:8px;border:1px solid #a5d6a7;font-weight:600;color:#1565c0;'>{mixing['ratios'].get(ing,'-') if mixing else '-'}% ({mixing['ml'].get(ing,'-') if mixing else '-'}ml)</td>"
-                  f"<td style='padding:8px;border:1px solid #a5d6a7;font-family:monospace;color:#1b5e20;'>{get_concentration(ing,st_)[0]}</td>"
-                  f"<td style='padding:8px;border:1px solid #a5d6a7;'>{_cp_buy_btn(ing)}</td>"
-                  f"<td style='padding:8px;border:1px solid #a5d6a7;color:#888;font-size:9px;'>{get_concentration(ing,st_)[1]}</td></tr>" for i,ing in enumerate(ings)])
-    steps_h="".join([f"<div style='display:flex;align-items:center;gap:8px;padding:5px 0;font-size:10px;border-bottom:1px solid #f0f0f0;'>"
-                     f"<span style='background:#1b5e20;color:white;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;'>{dn}</span>"
-                     f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>" for dn,s in enumerate(mixing["steps"],start=1)]) if mixing else ""
-    uv_d=f"{uv_val:.1f}" if uv_val is not None else "--"
-    hum_d=f"{hum_val:.0f}%" if hum_val is not None else "--"
-    return (_html_head(f"YD Lab 두피 공방 주문서 {code}","#1b5e20")+
-            f"""<div class="header"><div><h1>💆 YD Lab 두피 공방 주문서</h1><div style="font-size:9px;opacity:0.6;margin-top:3px;">AI 두피 분석 + SEEI v3 기반 맞춤형 두피케어 제조 요청 · 재능대학교</div></div>
+                               seei=0, seei_grade="낮음", seei_msg="",
+                               uv_val=None, uv_gstr="알수없음", hum_val=None):
+    code     = "YDL-SCALP-"+datetime.now().strftime("%Y%m%d")+"-"+''.join(random.choices(string.ascii_uppercase+string.digits,k=4))
+    overall  = result.get("overall_score",0); st_ = result.get("scalp_type","")
+    ings     = result.get("recommended_ingredients",[])
+    is_mock  = air.get("mock",True)
+    total_ml = mixing["total_ml"] if mixing else 20
+    sg       = {"낮음":"#2e7d32","보통":"#1565c0","높음":"#e65100","매우높음":"#c62828"}.get(seei_grade,"#333")
+    pm = {"징크피리치온":"두피 항균·비듬 억제","살리실산":"두피 각질 용해","살리실산(BHA)":"두피 각질 용해",
+          "바이오틴":"모발 강화·성장 촉진","판테놀 (두피용)":"두피 진정·보습","판테놀":"두피 진정·보습",
+          "나이아신아마이드":"두피 피지 조절·진정","비타민C":"두피 항산화","비타민C 유도체":"두피 항산화·안정형",
+          "히알루론산":"두피 수분 공급","세라마이드":"두피 장벽 강화",
+          "티트리 오일":"두피 항균·항염·진정","티트리오일":"두피 항균·항염·진정","티트리":"두피 항균·항염·진정",
+          "로즈마리 오일":"두피 혈행 촉진·성장","멘톨":"두피 청량감·항균","소듐PCA":"두피 보습"}
+    rows = "".join([
+        f"<tr style='background:{'#f0faf4' if i%2==0 else 'white'}'>"
+        f"<td style='padding:8px;border:1px solid #a5d6a7;text-align:center;font-weight:600;color:#1b5e20;'>{i+1}</td>"
+        f"<td style='padding:8px;border:1px solid #a5d6a7;font-weight:700;'>{ing}</td>"
+        f"<td style='padding:8px;border:1px solid #a5d6a7;color:#555;'>{pm.get(ing,'두피·모발 상태 개선')}</td>"
+        f"<td style='padding:8px;border:1px solid #a5d6a7;font-weight:600;color:#1565c0;'>"
+        f"{mixing['ratios'].get(ing,'-') if mixing else '-'}% ({mixing['ml'].get(ing,'-') if mixing else '-'}ml)</td>"
+        f"<td style='padding:8px;border:1px solid #a5d6a7;font-family:monospace;color:#1b5e20;'>{get_concentration(ing,st_)[0]}</td>"
+        f"<td style='padding:8px;border:1px solid #a5d6a7;'>{_cp_buy_btn(ing)}</td>"
+        f"<td style='padding:8px;border:1px solid #a5d6a7;color:#888;font-size:9px;'>{get_concentration(ing,st_)[1]}</td></tr>"
+        for i,ing in enumerate(ings)])
+    steps_h = "".join([
+        f"<div style='display:flex;align-items:center;gap:8px;padding:5px 0;font-size:10px;border-bottom:1px solid #f0f0f0;'>"
+        f"<span style='background:#1b5e20;color:white;border-radius:50%;width:20px;height:20px;"
+        f"display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;'>{dn}</span>"
+        f"<span><b>{s['label']}</b> — {' + '.join(s['items'])}</span></div>"
+        for dn,s in enumerate(mixing["steps"],start=1)]) if mixing else ""
+    uv_d  = f"{uv_val:.1f}" if uv_val is not None else "--"
+    hum_d = f"{hum_val:.0f}%" if hum_val is not None else "--"
+    return (_html_head(f"YD Lab 두피 공방 주문서 {code}","#1b5e20") +
+            f"""<div class="header"><div><h1>💆 YD Lab 두피 공방 주문서</h1>
+<div style="font-size:9px;opacity:0.6;margin-top:3px;">AI 두피 분석 + SEEI v3 기반 맞춤형 두피케어 제조 요청 · 재능대학교</div></div>
 <div style="font-family:monospace;background:rgba(255,255,255,0.15);padding:4px 10px;border-radius:4px;">{code}</div></div>
-<div class="body"><div style="font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;border-bottom:1px solid #a5d6a7;display:flex;gap:20px;flex-wrap:wrap;">
-<span><b>분석일:</b> {datetime.now().strftime("%Y년 %m월 %d일")}</span><span><b>참여자:</b> {pid} {age} {gender}</span>
-<span><b>거주지:</b> {region} {residence_years}년</span><span><b>두피타입:</b> {st_}</span><span><b>종합점수:</b> {overall}점</span>
-<span style="color:{sg};font-weight:700;"><b>SEEI:</b> {seei} [{seei_grade}]</span><span>☀️UV:{uv_d}[{uv_gstr}]</span><span>💧습도:{hum_d}</span></div>
-<div style="margin-bottom:16px;"><div style="font-size:9px;font-weight:700;color:#1b5e20;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #1b5e20;">두피 성분 처방 · SEEI v3 반영</div>
+<div class="body">
+<div style="font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;border-bottom:1px solid #a5d6a7;display:flex;gap:20px;flex-wrap:wrap;">
+<span><b>분석일:</b> {datetime.now().strftime("%Y년 %m월 %d일")}</span>
+<span><b>참여자:</b> {pid} {age} {gender}</span>
+<span><b>거주지:</b> {region} {residence_years}년</span>
+<span><b>두피타입:</b> {st_}</span>
+<span><b>종합점수:</b> {overall}점</span>
+<span style="color:{sg};font-weight:700;"><b>SEEI:</b> {seei} [{seei_grade}]</span>
+<span>☀️UV:{uv_d}[{uv_gstr}]</span><span>💧습도:{hum_d}</span></div>
+<div style="margin-bottom:16px;">
+<div style="font-size:9px;font-weight:700;color:#1b5e20;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #1b5e20;">
+두피 성분 처방 · SEEI v3 반영</div>
 <table><tr><th>#</th><th>성분명</th><th>목적</th><th>혼합비율</th><th>권장농도</th><th>구매링크</th><th>제조참고</th></tr>{rows}</table></div>
-<div style="margin-bottom:16px;"><div style="font-size:9px;font-weight:700;color:#1b5e20;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #1b5e20;">두피 제조 순서</div>
-{steps_h}<div style="font-size:8px;color:#e65100;padding:6px 8px;background:#fff8f0;border-radius:4px;margin-top:8px;">{COUPANG_DISCLAIMER}</div></div>
+<div style="margin-bottom:16px;">
+<div style="font-size:9px;font-weight:700;color:#1b5e20;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #1b5e20;">
+두피 제조 순서</div>{steps_h}
+<div style="font-size:8px;color:#e65100;padding:6px 8px;background:#fff8f0;border-radius:4px;margin-top:8px;">{COUPANG_DISCLAIMER}</div></div>
 <div style="font-size:10px;color:#555;background:#f0faf4;border:1px solid #a5d6a7;border-radius:6px;padding:8px 12px;">
 <b>SEEI {seei} [{seei_grade}]</b> · PM2.5 {air.get('pm25','-')}㎍/m³ · PM10 {air.get('pm10','-')}㎍/m³ · {'에어코리아 실측' if not is_mock else '모의데이터'}<br>
 <span style="font-size:9px;color:#666;">{seei_msg}</span></div>
-</div><div class="footer"><span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다. CEEI·SEEI 특허 출원 중.</span><span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
+</div><div class="footer">
+<span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다. CEEI·SEEI 특허 출원 중.</span>
+<span>YD Lab · 재능대학교 · 남정훈 교수</span></div></body></html>""")
 
 # ══════════════════════════════════════════════════════════════
 # 메인
 # ══════════════════════════════════════════════════════════════
 def main():
-    valid_codes = st.secrets.get("ACCESS_CODES",[st.secrets.get("ACCESS_PASSWORD","YDLAB2025")])
-    if isinstance(valid_codes,str): valid_codes=[valid_codes]
-    if "authed" not in st.session_state: st.session_state["authed"]=False
+    valid_codes = st.secrets.get("ACCESS_CODES", [st.secrets.get("ACCESS_PASSWORD","YDLAB2025")])
+    if isinstance(valid_codes, str): valid_codes = [valid_codes]
+
+    if "authed" not in st.session_state: st.session_state["authed"] = False
     if not st.session_state["authed"]:
         url_code = st.query_params.get("code","")
-        if url_code and url_code in valid_codes: st.session_state["authed"]=True
+        if url_code and url_code in valid_codes:
+            st.session_state["authed"] = True
 
     if not st.session_state["authed"]:
-        st.markdown("""<div class='hero'><div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
-<h1>🔬 AI 피부·두피 분석</h1><p>오픈랩 이벤트 참여자 전용 서비스입니다.<br>행사장에서 받은 이벤트 코드를 입력해 주세요.</p></div>""", unsafe_allow_html=True)
-        gate_pw = st.text_input("이벤트 코드",type="password",placeholder="이벤트 코드를 입력하세요",key="k_gate")
-        if st.button("✅ 분석 시작하기",type="primary",use_container_width=True):
+        st.markdown("""<div class='hero'>
+<div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
+<h1>🔬 AI 피부·두피 분석</h1>
+<p>오픈랩 이벤트 참여자 전용 서비스입니다.<br>행사장에서 받은 이벤트 코드를 입력해 주세요.</p></div>""",
+                    unsafe_allow_html=True)
+        gate_pw = st.text_input("이벤트 코드", type="password",
+                                placeholder="이벤트 코드를 입력하세요", key="k_gate")
+        if st.button("✅ 분석 시작하기", type="primary", use_container_width=True):
             if gate_pw.upper() in [c.upper() for c in valid_codes]:
-                st.session_state["authed"]=True; st.rerun()
-            else: st.error("유효하지 않은 코드입니다.")
+                st.session_state["authed"] = True; st.rerun()
+            else:
+                st.error("유효하지 않은 코드입니다.")
         st.stop()
 
     api_key = st.secrets.get("ANTHROPIC_API_KEY","")
-    if not api_key: st.error("⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다."); st.stop()
+    if not api_key:
+        st.error("⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다."); st.stop()
 
-    kma_key = st.secrets.get("KMA_API_KEY","")
+    kma_key    = st.secrets.get("KMA_API_KEY","")
     kma_status = "✅ 기상청 API 연동" if kma_key else "⚠️ 기상청 API 미연동 (모의값 사용)"
 
-    st.markdown(f"""<div class='hero'><div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
-<h1>🔬 AI 피부·두피 분석 v3</h1>
+    st.markdown(f"""<div class='hero'>
+<div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>
+<h1>🔬 AI 피부·두피 분석 v3.1</h1>
 <p>에어코리아(PM2.5·PM10·NO₂·O₃) + 기상청(UV·습도) + LLM 비전 AI<br>
 CEEI·SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)</p>
-<p style='font-size:0.75rem;opacity:0.6;margin-top:0.5rem;'>{kma_status}</p></div>""", unsafe_allow_html=True)
+<p style='font-size:0.75rem;opacity:0.6;margin-top:0.5rem;'>{kma_status}</p></div>""",
+                unsafe_allow_html=True)
 
-    st.markdown("<div class='card'><div class='card-label'>🎯 분석 모드 선택</div>", unsafe_allow_html=True)
+    # ── 분석 모드 ────────────────────────────────────────────
+    st.markdown("<div class='card'><div class='card-label'>🎯 분석 모드 선택</div>",
+                unsafe_allow_html=True)
     c1,c2 = st.columns(2)
     with c1:
-        skin_sel = st.button("🧴 피부 분석\n\n피부 5지표 + CEEI",use_container_width=True,key="k_mode_skin")
+        skin_sel  = st.button("🧴 피부 분석\n\n피부 5지표 + CEEI",
+                              use_container_width=True, key="k_mode_skin")
     with c2:
-        scalp_sel= st.button("💆 두피 분석\n\n두피 6지표 + SEEI v3\n(에어코리아+기상청 UV·습도)",use_container_width=True,key="k_mode_scalp")
-    if skin_sel:  st.session_state["analysis_mode"]="skin"
-    if scalp_sel: st.session_state["analysis_mode"]="scalp"
-    mode = st.session_state.get("analysis_mode",None)
-    if mode=="skin":   st.info("🧴 **피부 분석 모드** — 피부 5지표 + CEEI 환경노출지수")
-    elif mode=="scalp": st.info("💆 **두피 분석 모드** — 두피 6지표 + SEEI v3 (PM2.5·PM10·NO₂·O₃·UV·습도)")
+        scalp_sel = st.button("💆 두피 분석\n\n두피 6지표 + SEEI v3",
+                              use_container_width=True, key="k_mode_scalp")
+    if skin_sel:  st.session_state["analysis_mode"] = "skin"
+    if scalp_sel: st.session_state["analysis_mode"] = "scalp"
+    mode = st.session_state.get("analysis_mode", None)
+    if mode == "skin":   st.info("🧴 **피부 분석 모드** — 피부 5지표 + CEEI 환경노출지수")
+    elif mode == "scalp": st.info("💆 **두피 분석 모드** — 두피 6지표 + SEEI v3 (PM2.5·PM10·NO₂·O₃·UV·습도)")
     else:
         st.warning("⬆️ 위에서 분석 모드를 먼저 선택해 주세요.")
         st.markdown("</div>", unsafe_allow_html=True); st.stop()
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<div class='card'><div class='card-label'>기본 정보 입력</div>", unsafe_allow_html=True)
+    # ── 기본 정보 ────────────────────────────────────────────
+    st.markdown("<div class='card'><div class='card-label'>기본 정보 입력</div>",
+                unsafe_allow_html=True)
     c1,c2,c3 = st.columns(3)
-    with c1: pid = st.text_input("익명 참여 코드",placeholder="YD-001",key="k_pid")
-    with c2: age = st.selectbox("연령대",["선택","10대","20대","30대","40대","50대","60대 이상"],key="k_age")
-    with c3: gender = st.selectbox("성별",["선택","여성","남성","기타"],key="k_gender")
+    with c1: pid    = st.text_input("익명 참여 코드", placeholder="YD-001", key="k_pid")
+    with c2: age    = st.selectbox("연령대", ["선택","10대","20대","30대","40대","50대","60대 이상"], key="k_age")
+    with c3: gender = st.selectbox("성별", ["선택","여성","남성","기타"], key="k_gender")
     c4,c5 = st.columns(2)
-    with c4: region = st.selectbox("거주 지역",list(REGION_PM25_AVG.keys()),key="k_region")
-    with c5: res_str = st.selectbox("거주 기간",list(RESIDENCE_YEAR_MAP.keys()),key="k_residence")
-    if mode=="skin":
-        concern = st.multiselect("주요 피부 고민",["주름·탄력","모공","피부톤·색소침착","수분·건조","민감성·홍조","여드름·트러블","기타"],key="k_concern")
+    with c4: region  = st.selectbox("거주 지역", list(REGION_PM25_AVG.keys()), key="k_region")
+    with c5: res_str = st.selectbox("거주 기간", list(RESIDENCE_YEAR_MAP.keys()), key="k_residence")
+
+    if mode == "skin":
+        concern = st.multiselect("주요 피부 고민",
+            ["주름·탄력","모공","피부톤·색소침착","수분·건조","민감성·홍조","여드름·트러블","기타"],
+            key="k_concern")
     else:
-        concern = st.multiselect("주요 두피·모발 고민",["두피 각질","두피 지루·피지","탈모·모발 가늘어짐","두피 염증·홍조","비듬","두피 건조","모발 손상·끊김","기타"],key="k_concern")
+        concern = st.multiselect("주요 두피·모발 고민",
+            ["두피 각질","두피 지루·피지","탈모·모발 가늘어짐","두피 염증·홍조","비듬","두피 건조","모발 손상·끊김","기타"],
+            key="k_concern")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<div class='card'><div class='card-label'>촬영 부위 선택</div>", unsafe_allow_html=True)
-    parts = st.multiselect("📍 촬영한 부위 선택",SKIN_BODY_PARTS if mode=="skin" else SCALP_BODY_PARTS,key="k_parts")
+    # ── 교란변수 설문 (논문용) ────────────────────────────────
+    st.markdown("<div class='confound-card'><div class='card-label'>📋 생활습관 정보 (연구용)</div>",
+                unsafe_allow_html=True)
+    c1,c2,c3 = st.columns(3)
+    with c1: sunscreen = st.selectbox("자외선차단제 사용",
+                                       ["매일 사용","가끔 사용","거의 안함"], key="k_sun")
+    with c2: smoking   = st.selectbox("흡연 여부",
+                                       ["비흡연","흡연","과거 흡연"], key="k_smoke")
+    with c3: sleep_hr  = st.selectbox("평균 수면 시간",
+                                       ["7시간 이상","5~7시간","5시간 미만"], key="k_sleep")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown(f"<div class='card'><div class='card-label'>{'피부' if mode=='skin' else '두피'} 사진 업로드 (최대 3장)</div>", unsafe_allow_html=True)
-    uploaded = st.file_uploader("사진 업로드 (JPG/PNG)",type=["jpg","jpeg","png"],accept_multiple_files=True,key="k_upload")
+    # ── 촬영 부위 ────────────────────────────────────────────
+    st.markdown("<div class='card'><div class='card-label'>촬영 부위 선택</div>",
+                unsafe_allow_html=True)
+    parts = st.multiselect("📍 촬영한 부위 선택",
+                            SKIN_BODY_PARTS if mode == "skin" else SCALP_BODY_PARTS,
+                            key="k_parts")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── 사진 업로드 ──────────────────────────────────────────
+    st.markdown(f"<div class='card'><div class='card-label'>{'피부' if mode=='skin' else '두피'} 사진 업로드 (최대 3장)</div>",
+                unsafe_allow_html=True)
+    uploaded = st.file_uploader("사진 업로드 (JPG/PNG)", type=["jpg","jpeg","png"],
+                                 accept_multiple_files=True, key="k_upload")
     if uploaded:
         cols = st.columns(min(len(uploaded[:3]),3))
         for i,f in enumerate(uploaded[:3]):
-            with cols[i]: st.image(f,use_container_width=True)
+            with cols[i]: st.image(f, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── 동의 ─────────────────────────────────────────────────
     st.markdown("<div class='consent-box'>", unsafe_allow_html=True)
-    consent  = st.checkbox("✅ [필수] 본 연구는 IRB 승인 후 연구담당자를 통해 별도 동의서를 작성합니다",key="k_consent")
-    research = st.checkbox("🔬 [선택] 익명화된 데이터를 학술 연구에 활용하는 것에 동의합니다.",key="k_research")
+    consent  = st.checkbox("✅ [필수] 본 연구는 IRB 승인 후 연구담당자를 통해 별도 동의서를 작성합니다", key="k_consent")
+    research = st.checkbox("🔬 [선택] 익명화된 데이터를 학술 연구에 활용하는 것에 동의합니다.", key="k_research")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    with st.expander("📧 결과 알림 수신 동의 (선택)",expanded=False):
-        mkt = st.checkbox("SKIN-X 플랫폼 정식 출시 시 안내를 받겠습니다.",key="k_marketing")
+    with st.expander("📧 결과 알림 수신 동의 (선택)", expanded=False):
+        mkt = st.checkbox("SKIN-X 플랫폼 정식 출시 시 안내를 받겠습니다.", key="k_marketing")
         mkt_email = ""
-        if mkt: mkt_email = st.text_input("이메일 주소",key="k_mkt_email")
+        if mkt: mkt_email = st.text_input("이메일 주소", key="k_mkt_email")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    btn = "🧴 피부 AI 분석 시작" if mode=="skin" else "💆 두피 AI 분석 시작 (SEEI v3 + UV·습도)"
-    run = st.button(btn,use_container_width=True,type="primary",key="k_run")
+    btn = "🧴 피부 AI 분석 시작" if mode == "skin" else "💆 두피 AI 분석 시작 (SEEI v3)"
+    run = st.button(btn, use_container_width=True, type="primary", key="k_run")
 
     if run:
-        if not uploaded:           st.error("사진을 업로드해 주세요."); st.stop()
-        if not consent:            st.error("IRB 동의 확인이 필요합니다."); st.stop()
-        if not pid.strip():        st.error("익명 참여 코드를 입력해 주세요."); st.stop()
-        if age=="선택" or gender=="선택": st.warning("연령대와 성별을 선택해 주세요."); st.stop()
-        if not parts:              st.warning("촬영 부위를 하나 이상 선택해 주세요."); st.stop()
+        if not uploaded:                      st.error("사진을 업로드해 주세요."); st.stop()
+        if not consent:                       st.error("IRB 동의 확인이 필요합니다."); st.stop()
+        if not pid.strip():                   st.error("익명 참여 코드를 입력해 주세요."); st.stop()
+        if age == "선택" or gender == "선택": st.warning("연령대와 성별을 선택해 주세요."); st.stop()
+        if not parts:                         st.warning("촬영 부위를 하나 이상 선택해 주세요."); st.stop()
 
         images = []
         for f in uploaded[:3]:
             try: images.append(Image.open(f).convert("RGB"))
             except: pass
 
-        with st.spinner("🌡️ 실시간 환경·기상 데이터 수집 중 (에어코리아 + 기상청)..."):
+        with st.spinner("🌡️ 실시간 환경·기상 데이터 수집 중..."):
             air = fetch_air(region)
-            if mode=="scalp":
+            if mode == "scalp":
                 uv_data  = fetch_kma_uv(region)
                 hum_data = fetch_kma_humidity(region)
             else:
                 uv_data = hum_data = None
 
-        spinner_txt = "🧴 AI 피부 분석 중..." if mode=="skin" else "💆 AI 두피 분석 + SEEI v3 산출 중..."
-        with st.spinner(spinner_txt+" (10~20초 소요)"):
-            result = analyze_skin(images,api_key,parts) if mode=="skin" else analyze_scalp(images,api_key,parts)
+        with st.spinner(("🧴 AI 피부 분석 중..." if mode=="skin"
+                         else "💆 AI 두피 분석 + SEEI v3 산출 중...") + " (10~20초 소요)"):
+            result = (analyze_skin(images, api_key, parts)
+                      if mode == "skin" else analyze_scalp(images, api_key, parts))
 
         if result is None:
             st.error("분석에 실패했습니다. 사진을 확인하고 다시 시도해 주세요."); st.stop()
@@ -1249,95 +1430,147 @@ CEEI·SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특�
         for k,v in {"result":result,"air":air,"uv_data":uv_data,"humidity_data":hum_data,
                     "region":region,"residence_years_str":res_str,"participant_id":pid,
                     "age_group":age,"gender":gender,"selected_parts":parts,
-                    "skin_concern":concern,"consent":consent,"research_consent":research,"current_mode":mode}.items():
-            st.session_state[k]=v
+                    "skin_concern":concern,"consent":consent,"research_consent":research,
+                    "current_mode":mode}.items():
+            st.session_state[k] = v
 
-        yrs      = RESIDENCE_YEAR_MAP.get(res_str,0)
-        pm25_avg = REGION_PM25_AVG.get(region,22.0)
-        ceei,ceei_grade,_,_ = calc_ceei(pm25_avg,yrs)
-        seei,seei_grade,_,_,_,season_corr,uv_val,uv_gstr,hum_val,hum_corr = calc_seei(air,yrs,uv_data,hum_data)
-        _,uv_corr,_ = uv_index_grade(uv_val)
-        pm25_safe = air.get("pm25","") if isinstance(air.get("pm25",""), (int,float)) else ""
+        # 지수 산출
+        yrs      = RESIDENCE_YEAR_MAP.get(res_str, 0)
+        pm25_avg = REGION_PM25_AVG.get(region, 22.0)
+        ceei, ceei_grade, _, _ = calc_ceei(pm25_avg, yrs)
+        seei,seei_grade,_,_,_,season_corr,uv_val,uv_gstr,hum_val,hum_corr = \
+            calc_seei(air, yrs, uv_data, hum_data)
+        _, uv_corr, _ = uv_index_grade(uv_val)
+        pm25_safe = air.get("pm25","") if isinstance(air.get("pm25"), (int,float)) else ""
 
         save_record({
-            "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "participant_id":pid,"age_group":age,"gender":gender,"region":region,"residence_years":yrs,
-            "skin_concern":", ".join(concern),"body_parts":", ".join(parts),"photo_count":len(images),"analysis_mode":mode,
-            "pm25":pm25_safe,"pm10":air.get("pm10",""),"o3":air.get("o3",""),"no2":air.get("no2",""),
-            "air_station":air.get("station",""),"air_source":"실측" if not air.get("mock") else "모의",
-            "uv_index":uv_val if uv_val is not None else "","uv_grade":uv_gstr if mode=="scalp" else "",
-            "uv_mock":(uv_data or {}).get("mock",True) if uv_data else "",
-            "humidity":hum_val if hum_val is not None else "","humidity_mock":(hum_data or {}).get("mock",True) if hum_data else "",
-            "ceei_score":ceei,"ceei_grade":ceei_grade,
-            "seei_score":seei if mode=="scalp" else "","seei_grade":seei_grade if mode=="scalp" else "",
-            "season_correction":season_corr if mode=="scalp" else "",
-            "uv_correction":uv_corr if mode=="scalp" else "","humidity_correction_val":hum_corr if mode=="scalp" else "",
-            "overall_score":result.get("overall_score",""),
-            "skin_type":result.get("skin_type",result.get("scalp_type","")),
-            "key_concerns":", ".join(result.get("key_concerns",[])),
-            "recommended_ingredients":", ".join(result.get("recommended_ingredients",[])),
-            "wrinkle_score":result.get("wrinkle_score",""),"pore_score":result.get("pore_score",""),
-            "texture_score":result.get("texture_score",""),"tone_score":result.get("tone_score",""),
-            "moisture_score":result.get("moisture_score",""),
-            "scalp_keratin_score":result.get("keratin_score",""),"scalp_pore_score":result.get("pore_score",""),
-            "scalp_hair_thickness_score":result.get("hair_thickness_score",""),
-            "scalp_color_score":result.get("scalp_color_score",""),
-            "scalp_moisture_balance_score":result.get("moisture_balance_score",""),
-            "scalp_hair_damage_score":result.get("hair_damage_score",""),
-            "scalp_hair_loss_risk_score":result.get("hair_loss_risk_score",""),
-            "scalp_comment":result.get("summary",""),
-            "consent":consent,"research_consent":research,"marketing_opt_in":mkt,
+            "timestamp":               datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "participant_id":          pid,
+            "age_group":               age,
+            "gender":                  gender,
+            "region":                  region,
+            "residence_years":         yrs,
+            "skin_concern":            ", ".join(concern),
+            "body_parts":              ", ".join(parts),
+            "photo_count":             len(images),
+            "analysis_mode":           mode,
+            # 에어코리아
+            "pm25":        pm25_safe,
+            "pm10":        air.get("pm10",""),
+            "o3":          air.get("o3",""),
+            "no2":         air.get("no2",""),
+            "air_station": air.get("station",""),
+            "air_source":  "실측" if not air.get("mock") else "모의",
+            # 기상청 UV (두피만)
+            "uv_index":  uv_val  if mode=="scalp" and uv_val  is not None else "",
+            "uv_grade":  uv_gstr if mode=="scalp" else "",
+            "uv_mock":   (uv_data or {}).get("mock",True) if mode=="scalp" else "",
+            # 기상청 습도 (두피만)
+            "humidity":      hum_val if mode=="scalp" and hum_val is not None else "",
+            "humidity_mock": (hum_data or {}).get("mock",True) if mode=="scalp" else "",
+            # CEEI (공통)
+            "ceei_score": ceei,
+            "ceei_grade": ceei_grade,
+            # SEEI (두피만)
+            "seei_score":              seei        if mode=="scalp" else "",
+            "seei_grade":              seei_grade  if mode=="scalp" else "",
+            "season_correction":       season_corr if mode=="scalp" else "",
+            "uv_correction":           uv_corr     if mode=="scalp" else "",
+            "humidity_correction_val": hum_corr    if mode=="scalp" else "",
+            # AI 결과 공통
+            "overall_score":           result.get("overall_score",""),
+            "skin_type":               result.get("skin_type", result.get("scalp_type","")),
+            "key_concerns":            ", ".join(result.get("key_concerns",[])),
+            "recommended_ingredients": ", ".join(result.get("recommended_ingredients",[])),
+            # 피부 5지표 (피부 모드만)
+            "wrinkle_score":  result.get("wrinkle_score","")  if mode=="skin" else "",
+            "pore_score":     result.get("pore_score","")     if mode=="skin" else "",
+            "texture_score":  result.get("texture_score","")  if mode=="skin" else "",
+            "tone_score":     result.get("tone_score","")     if mode=="skin" else "",
+            "moisture_score": result.get("moisture_score","") if mode=="skin" else "",
+            # 두피 7지표 (두피 모드만)
+            "scalp_keratin_score":          result.get("keratin_score","")          if mode=="scalp" else "",
+            "scalp_pore_score":             result.get("pore_score","")             if mode=="scalp" else "",
+            "scalp_hair_thickness_score":   result.get("hair_thickness_score","")   if mode=="scalp" else "",
+            "scalp_color_score":            result.get("scalp_color_score","")      if mode=="scalp" else "",
+            "scalp_moisture_balance_score": result.get("moisture_balance_score","") if mode=="scalp" else "",
+            "scalp_hair_damage_score":      result.get("hair_damage_score","")      if mode=="scalp" else "",
+            "scalp_hair_loss_risk_score":   result.get("hair_loss_risk_score","")   if mode=="scalp" else "",
+            "scalp_comment":                result.get("summary","")                if mode=="scalp" else "",
+            # 교란변수
+            "sunscreen":   sunscreen,
+            "smoking":     smoking,
+            "sleep_hours": sleep_hr,
+            # 동의
+            "consent":          consent,
+            "research_consent": research,
+            "marketing_opt_in": mkt,
         })
-        if mkt and mkt_email.strip():
-            save_marketing_opt(pid,mkt_email.strip(),region)
 
+        if mkt and mkt_email.strip():
+            save_marketing_opt(pid, mkt_email.strip(), region)
+
+    # ── 결과 출력 ────────────────────────────────────────────
     if "result" in st.session_state:
         st.success("✅ 분석 완료!")
         cm = st.session_state.get("current_mode","skin")
-        if cm=="skin":
-            show_skin_result(st.session_state["result"],st.session_state["air"],
-                             st.session_state["region"],st.session_state["residence_years_str"],
-                             st.session_state["participant_id"],st.session_state["age_group"],
-                             st.session_state["gender"],st.session_state["selected_parts"])
+        if cm == "skin":
+            show_skin_result(
+                st.session_state["result"], st.session_state["air"],
+                st.session_state["region"], st.session_state["residence_years_str"],
+                st.session_state["participant_id"], st.session_state["age_group"],
+                st.session_state["gender"], st.session_state["selected_parts"])
         else:
-            show_scalp_result(st.session_state["result"],st.session_state["air"],
-                              st.session_state["region"],st.session_state["residence_years_str"],
-                              st.session_state["participant_id"],st.session_state["age_group"],
-                              st.session_state["gender"],st.session_state["selected_parts"],
-                              st.session_state.get("uv_data"),st.session_state.get("humidity_data"))
+            show_scalp_result(
+                st.session_state["result"], st.session_state["air"],
+                st.session_state["region"], st.session_state["residence_years_str"],
+                st.session_state["participant_id"], st.session_state["age_group"],
+                st.session_state["gender"], st.session_state["selected_parts"],
+                st.session_state.get("uv_data"), st.session_state.get("humidity_data"))
 
+    # ── 관리자 사이드바 ──────────────────────────────────────
     with st.sidebar:
         st.markdown("### 🔐 관리자")
-        admin_pw = st.text_input("관리자 비밀번호",type="password",key="k_admin")
+        admin_pw = st.text_input("관리자 비밀번호", type="password", key="k_admin")
         if admin_pw == st.secrets.get("ADMIN_PASSWORD","ydlab2024"):
             st.success("✅ 관리자 모드")
             kma_st = "✅ 실측 연동 중" if kma_key else "⚠️ 키 미등록 (모의값)"
             st.markdown(f"**기상청 API:** {kma_st}")
             if DATA_FILE.exists():
                 import pandas as pd
-                df = pd.read_csv(DATA_FILE,encoding="utf-8-sig")
+                df = pd.read_csv(DATA_FILE, encoding="utf-8-sig")
                 st.markdown(f"**총 분석 건수:** {len(df)}건")
                 if "analysis_mode" in df.columns:
-                    st.markdown("**분석 모드**"); st.bar_chart(df["analysis_mode"].value_counts())
-                if len(df)>0:
-                    st.markdown("**피부 타입**"); st.bar_chart(df["skin_type"].value_counts())
+                    st.markdown("**분석 모드**")
+                    st.bar_chart(df["analysis_mode"].value_counts())
+                if len(df) > 0:
+                    st.markdown("**피부 타입**")
+                    st.bar_chart(df["skin_type"].value_counts())
                     if "ceei_grade" in df.columns:
-                        st.markdown("**CEEI 등급**"); st.bar_chart(df["ceei_grade"].value_counts())
+                        st.markdown("**CEEI 등급**")
+                        st.bar_chart(df["ceei_grade"].value_counts())
                     if "seei_grade" in df.columns:
-                        sd = df[df["seei_grade"]!=""]["seei_grade"]
-                        if len(sd)>0:
-                            st.markdown("**SEEI 등급 (두피)**"); st.bar_chart(sd.value_counts())
-                    if "uv_grade" in df.columns:
-                        ud = df[df["uv_grade"]!=""]["uv_grade"]
-                        if len(ud)>0:
-                            st.markdown("**UV등급 분포**"); st.bar_chart(ud.value_counts())
+                        sd = df[df["seei_grade"] != ""]["seei_grade"]
+                        if len(sd) > 0:
+                            st.markdown("**SEEI 등급 (두피)**")
+                            st.bar_chart(sd.value_counts())
+                    if "sunscreen" in df.columns:
+                        st.markdown("**자외선차단제 사용**")
+                        st.bar_chart(df["sunscreen"].value_counts())
+                    if "smoking" in df.columns:
+                        st.markdown("**흡연 여부**")
+                        st.bar_chart(df["smoking"].value_counts())
                     if "air_source" in df.columns:
-                        rc=(df["air_source"]=="실측").sum(); mc=(df["air_source"]=="모의").sum()
+                        rc = (df["air_source"]=="실측").sum()
+                        mc = (df["air_source"]=="모의").sum()
                         st.markdown(f"**대기데이터** — 실측:{rc} / 모의:{mc}")
-                st.download_button("📥 전체 데이터 CSV",data=open(DATA_FILE,"rb").read(),
-                                   file_name=f"ydlab_data_{datetime.now().strftime('%Y%m%d')}.csv",
-                                   mime="text/csv",key="k_csv")
-            else: st.info("아직 수집된 데이터가 없습니다.")
+                st.download_button(
+                    "📥 전체 데이터 CSV",
+                    data=open(DATA_FILE,"rb").read(),
+                    file_name=f"ydlab_data_{datetime.now().strftime('%Y%m%d')}.csv",
+                    mime="text/csv", key="k_csv")
+            else:
+                st.info("아직 수집된 데이터가 없습니다.")
 
 if __name__ == "__main__":
     main()
