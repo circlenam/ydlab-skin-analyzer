@@ -69,10 +69,13 @@
         .pm-multi-item .mval { font-weight: 700; color: rgba(255,255,255,0.9); }
         .pm-dashboard-link { display: block; margin-top: 1rem; text-align: center; font-size: 0.8rem; color: rgba(126,205,192,0.75); text-decoration: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; transition: color 0.2s; }
         .pm-dashboard-link:hover { color: #7ecdc0; }
+
+        /* ── stats: 5컬럼 ── */
         #stats { background: var(--primary); padding: 50px 5%; }
-        .stats-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center; }
+        .stats-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2rem; text-align: center; }
         .stat-item .number { font-size: 2.2rem; font-weight: 800; color: var(--white); }
         .stat-item .label { font-size: 0.9rem; color: rgba(255,255,255,0.75); margin-top: 0.3rem; }
+
         #about { background: var(--white); }
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
         .about-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -88,13 +91,20 @@
         .tech-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--dark); }
         .tech-card p { font-size: 0.9rem; color: var(--gray); line-height: 1.7; }
         .tech-tag { display: inline-block; background: var(--secondary); color: var(--primary); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 6px; margin-top: 1rem; }
+
+        /* ── howto: 5컬럼 ── */
         #howto { background: var(--white); }
-        .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; position: relative; }
-        .steps-grid::before { content: ''; position: absolute; top: 40px; left: 12.5%; width: 75%; height: 2px; background: var(--border); z-index: 0; }
+        .steps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.2rem; position: relative; }
+        .steps-grid::before { content: ''; position: absolute; top: 40px; left: 10%; width: 80%; height: 2px; background: var(--border); z-index: 0; }
         .step-card { text-align: center; position: relative; z-index: 1; }
         .step-number { width: 80px; height: 80px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.2rem; border: 4px solid var(--white); box-shadow: 0 0 0 2px var(--primary); }
         .step-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
         .step-card p { font-size: 0.875rem; color: var(--gray); line-height: 1.6; }
+        .step-mode-badge { display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
+        .mode-pill { font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 10px; }
+        .mode-pill.skin  { background: #E8F5E9; color: #2E7D32; }
+        .mode-pill.scalp { background: #E3F2FD; color: #1565C0; }
+
         #sample { background: var(--secondary); }
         .sample-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
         .sample-screen { background: var(--white); border-radius: 20px; padding: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.1); border: 1px solid var(--border); }
@@ -125,52 +135,15 @@
         .news-card-body h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.5; }
         .news-card-body p { font-size: 0.85rem; color: var(--gray); }
         .news-date { font-size: 0.8rem; color: var(--gray); margin-top: 0.8rem; }
-
-        /* ── CTA 섹션 ── */
         #cta { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); text-align: center; }
         #cta .section-title { color: var(--white); font-size: 2.2rem; }
         #cta .section-sub { color: rgba(255,255,255,0.7); margin: 0 auto 2rem; }
         .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.5rem; }
-
-        /* ── 분석 시작 박스 (코드 입력 대체) ── */
-        .start-box {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        .start-box p {
-            color: rgba(255,255,255,0.75);
-            font-size: 0.95rem;
-            margin-bottom: 1.4rem;
-            line-height: 1.7;
-        }
-        .start-box .start-notice {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.4);
-            margin-top: 1rem;
-            line-height: 1.6;
-        }
-        .btn-start {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            background: #2E7D6B;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.05rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-            transition: background 0.2s;
-            font-family: inherit;
-        }
+        .start-box { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 2rem; max-width: 480px; margin: 0 auto; }
+        .start-box p { color: rgba(255,255,255,0.75); font-size: 0.95rem; margin-bottom: 1.4rem; line-height: 1.7; }
+        .start-box .start-notice { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 1rem; line-height: 1.6; }
+        .btn-start { display: block; width: 100%; padding: 1rem; background: #2E7D6B; color: white; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; transition: background 0.2s; font-family: inherit; }
         .btn-start:hover { background: #245f55; }
-
         #faq { background: var(--secondary); }
         .faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.8rem; }
         .faq-item { background: var(--white); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
@@ -187,11 +160,12 @@
         .footer-links { display: flex; gap: 1.5rem; }
         .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; }
         .footer-links a:hover { color: var(--white); }
+
         @media (max-width: 768px) {
             .nav-menu { display: none; }
             .hero-inner { grid-template-columns: 1fr; }
             .hero-title { font-size: 2rem; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
             .about-grid { grid-template-columns: 1fr; }
             .tech-grid { grid-template-columns: 1fr; }
             .steps-grid { grid-template-columns: repeat(2, 1fr); }
@@ -290,9 +264,12 @@
 <section id="stats">
     <div class="stats-grid">
         <div class="stat-item"><div class="number">5가지</div><div class="label">피부 지표 정량 분석</div></div>
-        <div class="stat-item"><div class="number">3가지</div><div class="label">두피 지표 분석</div></div>
+        <!-- ✅ 3→7 수정 -->
+        <div class="stat-item"><div class="number">7가지</div><div class="label">두피 지표 분석</div></div>
         <div class="stat-item"><div class="number">600+</div><div class="label">전국 대기오염 측정소 연동</div></div>
-        <div class="stat-item"><div class="number">CEEI</div><div class="label">환경노출지수 독자 알고리즘</div></div>
+        <!-- ✅ CEEI·SEEI 2종 병기 -->
+        <div class="stat-item"><div class="number">CEEI</div><div class="label">피부 환경노출지수</div></div>
+        <div class="stat-item"><div class="number">SEEI</div><div class="label">두피 환경노출지수</div></div>
     </div>
 </section>
 
@@ -323,9 +300,25 @@
         <h2 class="section-title">세 가지 핵심 기술</h2>
         <p class="section-sub">세계 어디에도 없는 환경·피부·두피 삼중 통합 분석 플랫폼입니다</p>
         <div class="tech-grid">
-            <div class="tech-card"><div class="tech-icon">🌫</div><h3>실시간 환경오염 연동</h3><p>에어코리아 전국 600여 개 측정소의 PM2.5, PM10, NO₂, O₃ 데이터를 실시간으로 수집해 사용자 위치 기반 환경노출지수(CEEI)를 산출합니다.</p><span class="tech-tag">특허 출원 중</span></div>
-            <div class="tech-card"><div class="tech-icon">🔬</div><h3>스마트폰 현미경 AI 분석</h3><p>저가 스마트폰 현미경과 LLM 비전 AI를 결합해 피부 5가지 지표(주름·모공·결·톤·수분)와 두피 3가지 지표를 0~100점으로 정량화합니다.</p><span class="tech-tag">특허 출원 중</span></div>
-            <div class="tech-card"><div class="tech-icon">💊</div><h3>맞춤형 화장품 처방 생성</h3><p>분석 결과와 CEEI를 결합해 개인별 환경노출 상태에 최적화된 맞춤형 화장품 제조 의뢰서를 자동으로 생성합니다.</p><span class="tech-tag">특허 출원 중</span></div>
+            <div class="tech-card">
+                <div class="tech-icon">🌫</div>
+                <h3>실시간 환경오염 연동</h3>
+                <p>에어코리아 전국 600여 개 측정소의 PM2.5, PM10, NO₂, O₃ 데이터를 실시간으로 수집해 사용자 위치 기반 환경노출지수(CEEI·SEEI)를 산출합니다.</p>
+                <span class="tech-tag">특허 출원 중</span>
+            </div>
+            <!-- ✅ 두피 7가지 지표 상세 나열 -->
+            <div class="tech-card">
+                <div class="tech-icon">🔬</div>
+                <h3>스마트폰 현미경 AI 분석</h3>
+                <p>저가 스마트폰 현미경과 LLM 비전 AI를 결합해 피부 5가지 지표(주름·모공·결·톤·수분)와 두피 7가지 지표(각질·모공·모발굵기·두피색·수분밸런스·모발손상·탈모위험)를 0~100점으로 정량화합니다.</p>
+                <span class="tech-tag">특허 출원 중</span>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">💊</div>
+                <h3>맞춤형 화장품 처방 생성</h3>
+                <p>분석 결과와 CEEI·SEEI를 결합해 개인별 환경노출 상태에 최적화된 맞춤형 화장품 제조 의뢰서를 자동으로 생성합니다.</p>
+                <span class="tech-tag">특허 출원 중</span>
+            </div>
         </div>
     </div>
 </section>
@@ -334,13 +327,41 @@
 <section id="howto">
     <div class="section-inner">
         <span class="section-tag">How to Use</span>
-        <h2 class="section-title">4단계로 완성되는 분석</h2>
+        <!-- ✅ 4단계→5단계 -->
+        <h2 class="section-title">5단계로 완성되는 분석</h2>
         <p class="section-sub">키트 하나로 누구나 전문가 수준의 피부·두피 분석을 받을 수 있습니다</p>
         <div class="steps-grid">
-            <div class="step-card"><div class="step-number">📦</div><h3>키트 개봉</h3><p>스마트폰 유무선 연결 현미경과 코드 카드를 확인합니다</p></div>
-            <div class="step-card"><div class="step-number">📱</div><h3>분석기 접속</h3><p>아래 분석 시작 버튼을 클릭해 분석기로 이동합니다</p></div>
-            <div class="step-card"><div class="step-number">🔑</div><h3>이벤트 코드 입력</h3><p>분석기 입장 화면에서 행사장에서 받은 이벤트 코드를 입력합니다</p></div>
-            <div class="step-card"><div class="step-number">📊</div><h3>결과 확인·처방</h3><p>AI가 분석한 점수와 환경노출지수, 맞춤 화장품 처방을 확인합니다</p></div>
+            <div class="step-card">
+                <div class="step-number">📦</div>
+                <h3>키트 개봉</h3>
+                <p>스마트폰 유무선 연결 현미경과 코드 카드를 확인합니다</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">📱</div>
+                <h3>분석기 접속</h3>
+                <p>아래 분석 시작 버튼을 클릭해 분석기로 이동합니다</p>
+            </div>
+            <!-- ✅ 코드 입력 + 모드 선택 병합 -->
+            <div class="step-card">
+                <div class="step-number">🔑</div>
+                <h3>코드 입력 · 모드 선택</h3>
+                <p>이벤트 코드 입력 후 분석 모드를 선택합니다</p>
+                <div class="step-mode-badge">
+                    <span class="mode-pill skin">🌿 피부</span>
+                    <span class="mode-pill scalp">💆 두피</span>
+                </div>
+            </div>
+            <!-- ✅ 사진 촬영 step 신규 추가 -->
+            <div class="step-card">
+                <div class="step-number">🔬</div>
+                <h3>사진 촬영 · 업로드</h3>
+                <p>현미경으로 촬영한 피부 또는 두피 사진을 업로드합니다</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">📊</div>
+                <h3>결과 확인·처방</h3>
+                <p>AI가 분석한 점수와 환경노출지수, 맞춤 화장품 처방을 확인합니다</p>
+            </div>
         </div>
     </div>
 </section>
@@ -362,19 +383,22 @@
                     <div class="score-item"><div class="score-label">피부결</div><div class="score-bar-wrap"><div class="score-bar" style="width:81%"></div></div><div class="score-num">81점</div></div>
                     <div class="score-item"><div class="score-label">수분</div><div class="score-bar-wrap"><div class="score-bar" style="width:64%"></div></div><div class="score-num">64점</div></div>
                 </div>
+                <!-- ✅ CEEI·SEEI 병기 -->
                 <div class="ceei-box">
-                    <div class="ceei-label">환경노출지수 (CEEI)</div>
+                    <div class="ceei-label">환경노출지수 · 피부 CEEI / 두피 SEEI</div>
                     <div class="ceei-value">47.3</div>
-                    <div class="ceei-desc">오늘 PM2.5 47μg/m³ 기준 · 주의 단계</div>
+                    <div class="ceei-desc">PM2.5·PM10·NO₂·O₃ 연동 · 거주기간 반영 · 주의 단계</div>
                 </div>
             </div>
             <div class="sample-features">
                 <span class="section-tag">Sample Result</span>
                 <h2 class="section-title">이런 결과를 받게 됩니다</h2>
                 <div class="feature-item"><div class="feature-icon">📊</div><div><h4>5가지 피부 지표 점수화</h4><p>주름·모공·피부결·톤·수분을 0~100점으로 정량화해 변화를 추적합니다</p></div></div>
-                <div class="feature-item"><div class="feature-icon">🌫</div><div><h4>환경노출지수 (CEEI) 산출</h4><p>오늘 내 지역 대기오염이 피부에 미치는 영향을 수치로 확인합니다</p></div></div>
+                <div class="feature-item"><div class="feature-icon">🌫</div><div><h4>환경노출지수 (CEEI·SEEI) 산출</h4><p>오늘 내 지역 대기오염이 피부·두피에 미치는 영향을 수치로 확인합니다</p></div></div>
                 <div class="feature-item"><div class="feature-icon">💊</div><div><h4>맞춤 화장품 처방서 생성</h4><p>분석 결과 기반으로 제조 의뢰서가 자동 생성되어 공방에 바로 주문 가능합니다</p></div></div>
                 <div class="feature-item"><div class="feature-icon">📈</div><div><h4>시계열 변화 추적</h4><p>매주·매월 분석 결과를 비교해 피부 변화 트렌드를 확인합니다</p></div></div>
+                <!-- ✅ 생활습관 교란변수 항목 추가 -->
+                <div class="feature-item"><div class="feature-icon">📋</div><div><h4>생활습관 교란변수 기록</h4><p>자외선차단제 사용 여부·흡연·수면시간을 함께 기록해 더 정확한 분석 결과를 제공합니다</p></div></div>
             </div>
         </div>
     </div>
@@ -407,15 +431,13 @@
             <a href="#" onclick="alert('네이버 스마트스토어 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-accent btn-large">📦 키트 구매하기 (계획 중)</a>
             <a href="#" onclick="alert('일본 Qoo10 입점 계획 중입니다. 곧 오픈 예정!')" class="btn btn-outline btn-large" style="color:white;border-color:white;">🇯🇵 일본 구매 Qoo10 (계획 중)</a>
         </div>
-
-        <!-- ✅ 코드 입력 제거 → 분석기 바로 이동 버튼으로 교체 -->
         <div class="start-box">
             <p>
                 🔬 <strong style="color:white;">AI 피부·두피 분석기</strong><br>
                 버튼을 클릭하면 분석기로 이동합니다.<br>
                 분석기 입장 시 <strong style="color:#7ecdc0;">이벤트 코드</strong>가 필요합니다.
             </p>
-            <a href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/" 
+            <a href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/"
                target="_blank" class="btn-start">
                 🔬 AI 분석기 시작하기
             </a>
@@ -436,7 +458,7 @@
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">어떤 스마트폰에서도 사용할 수 있나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>안드로이드 및 iOS 모두 지원합니다. 저가형 유무선 연결가능 현미경을 스마트폰 카메라에 장착하고 브라우저에서 플랫폼에 접속하면 별도 앱 설치 없이 바로 사용 가능합니다.</p></div></div>
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">무료 이용 기간이 끝나면 어떻게 되나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>무료 기간 만료 후에는 분석 기능이 잠기지만 기존 분석 결과 이력은 계속 열람 가능합니다. 월 구독(9,900원)으로 전환하면 이력 보존과 함께 무제한 분석이 가능합니다.</p></div></div>
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">이벤트 코드는 어디서 받나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>오픈랩 이벤트 참여자는 행사장 현장에서 코드를 받으실 수 있습니다. 키트 구매자는 키트 박스 안에 동봉된 코드 카드를 확인해 주세요. 분석기 접속 후 입장 화면에서 코드를 입력하시면 바로 시작됩니다.</p></div></div>
-            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">두피 분석도 같은 현미경으로 할 수 있나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>네, 동일한 유무선 연결 스마트폰 현미경으로 피부와 두피 모두 분석 가능합니다. 두피 부위에 현미경을 대고 촬영하면 모공 상태, 두피 각질, 모발 굵기 등을 분석해드립니다.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">두피 분석도 같은 현미경으로 할 수 있나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>네, 동일한 유무선 연결 스마트폰 현미경으로 피부와 두피 모두 분석 가능합니다. 두피 부위에 현미경을 대고 촬영하면 각질·모공·모발굵기·두피색·수분밸런스·모발손상·탈모위험 등 7가지 지표를 분석해드립니다.</p></div></div>
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">개인정보는 어떻게 관리되나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>촬영된 이미지와 분석 결과는 암호화하여 저장되며, 제3자에게 제공되지 않습니다. 연구 목적으로 익명화된 데이터를 활용할 수 있으며, 이는 회원가입 시 별도 동의를 받습니다.</p></div></div>
         </div>
     </div>
