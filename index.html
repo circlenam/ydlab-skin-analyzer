@@ -34,16 +34,69 @@
         .btn-large { padding: 0.9rem 2rem; font-size: 1.05rem; border-radius: 10px; }
         .btn-accent { background: var(--accent); color: var(--white); border: 2px solid var(--accent); }
         .btn-accent:hover { background: #e05555; border-color: #e05555; }
-        .btn-green { background: #2E7D6B; color: var(--white); border: 2px solid #2E7D6B; }
-        .btn-green:hover { background: #245f55; border-color: #245f55; }
         section { padding: 90px 5%; }
         .section-inner { max-width: 1100px; margin: 0 auto; }
         .section-tag { display: inline-block; background: var(--secondary); color: var(--primary); font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 20px; margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase; }
         .section-title { font-size: 2rem; font-weight: 700; line-height: 1.3; margin-bottom: 1rem; color: var(--dark); }
         .section-sub { font-size: 1.05rem; color: var(--gray); max-width: 600px; margin-bottom: 3rem; }
-        #hero { min-height: 100vh; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364), url('skinx-bg02.png') center/cover no-repeat; background-blend-mode: overlay; display: flex; align-items: center; padding: 100px 5% 80px; position: relative; overflow: hidden; }
-        #hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(46,125,107,0.3) 0%, transparent 70%); border-radius: 50%; }
-        .hero-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+
+        /* ===== HERO — 동영상 배경 ===== */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 100px 5% 80px;
+            position: relative;
+            overflow: hidden;
+            /* 동영상 로드 전 fallback 배경색 */
+            background: #0f2027;
+        }
+        /* 배경 동영상 */
+        #hero-bg-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            z-index: 0;
+            pointer-events: none;
+        }
+        /* 동영상 위 어두운 오버레이 */
+        #hero-video-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(15,32,39,0.80),
+                rgba(32,58,67,0.75),
+                rgba(44,83,100,0.70)
+            );
+            z-index: 1;
+        }
+        /* 기존 우상단 글로우 효과 유지 */
+        #hero::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -20%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(46,125,107,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 2;
+            pointer-events: none;
+        }
+        /* hero 콘텐츠는 동영상·오버레이 위에 */
+        .hero-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            width: 100%;
+        }
         .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(46,125,107,0.2); border: 1px solid rgba(46,125,107,0.5); color: #7ecdc0; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; margin-bottom: 1.5rem; }
         .hero-title { font-size: 2.8rem; font-weight: 800; color: var(--white); line-height: 1.25; margin-bottom: 1.5rem; }
         .hero-title .highlight { color: #7ecdc0; }
@@ -67,10 +120,8 @@
         .pm-multi { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin: 0.6rem 0; }
         .pm-multi-item { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 0.35rem 0.6rem; font-size: 0.78rem; color: rgba(255,255,255,0.65); display: flex; justify-content: space-between; align-items: center; }
         .pm-multi-item .mval { font-weight: 700; color: rgba(255,255,255,0.9); }
-        .pm-dashboard-link { display: block; margin-top: 1rem; text-align: center; font-size: 0.8rem; color: rgba(126,205,192,0.75); text-decoration: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.8rem; transition: color 0.2s; }
-        .pm-dashboard-link:hover { color: #7ecdc0; }
 
-        /* ── stats: 5컬럼 ── */
+        /* ── stats ── */
         #stats { background: var(--primary); padding: 50px 5%; }
         .stats-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2rem; text-align: center; }
         .stat-item .number { font-size: 2.2rem; font-weight: 800; color: var(--white); }
@@ -83,6 +134,7 @@
         .about-card .icon { font-size: 1.8rem; margin-bottom: 0.8rem; }
         .about-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark); }
         .about-card p { font-size: 0.85rem; color: var(--gray); }
+
         #technology { background: var(--secondary); }
         .tech-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
         .tech-card { background: var(--white); border-radius: 16px; padding: 2rem; border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; }
@@ -92,7 +144,7 @@
         .tech-card p { font-size: 0.9rem; color: var(--gray); line-height: 1.7; }
         .tech-tag { display: inline-block; background: var(--secondary); color: var(--primary); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 6px; margin-top: 1rem; }
 
-        /* ── howto: 5컬럼 ── */
+        /* ── howto ── */
         #howto { background: var(--white); }
         .steps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.2rem; position: relative; }
         .steps-grid::before { content: ''; position: absolute; top: 40px; left: 10%; width: 80%; height: 2px; background: var(--border); z-index: 0; }
@@ -125,6 +177,7 @@
         .feature-icon { width: 44px; height: 44px; background: var(--secondary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
         .feature-item h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
         .feature-item p { font-size: 0.85rem; color: var(--gray); }
+
         #news { background: var(--white); }
         .news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
         .news-card { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s; }
@@ -135,6 +188,7 @@
         .news-card-body h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.5; }
         .news-card-body p { font-size: 0.85rem; color: var(--gray); }
         .news-date { font-size: 0.8rem; color: var(--gray); margin-top: 0.8rem; }
+
         #cta { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); text-align: center; }
         #cta .section-title { color: var(--white); font-size: 2.2rem; }
         #cta .section-sub { color: rgba(255,255,255,0.7); margin: 0 auto 2rem; }
@@ -144,6 +198,7 @@
         .start-box .start-notice { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 1rem; line-height: 1.6; }
         .btn-start { display: block; width: 100%; padding: 1rem; background: #2E7D6B; color: white; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; transition: background 0.2s; font-family: inherit; }
         .btn-start:hover { background: #245f55; }
+
         #faq { background: var(--secondary); }
         .faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.8rem; }
         .faq-item { background: var(--white); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
@@ -153,6 +208,7 @@
         .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
         .faq-answer.open { max-height: 300px; }
         .faq-answer p { padding: 0 1.5rem 1.2rem; font-size: 0.9rem; color: var(--gray); line-height: 1.8; }
+
         footer { background: var(--dark); padding: 3rem 5%; color: rgba(255,255,255,0.5); font-size: 0.85rem; }
         .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; }
         .footer-logo { font-size: 1.2rem; font-weight: 700; color: var(--white); margin-bottom: 0.5rem; }
@@ -161,6 +217,7 @@
         .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; }
         .footer-links a:hover { color: var(--white); }
 
+        /* ── 반응형 ── */
         @media (max-width: 768px) {
             .nav-menu { display: none; }
             .hero-inner { grid-template-columns: 1fr; }
@@ -173,6 +230,10 @@
             .sample-grid { grid-template-columns: 1fr; }
             .news-grid { grid-template-columns: 1fr; }
             .section-title { font-size: 1.6rem; }
+            /* 모바일: 동영상 대신 정적 배경으로 fallback */
+            #hero-bg-video { display: none; }
+            #hero { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); }
+            #hero-video-overlay { display: none; }
         }
     </style>
 </head>
@@ -198,6 +259,16 @@
 
 <!-- ===== 히어로 섹션 ===== -->
 <section id="hero">
+
+    <!-- 배경 동영상 -->
+    <video id="hero-bg-video" autoplay muted loop playsinline preload="auto">
+        <source src="skinx-bg.mp4" type="video/mp4">
+    </video>
+
+    <!-- 동영상 위 어두운 오버레이 -->
+    <div id="hero-video-overlay"></div>
+
+    <!-- 기존 콘텐츠 그대로 유지 -->
     <div class="hero-inner">
         <div class="hero-content">
             <div class="hero-badge">🔬 특허 출원 중 · AI 피부·두피 분석</div>
@@ -266,7 +337,6 @@
         <div class="stat-item"><div class="number">5가지</div><div class="label">피부 지표 정량 분석</div></div>
         <div class="stat-item"><div class="number">7가지</div><div class="label">두피 지표 분석</div></div>
         <div class="stat-item"><div class="number">600+</div><div class="label">전국 대기오염 측정소 연동</div></div>
-        <!-- ✅ CEEI label에 기상청 연동 문구 추가 -->
         <div class="stat-item"><div class="number">CEEI</div><div class="label">피부 환경노출지수</div></div>
         <div class="stat-item"><div class="number">SEEI</div><div class="label">두피 환경노출지수 · 기상청 UV·습도 연동</div></div>
     </div>
@@ -299,7 +369,6 @@
         <h2 class="section-title">세 가지 핵심 기술</h2>
         <p class="section-sub">세계 어디에도 없는 환경·피부·두피 삼중 통합 분석 플랫폼입니다</p>
         <div class="tech-grid">
-            <!-- ✅ SEEI에 기상청 UV·습도 연동 문구 추가 -->
             <div class="tech-card">
                 <div class="tech-icon">🌫</div>
                 <h3>실시간 환경오염 연동</h3>
@@ -391,7 +460,6 @@
                 <div class="feature-item"><div class="feature-icon">📊</div><div><h4>5가지 피부 지표 점수화</h4><p>주름·모공·피부결·톤·수분을 0~100점으로 정량화해 변화를 추적합니다</p></div></div>
                 <div class="feature-item"><div class="feature-icon">🌫</div><div><h4>환경노출지수 (CEEI·SEEI) 산출</h4><p>오늘 내 지역 대기오염이 피부·두피에 미치는 영향을 수치로 확인합니다</p></div></div>
                 <div class="feature-item"><div class="feature-icon">💊</div><div><h4>맞춤 화장품 처방서 생성</h4><p>분석 결과 기반으로 제조 의뢰서가 자동 생성되어 공방에 바로 주문 가능합니다</p></div></div>
-                <!-- ✅ 두피 세럼 30mL 사용법 가이드 항목 추가 -->
                 <div class="feature-item"><div class="feature-icon">🧴</div><div><h4>두피 세럼 30mL 맞춤 제조 + 사용법 가이드</h4><p>두피 분석 결과를 바탕으로 30mL 맞춤 세럼 처방서와 단계별 사용법 가이드가 함께 제공됩니다</p></div></div>
                 <div class="feature-item"><div class="feature-icon">📈</div><div><h4>시계열 변화 추적</h4><p>매주·매월 분석 결과를 비교해 피부 변화 트렌드를 확인합니다</p></div></div>
                 <div class="feature-item"><div class="feature-icon">📋</div><div><h4>생활습관 교란변수 기록</h4><p>자외선차단제 사용 여부·흡연·수면시간을 함께 기록해 더 정확한 분석 결과를 제공합니다</p></div></div>
@@ -454,7 +522,6 @@
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">어떤 스마트폰에서도 사용할 수 있나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>안드로이드 및 iOS 모두 지원합니다. 저가형 유무선 연결가능 현미경을 스마트폰 카메라에 장착하고 브라우저에서 플랫폼에 접속하면 별도 앱 설치 없이 바로 사용 가능합니다.</p></div></div>
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">무료 이용 기간이 끝나면 어떻게 되나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>무료 기간 만료 후에는 분석 기능이 잠기지만 기존 분석 결과 이력은 계속 열람 가능합니다. 월 구독(9,900원)으로 전환하면 이력 보존과 함께 무제한 분석이 가능합니다.</p></div></div>
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">이벤트 코드는 어디서 받나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>오픈랩 이벤트 참여자는 행사장 현장에서 코드를 받으실 수 있습니다. 키트 구매자는 키트 박스 안에 동봉된 코드 카드를 확인해 주세요. 분석기 접속 후 입장 화면에서 코드를 입력하시면 바로 시작됩니다.</p></div></div>
-            <!-- ✅ 두피 FAQ 답변 — 7가지 지표 전체 나열 + 탈모위험 명시 -->
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">두피 분석도 같은 현미경으로 할 수 있나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>네, 동일한 유무선 연결 스마트폰 현미경으로 피부와 두피 모두 분석 가능합니다. 두피 부위에 현미경을 대고 촬영하면 각질·모공·모발굵기·두피색·수분밸런스·모발손상 6가지 지표와 탈모 진행도(참고용)를 포함해 총 7가지 항목을 분석해드립니다.</p></div></div>
             <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">개인정보는 어떻게 관리되나요?<span class="faq-arrow">＋</span></button><div class="faq-answer"><p>촬영된 이미지와 분석 결과는 암호화하여 저장되며, 제3자에게 제공되지 않습니다. 연구 목적으로 익명화된 데이터를 활용할 수 있으며, 이는 회원가입 시 별도 동의를 받습니다.</p></div></div>
         </div>
@@ -469,7 +536,6 @@
             <div class="footer-info">
                 (주)와이디랩 · 대표: 남정훈 · 사업자등록번호: 등록 예정<br>
                 이메일: circlenam@naver.com<br>
-                <!-- ✅ 쿠팡 파트너스 고지 추가 -->
                 이 페이지의 일부 링크는 쿠팡 파트너스 활동의 일환으로, 구매 시 수수료를 받을 수 있습니다.<br>
                 © 2026 SKIN-<span style="color:#FF6B6B;">X</span> by YD Lab · 재능대학교 AI-바이오분석특화연구소. All rights reserved.
             </div>
@@ -497,6 +563,19 @@ function toggleFaq(btn) {
 window.addEventListener('scroll', function() {
     document.querySelector('nav').style.boxShadow = window.scrollY > 50 ? '0 2px 20px rgba(0,0,0,0.1)' : 'none';
 });
+
+// ===== 동영상 로드 실패 시 fallback =====
+(function() {
+    const vid = document.getElementById('hero-bg-video');
+    if (!vid) return;
+    vid.addEventListener('error', function() {
+        vid.style.display = 'none';
+        document.getElementById('hero').style.background =
+            'linear-gradient(135deg, #0f2027, #203a43, #2c5364)';
+        const overlay = document.getElementById('hero-video-overlay');
+        if (overlay) overlay.style.display = 'none';
+    });
+})();
 
 // ===== 실시간 대기질 =====
 const AIR_JSON_URL = 'https://circlenam.github.io/ydlab/data/airdata.json';
