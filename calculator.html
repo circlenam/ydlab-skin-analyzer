@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKIN-X 맞춤 세럼 혼합 비율 계산기</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --primary: #2E7D6B;
+  --primary-dark: #1b5e20;
+  --blue: #1565c0;
+  --orange: #ff6b35;
+  --warn: #e65100;
+  --red: #c62828;
+  --bg: #f4f7f6;
+  --card: #ffffff;
+  --border: #e0ece8;
+  --text: #1a1a2e;
+  --sub: #6b7280;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── 헤더 ── */
+.header {
+  background: linear-gradient(135deg, #1b5e20 0%, #2E7D6B 100%);
+  color: white;
+  padding: 1.4rem 1.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.header-left h1 { font-size: 1.2rem; font-weight: 700; }
+.header-left p  { font-size: 0.75rem; opacity: 0.65; margin-top: 0.25rem; }
+.header-badge {
+  background: rgba(255,255,255,0.15);
+  padding: 0.35rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── 레이아웃 ── */
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.6rem 1rem 4rem;
+}
+
+/* ── 카드 ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.4rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+.card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary-dark);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1.5px solid var(--border);
+}
+
+/* ── 처방 테이블 ── */
+.rx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.rx-table th {
+  background: var(--primary-dark);
+  color: white;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.rx-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+.rx-table tr:nth-child(even) td { background: #f8faf8; }
+.badge-ratio {
+  background: #e8f5e9;
+  color: var(--primary-dark);
+  border-radius: 5px;
+  padding: 0.2rem 0.6rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+}
+.badge-target {
+  background: #e3f2fd;
+  color: var(--blue);
+  border-radius: 5px;
+  padding: 0.2rem 0.6rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+}
+
+/* ── 계산기 입력 ── */
+.calc-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+.calc-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 0.8fr;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.7rem 0.9rem;
+  background: #f8faf8;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.calc-row-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--primary-dark);
+}
+.calc-row-purpose {
+  font-size: 0.72rem;
+  color: var(--sub);
+  margin-top: 0.15rem;
+}
+.input-group label {
+  font-size: 0.68rem;
+  color: var(--sub);
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+.input-group input[type=number] {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1.5px solid #d1d9d5;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-family: 'DM Mono', monospace;
+  background: white;
+  transition: border-color 0.2s;
+}
+.input-group input[type=number]:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.vol-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 0.9rem;
+  background: #f0faf4;
+  border: 1px solid #a5d6a7;
+  border-radius: 10px;
+  margin-bottom: 0.9rem;
+}
+.vol-row label {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--primary-dark);
+  white-space: nowrap;
+}
+.vol-row input[type=number] {
+  width: 90px;
+  padding: 0.45rem 0.6rem;
+  border: 1.5px solid #a5d6a7;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  font-family: 'DM Mono', monospace;
+  background: white;
+}
+.vol-row input[type=number]:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.vol-row span {
+  font-size: 0.8rem;
+  color: var(--sub);
+}
+
+/* ── 계산 버튼 ── */
+.calc-btn {
+  width: 100%;
+  padding: 0.85rem;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: opacity 0.2s;
+}
+.calc-btn:hover { opacity: 0.9; }
+.calc-btn:disabled {
+  background: #b0bec5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ── 결과 ── */
+.result-card {
+  display: none;
+  background: var(--card);
+  border: 1.5px solid #a5d6a7;
+  border-radius: 14px;
+  padding: 1.4rem;
+  margin-bottom: 1.2rem;
+}
+.result-row {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr 0.7fr;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.85rem;
+}
+.result-row.header-row {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--sub);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--border);
+}
+.result-name { font-weight: 700; color: var(--primary-dark); }
+.result-ml   { font-weight: 700; font-family: 'DM Mono', monospace; }
+.result-pct  { font-family: 'DM Mono', monospace; color: var(--sub); font-size: 0.8rem; }
+.status-ok   { color: var(--primary-dark); font-weight: 700; font-size: 0.78rem; }
+.status-warn { color: var(--warn); font-weight: 700; font-size: 0.78rem; }
+.status-err  { color: var(--red); font-weight: 700; font-size: 0.78rem; }
+.base-row {
+  background: #f0faf4;
+  border-radius: 8px;
+  padding: 0.6rem 0.5rem;
+  margin-top: 0.5rem;
+}
+.total-row {
+  background: var(--primary-dark);
+  color: white;
+  border-radius: 8px;
+  padding: 0.6rem 0.5rem;
+  margin-top: 0.4rem;
+  font-weight: 700;
+}
+
+/* ── 비율 바 ── */
+.bar-section { margin: 1rem 0 0.5rem; }
+.bar-label   { font-size: 0.72rem; color: var(--sub); margin-bottom: 0.5rem; }
+.bar-track   {
+  display: flex;
+  height: 22px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #e0ece8;
+}
+.bar-segment { height: 100%; transition: width 0.5s ease; }
+.legend-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--text);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── 경고·오류 박스 ── */
+.alert-box {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin-top: 0.8rem;
+}
+.alert-warn { background: #fff3e0; border: 1px solid #ffcc80; color: var(--warn); }
+.alert-err  { background: #fce4ec; border: 1px solid #ef9a9a; color: var(--red); }
+.alert-ok   { background: #e8f5e9; border: 1px solid #a5d6a7; color: var(--primary-dark); }
+
+/* ── 액션 버튼 ── */
+.action-row {
+  display: flex;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+.btn-copy, .btn-print {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+.btn-copy  { background: var(--blue); color: white; }
+.btn-print { background: #607d8b; color: white; }
+.btn-copy:hover, .btn-print:hover { opacity: 0.85; }
+
+/* ── 주의사항 ── */
+.caution-list {
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--sub);
+  line-height: 1.8;
+}
+.caution-list li::before { content: "⚠️ "; }
+
+/* ── 빈 화면 ── */
+.empty-screen {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+.empty-screen .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+.empty-screen h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--primary-dark); }
+.empty-screen p  { font-size: 0.88rem; color: var(--sub); line-height: 1.7; margin-bottom: 1.6rem; }
+.btn-go {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
+  padding: 0.85rem 2.2rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.btn-go:hover { opacity: 0.88; }
+
+/* ── 파트너스 고지 ── */
+.partners-notice {
+  background: #fff8f0;
+  border: 1px solid #ffcc80;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.72rem;
+  color: var(--warn);
+  margin-top: 0.8rem;
+  line-height: 1.6;
+}
+
+/* ── 푸터 ── */
+.footer {
+  background: var(--primary-dark);
+  color: rgba(255,255,255,0.55);
+  padding: 1rem 1.8rem;
+  font-size: 0.72rem;
+  text-align: center;
+  line-height: 1.8;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 640px) {
+  .calc-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .calc-row-name { grid-column: 1 / -1; }
+  .result-row {
+    grid-template-columns: 1.5fr 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .result-row > *:nth-child(4),
+  .result-row > *:nth-child(5) { grid-column: auto; }
+}
+
+@media print {
+  .calc-btn, .action-row, .header-badge { display: none; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>🧮 SKIN-X 맞춤 세럼 혼합 비율 계산기</h1>
+    <p>AI 처방 결과 기반 · 구매한 제품 농도 입력 → 정확한 혼합량 자동 계산</p>
+  </div>
+  <div class="header-badge">YD Lab · 재능대학교</div>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<footer class="footer">
+  이 페이지의 일부 링크는 쿠팡 파트너스 활동의 일환으로, 구매 시 수수료를 받을 수 있습니다.<br>
+  본 계산기는 참고용이며 의료적 처방을 대체하지 않습니다. © 2026 SKIN-X by YD Lab · 재능대학교
+</footer>
+
+<script>
+// ── 성분 DB ──────────────────────────────────────────────────
+const DB = {
+  "징크피리치온":   { purpose:"두피 항균·비듬 억제",   min:0.5,  max:1.0,  color:"#1565c0", url:"https://link.coupang.com/a/eUnNCpma4G" },
+  "살리실산":       { purpose:"두피 각질 용해",         min:0.5,  max:2.0,  color:"#e65100", url:"https://link.coupang.com/a/eUnRNCfwpo" },
+  "살리실산(BHA)":  { purpose:"두피 각질 용해",         min:0.5,  max:2.0,  color:"#e65100", url:"https://link.coupang.com/a/eUnRNCfwpo" },
+  "바이오틴":       { purpose:"모발 강화·성장 촉진",    min:0.01, max:0.1,  color:"#7b1fa2", url:"https://link.coupang.com/a/eUnT1cHfSm" },
+  "판테놀 (두피용)":{ purpose:"두피 진정·보습",         min:1.0,  max:5.0,  color:"#2E7D6B", url:"https://link.coupang.com/a/eUnVWdetMW" },
+  "판테놀":         { purpose:"두피·피부 진정·보습",    min:1.0,  max:5.0,  color:"#2E7D6B", url:"https://link.coupang.com/a/eTyRoPRJ6W" },
+  "나이아신아마이드":{ purpose:"피지 조절·피부톤",      min:2.0,  max:10.0, color:"#1565c0", url:"https://link.coupang.com/a/eTyFrMsrAa" },
+  "비타민C":        { purpose:"항산화·피부톤 개선",     min:5.0,  max:15.0, color:"#f9a825", url:"https://link.coupang.com/a/eTyNlOaXbE" },
+  "비타민C 유도체": { purpose:"항산화·안정형",          min:3.0,  max:5.0,  color:"#f9a825", url:"https://link.coupang.com/a/eTyNlOaXbE" },
+  "히알루론산":     { purpose:"즉각 수분 공급·보습",    min:0.5,  max:2.0,  color:"#0288d1", url:"https://link.coupang.com/a/eTyrjnNNN6" },
+  "세라마이드":     { purpose:"피부 장벽 강화",         min:0.5,  max:3.0,  color:"#6a1b9a", url:"https://link.coupang.com/a/eTyBwMM8l2" },
+  "티트리 오일":    { purpose:"두피 항균·항염·진정",    min:0.5,  max:2.0,  color:"#2e7d32", url:"https://link.coupang.com/a/eUtWoJz7CK" },
+  "티트리오일":     { purpose:"두피 항균·항염·진정",    min:0.5,  max:2.0,  color:"#2e7d32", url:"https://link.coupang.com/a/eUtWoJz7CK" },
+  "티트리":         { purpose:"두피 항균·항염·진정",    min:0.5,  max:2.0,  color:"#2e7d32", url:"https://link.coupang.com/a/eUtWoJz7CK" },
+  "로즈마리 오일":  { purpose:"두피 혈행 촉진·성장",    min:0.5,  max:1.0,  color:"#558b2f", url:"https://www.coupang.com/np/search?q=로즈마리+오일+원액" },
+  "멘톨":           { purpose:"두피 청량감·항균",        min:0.1,  max:0.5,  color:"#00838f", url:"https://www.coupang.com/np/search?q=멘톨+원액" },
+  "소듐PCA":        { purpose:"두피 보습",              min:2.0,  max:5.0,  color:"#0277bd", url:"https://www.coupang.com/np/search?q=소듐PCA+원액" },
+  "레티놀":         { purpose:"주름 개선·탄력",         min:0.05, max:0.3,  color:"#c62828", url:"https://link.coupang.com/a/eTyKZaEF5g" },
+  "펩타이드":       { purpose:"탄력·항노화",            min:1.0,  max:5.0,  color:"#4527a0", url:"https://link.coupang.com/a/eTyORAWtK8" },
+  "아데노신":       { purpose:"주름 개선(식약처 기준)", min:0.04, max:0.04, color:"#ad1457", url:"https://link.coupang.com/a/eTySFtlt0K" },
+  "EGF":            { purpose:"세포 재생·탄력",         min:0.0001,max:0.001,color:"#283593",url:"https://www.coupang.com/np/search?q=EGF+원액" },
+  "글리세린":       { purpose:"기초 보습",              min:3.0,  max:5.0,  color:"#00695c", url:"https://www.coupang.com/np/search?q=글리세린+원액" },
+  "알란토인":       { purpose:"피부 진정·재생",         min:0.1,  max:0.5,  color:"#4e342e", url:"https://www.coupang.com/np/search?q=알란토인+원액" },
+  "스쿠알란":       { purpose:"보습·장벽 강화",         min:3.0,  max:5.0,  color:"#37474f", url:"https://www.coupang.com/np/search?q=스쿠알란+원액" },
+};
+
+// 색상 팔레트 (DB에 없는 성분 폴백용)
+const PALETTE = [
+  "#2E7D6B","#1565c0","#e65100","#7b1fa2","#c62828",
+  "#f9a825","#0288d1","#2e7d32","#ad1457","#283593"
+];
+
+// ── URL 파라미터 파싱 ────────────────────────────────────────
+function parseParams() {
+  const p = new URLSearchParams(window.location.search);
+  const items = [];
+  let i = 1;
+  while (p.get(`s${i}`)) {
+    items.push({
+      name:      decodeURIComponent(p.get(`s${i}`) || ""),
+      targetPct: parseFloat(p.get(`p${i}`) || 1),
+      ratio:     parseFloat(p.get(`r${i}`) || 0),
+      volMl:     parseFloat(p.get(`v${i}`) || 0),
+    });
+    i++;
+  }
+  const vol = parseFloat(p.get("vol") || 30);
+  return { items, vol };
+}
+
+// ── 빈 화면 렌더링 ───────────────────────────────────────────
+function renderEmpty() {
+  document.getElementById("app").innerHTML = `
+    <div class="empty-screen">
+      <div class="empty-icon">🔬</div>
+      <h2>AI 처방 결과가 없습니다</h2>
+      <p>
+        SKIN-X 앱에서 피부·두피 분석을 완료하면<br>
+        이 계산기에 성분과 목표 비율이 자동으로 채워집니다.<br><br>
+        분석 앱 → 결과 확인 → 주문서 하단 버튼 클릭 → 이 페이지로 이동
+      </p>
+      <a class="btn-go"
+         href="https://ydlab-skin-analyzer-7p4ztomjfeevw73r25n9pm.streamlit.app/"
+         target="_blank">
+        🚀 SKIN-X 분석 앱으로 이동
+      </a>
+    </div>`;
+}
+
+// ── 처방 테이블 렌더링 ───────────────────────────────────────
+function renderRx(items, totalVol) {
+  const rows = items.map((it, idx) => {
+    const db   = DB[it.name] || {};
+    const minP = db.min != null ? db.min : "—";
+    const maxP = db.max != null ? db.max : "—";
+    const url  = db.url || `https://www.coupang.com/np/search?q=${encodeURIComponent(it.name)}+원액`;
+    return `
+      <tr>
+        <td><b>${it.name}</b></td>
+        <td>${db.purpose || "—"}</td>
+        <td><span class="badge-ratio">${it.ratio}% (${it.volMl}ml)</span></td>
+        <td><span class="badge-target">${it.targetPct}%</span></td>
+        <td style="font-size:0.75rem;color:#888;">${minP}~${maxP}%</td>
+        <td>
+          <a href="${url}" target="_blank"
+             style="background:#ff6b35;color:white;padding:3px 8px;
+                    border-radius:5px;font-size:0.72rem;text-decoration:none;font-weight:700;">
+            🛒 구매
+          </a>
+        </td>
+      </tr>`;
+  }).join("");
+
+  return `
+    <div class="card">
+      <div class="card-label">📋 AI 처방 결과 — 총 ${totalVol}ml 기준</div>
+      <div style="overflow-x:auto;">
+        <table class="rx-table">
+          <thead>
+            <tr>
+              <th>성분명</th><th>목적</th><th>AI 처방 비율</th>
+              <th>최종 목표 농도</th><th>권장 범위</th><th>구매</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="partners-notice">
+        🛒 위 구매 링크는 쿠팡 파트너스 링크입니다. 구매 시 소정의 수수료가 발생할 수 있습니다.
+      </div>
+    </div>`;
+}
+
+// ── 계산기 입력 렌더링 ───────────────────────────────────────
+function renderInputs(items, totalVol) {
+  const inputRows = items.map((it, idx) => {
+    const db     = DB[it.name] || {};
+    const defPct = 100; // 기본값: 100% 원액
+    return `
+      <div class="calc-row" id="row-${idx}">
+        <div>
+          <div class="calc-row-name">${it.name}</div>
+          <div class="calc-row-purpose">${db.purpose || ""}</div>
+        </div>
+        <div class="input-group">
+          <label>내 제품 농도 (%)</label>
+          <input type="number" id="prod-${idx}"
+                 value="${defPct}" min="0.001" max="100" step="0.1"
+                 placeholder="예: 100">
+        </div>
+        <div class="input-group">
+          <label>목표 농도 (%)</label>
+          <input type="number" id="tgt-${idx}"
+                 value="${it.targetPct}" min="0.001" max="100" step="0.01"
+                 placeholder="${it.targetPct}">
+        </div>
+        <div style="font-size:0.72rem;color:#888;text-align:center;line-height:1.5;">
+          권장<br>
+          <b style="color:#1565c0;">
+            ${db.min != null ? db.min : "—"}~${db.max != null ? db.max : "—"}%
+          </b>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="card">
+      <div class="card-label">🧪 내 제품 농도 입력</div>
+      <div class="vol-row">
+        <label>📦 전체 제조 용량</label>
+        <input type="number" id="total-vol" value="${totalVol}"
+               min="5" max="500" step="5">
+        <span>mL</span>
+        <span style="font-size:0.78rem;color:#888;margin-left:auto;">
+          ※ 변경 시 계산하기 버튼을 다시 눌러주세요
+        </span>
+      </div>
+      <div class="calc-grid">${inputRows}</div>
+      <button class="calc-btn" onclick="calculate()">
+        🧮 혼합 비율 계산하기
+      </button>
+    </div>`;
+}
+
+// ── 계산 실행 ────────────────────────────────────────────────
+function calculate() {
+  const { items } = parseParams();
+  const totalVol  = parseFloat(document.getElementById("total-vol").value) || 30;
+
+  let results     = [];
+  let totalUsed   = 0;
+  let hasErr      = false;
+  let warnings    = [];
+  let errors      = [];
+
+  items.forEach((it, idx) => {
+    const prodPct = parseFloat(document.getElementById(`prod-${idx}`).value) || 100;
+    const tgtPct  = parseFloat(document.getElementById(`tgt-${idx}`).value)  || it.targetPct;
+    const db      = DB[it.name] || {};
+
+    // 필요한 제품 양 계산
+    const neededMl   = Math.round((tgtPct * totalVol / prodPct) * 100) / 100;
+    const actualPct  = Math.round(neededMl * prodPct / totalVol * 1000) / 1000;
+    const overTotal  = neededMl > totalVol;
+    const overMax    = db.max != null && actualPct > db.max * 1.05; // 5% 여유
+    const useAsIs    = prodPct <= tgtPct;
+    const drops      = neededMl < 3 ? Math.round(neededMl * 20) : null;
+
+    if (overTotal) {
+      hasErr = true;
+      errors.push(`<b>${it.name}</b>: 제품 농도(${prodPct}%)가 너무 낮아 계산 불가 → 더 높은 농도 제품 구매 또는 전체 용량을 늘려주세요.`);
+    } else {
+      totalUsed += neededMl;
+      if (overMax) {
+        warnings.push(`<b>${it.name}</b>: 최종 농도 ${actualPct}% → 권장 최대(${db.max}%) 초과. 목표 농도를 낮춰주세요.`);
+      }
+    }
+
+    results.push({ name: it.name, prodPct, tgtPct, neededMl, actualPct,
+                   overTotal, overMax, useAsIs, drops, db });
+  });
+
+  const baseMl   = Math.max(Math.round((totalVol - totalUsed) * 100) / 100, 0);
+  const usedPct  = Math.round(totalUsed / totalVol * 1000) / 10;
+
+  // ── 결과 rows ──
+  const headerRow = `
+    <div class="result-row header-row">
+      <span>성분명</span><span>필요량</span>
+      <span>최종 농도</span><span>상태</span><span>구매</span>
+    </div>`;
+
+  const dataRows = results.map(r => {
+    if (r.overTotal) {
+      return `<div class="result-row">
+        <span class="result-name">${r.name}</span>
+        <span class="status-err">계산불가</span>
+        <span class="result-pct">—</span>
+        <span class="status-err">⛔ 농도 부족</span>
+        <span>—</span>
+      </div>`;
+    }
+    const mlText   = r.drops
+      ? `<b>${r.neededMl}ml</b> <span style="font-size:0.72rem;color:#888;">(~${r.drops}방울)</span>`
+      : `<b>${r.neededMl}ml</b>`;
+    const statusEl = r.useAsIs
+      ? `<span class="status-ok">✅ 그대로 사용</span>`
+      : r.overMax
+        ? `<span class="status-warn">⚠️ 농도 초과</span>`
+        : `<span class="status-ok">🟢 적정</span>`;
+    const url  = r.db.url || `https://www.coupang.com/np/search?q=${encodeURIComponent(r.name)}+원액`;
+    const link = `<a href="${url}" target="_blank"
+                     style="color:#ff6b35;font-size:0.8rem;text-decoration:none;">🛒</a>`;
+    return `<div class="result-row">
+      <span class="result-name">${r.name}</span>
+      <span class="result-ml">${mlText}</span>
+      <span class="result-pct">${r.actualPct}%</span>
+      ${statusEl}
+      <span>${link}</span>
+    </div>`;
+  }).join("");
+
+  const baseRow = `
+    <div class="result-row base-row">
+      <span style="font-weight:700;color:#1565c0;">💧 베이스 (증류수·알로에·호호바 등)</span>
+      <span style="font-weight:700;font-family:'DM Mono',monospace;">${baseMl}ml</span>
+      <span style="font-size:0.78rem;color:#888;">${Math.round((baseMl/totalVol)*100)}%</span>
+      <span style="font-size:0.78rem;color:#888;">전체 용량 채우기</span>
+      <span>—</span>
+    </div>`;
+
+  const totalRow = `
+    <div class="result-row total-row">
+      <span>📦 완성 세럼 합계</span>
+      <span style="font-family:'DM Mono',monospace;">${totalVol}ml</span>
+      <span>활성 성분 ${usedPct}%</span>
+      <span>베이스 ${Math.round((baseMl/totalVol)*100)}%</span>
+      <span>—</span>
+    </div>`;
+
+  // ── 비율 바 ──
+  const colors     = results.map((r, i) => r.db.color || PALETTE[i % PALETTE.length]);
+  const segments   = results
+    .filter(r => !r.overTotal)
+    .map((r, i) => {
+      const pct = Math.round(r.neededMl / totalVol * 100);
+      return `<div class="bar-segment"
+                   style="width:${pct}%;background:${colors[i]};"></div>`;
+    }).join("") +
+    `<div class="bar-segment" style="width:${Math.round(baseMl/totalVol*100)}%;background:#b0bec5;"></div>`;
+
+  const legends = results
+    .filter(r => !r.overTotal)
+    .map((r, i) => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${colors[i]};"></div>
+        <span>${r.name} ${Math.round(r.neededMl/totalVol*100)}%</span>
+      </div>`).join("") +
+    `<div class="legend-item">
+       <div class="legend-dot" style="background:#b0bec5;"></div>
+       <span>베이스 ${Math.round(baseMl/totalVol*100)}%</span>
+     </div>`;
+
+  // ── 경고·오류 박스 ──
+  let alertHtml = "";
+  if (errors.length) {
+    alertHtml += `<div class="alert-box alert-err">
+      ⛔ <b>계산 불가 항목</b><br>${errors.join("<br>")}
+    </div>`;
+  }
+  if (warnings.length) {
+    alertHtml += `<div class="alert-box alert-warn">
+      ⚠️ <b>주의 항목</b><br>${warnings.join("<br>")}
+    </div>`;
+  }
+  if (!errors.length && !warnings.length) {
+    alertHtml = `<div class="alert-box alert-ok">
+      ✅ 모든 성분이 권장 농도 범위 내에서 정상 계산되었습니다.
+    </div>`;
+  }
+
+  // ── 결과 카드 표시 ──
+  const rc = document.getElementById("result-card");
+  rc.style.display = "block";
+  rc.innerHTML = `
+    <div class="card-label">📊 혼합 계산 결과 — 총 ${totalVol}ml</div>
+    ${headerRow}${dataRows}${baseRow}${totalRow}
+    <div class="bar-section">
+      <div class="bar-label">성분 비율 시각화</div>
+      <div class="bar-track">${segments}</div>
+      <div class="legend-wrap">${legends}</div>
+    </div>
+    ${alertHtml}
+    <div class="action-row">
+      <button class="btn-copy" onclick="copyLink()">🔗 이 결과 링크 복사</button>
+      <button class="btn-print" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>
+    </div>`;
+
+  rc.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── 링크 복사 ────────────────────────────────────────────────
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    alert("✅ 링크가 클립보드에 복사되었습니다.");
+  }).catch(() => {
+    prompt("아래 링크를 복사하세요:", window.location.href);
+  });
+}
+
+// ── 초기 렌더링 ──────────────────────────────────────────────
+(function init() {
+  const { items, vol } = parseParams();
+  const app = document.getElementById("app");
+
+  if (!items.length) {
+    renderEmpty();
+    return;
+  }
+
+  app.innerHTML =
+    renderRx(items, vol) +
+    renderInputs(items, vol) +
+    `<div id="result-card" class="result-card"></div>` +
+    `<div class="card">
+       <div class="card-label">⚠️ 사용 전 확인사항</div>
+       <ul class="caution-list">
+         <li>패치 테스트 필수 — 팔 안쪽에 소량 도포 후 24시간 관찰</li>
+         <li>살리실산·레티놀 — 임산부 사용 주의, 눈 주위 금지</li>
+         <li>티트리 오일 — 반드시 희석 후 사용, 원액 직접 도포 금지</li>
+         <li>비타민C — 빛·공기에 산화되기 쉬우므로 갈색 병 보관 권장</li>
+         <li>EGF — 냉장 보관 필수, 개봉 후 1개월 내 사용</li>
+         <li>완성된 세럼은 직사광선 피해 서늘한 곳 보관, 3개월 내 사용</li>
+         <li>이상 반응(가려움·홍조·따가움) 발생 시 즉시 사용 중단</li>
+         <li>본 계산기는 참고용이며 전문가 상담을 대체하지 않습니다</li>
+       </ul>
+     </div>`;
+})();
+</script>
+</body>
+</html>
