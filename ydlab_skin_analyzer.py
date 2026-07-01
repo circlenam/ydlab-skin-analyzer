@@ -243,7 +243,7 @@ INGREDIENT_TARGET_PCT = {
     "스쿠알란":        3.0,
 }
 
-CALCULATOR_URL_BASE = "https://circlenam.github.io/ydlab/calculator.html"
+CALCULATOR_URL_BASE = "https://circlenam.github.io/ydlab-skin-analyzer/calculator.html"
 
 # ══════════════════════════════════════════════════════════════
 # AI 프롬프트
