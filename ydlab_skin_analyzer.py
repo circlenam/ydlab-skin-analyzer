@@ -110,46 +110,53 @@ label,
 .stTextInput > div > div > input,
 .stTextArea > div > div > textarea,
 .stNumberInput > div > div > input {
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(99,102,241,0.45) !important;
     border-radius: 10px !important;
-    color: #ffffff !important;
-    caret-color: #a78bfa !important;
+    color: #111111 !important;
+    caret-color: #6366f1 !important;
     padding: 10px 14px !important;
     font-family: 'Noto Sans KR', sans-serif !important;
     font-size: 0.9rem !important;
 }
 .stTextInput > div > div > input::placeholder,
 .stTextArea > div > div > textarea::placeholder {
-    color: rgba(200,200,230,0.45) !important;
+    color: rgba(100,100,120,0.60) !important;
 }
 .stTextInput > div > div > input:focus,
 .stTextArea > div > div > textarea:focus {
     border-color: rgba(99,102,241,0.70) !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.18) !important;
+    box-shadow: none !important;
     outline: none !important;
 }
+
 
 /* ══════════════════════════════════════
    5. Selectbox / Multiselect
 ══════════════════════════════════════ */
 /* 컨테이너 */
 .stSelectbox > div > div,
-.stMultiSelect > div > div {
+.stMultiSelect > div > div,
+[data-baseweb="select"],
+[data-baseweb="select"] > div,
+[data-baseweb="select"]:focus-within,
+[data-baseweb="select"] > div:focus,
+[data-baseweb="select"] > div:focus-within {
     background: rgba(255,255,255,0.06) !important;
     border: 1px solid rgba(255,255,255,0.15) !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
-/* 선택된 값 텍스트 */
-.stSelectbox [data-baseweb="select"] span,
-.stSelectbox [data-baseweb="select"] div,
-[data-testid="stSelectboxCurrentValue"],
-.stMultiSelect [data-baseweb="select"] span,
-.stMultiSelect [data-baseweb="select"] div {
-    color: #ffffff !important;
-    background: transparent !important;
-    font-family: 'Noto Sans KR', sans-serif !important;
+
+/* 포커스 시 테두리만 변경, 블러 없음 */
+[data-baseweb="select"] > div:focus,
+[data-baseweb="select"] > div[aria-expanded="true"] {
+    border-color: rgba(99,102,241,0.70) !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
+
 /* 드롭다운 화살표 */
 .stSelectbox svg, .stMultiSelect svg {
     fill: #a78bfa !important;
