@@ -785,10 +785,10 @@ def show_air_status(air, uv_data=None, humidity_data=None):
     uv_mock = (uv_data or {}).get("mock", True)
     air_txt = (
         f"에어코리아 실측 / {air.get('station', '')} / {air.get('fetch_time', '')}"
-        if not is_mock else "에어코리아: 모의 데이터")
+        if not is_mock else "에어코리아: 시간대 추정값")
     kma_txt = ""
     if uv_data or humidity_data:
-        kma_src = "기상청 실측" if not uv_mock else "기상청: 모의 데이터"
+        kma_src = "기상청 실측" if not uv_mock else "기상청: 시간대 추정값"
         kma_txt = f" | {kma_src}"
     css = "air-real" if not is_mock else "air-mock"
     st.markdown(
@@ -1258,7 +1258,7 @@ def generate_skin_report_html(result, air, region, yrs, pid, age, gender, mixing
     gc      = {"낮음": "#2e7d32", "보통": "#1565c0", "높음": "#e65100", "매우높음": "#c62828"}.get(cg, "#333")
     is_mock = air.get("mock", True)
     atxt    = (f"에어코리아 실측 / {air.get('station', '')} / {air.get('fetch_time', '')}"
-               if not is_mock else "모의 데이터")
+               if not is_mock else "시간대 추정값")
     return (
         _html_head("YD Lab 피부 분석 리포트", "#0f3460") +
         f"<div class='header'>"
@@ -1340,7 +1340,7 @@ def generate_scalp_report_html(result, air, region, yrs, pid, age, gender,
         for k, v in seei_comp.items()])
     is_mock = air.get("mock", True)
     atxt    = (f"에어코리아 실측 / {air.get('station', '')} / {air.get('fetch_time', '')}"
-               if not is_mock else "모의 데이터")
+               if not is_mock else "시간대 추정값")
     uv_d  = f"{uv_val:.1f}" if uv_val is not None else "--"
     hum_d = f"{hum_val:.0f}%" if hum_val is not None else "--"
     return (
