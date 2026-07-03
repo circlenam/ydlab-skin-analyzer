@@ -230,22 +230,29 @@ li[role="option"] *,
    7. 파일 업로더
 ══════════════════════════════════════ */
 [data-testid="stFileUploader"] {
-    background: rgba(255,255,255,0.04) !important;
+    background: #ffffff !important;
     border: 2px dashed rgba(99,102,241,0.45) !important;
     border-radius: 14px !important;
     padding: 16px !important;
 }
 [data-testid="stFileUploader"]:hover {
     border-color: rgba(99,102,241,0.80) !important;
-    background: rgba(99,102,241,0.07) !important;
+    background: #ffffff !important;
 }
 [data-testid="stFileUploader"] span,
 [data-testid="stFileUploader"] p,
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] div,
+[data-testid="stFileUploader"] button,
+[data-testid="stFileUploader"] *,
+[data-testid="stFileUploadDropzone"],
 [data-testid="stFileUploadDropzone"] span,
 [data-testid="stFileUploadDropzone"] p,
-[data-testid="stFileUploadDropzone"] small {
-    color: #c4b5fd !important;
+[data-testid="stFileUploadDropzone"] small,
+[data-testid="stFileUploadDropzone"] * {
+    color: #111111 !important;
 }
+
 
 /* ══════════════════════════════════════
    8. 알림 메시지 (info / warning / success / error)
