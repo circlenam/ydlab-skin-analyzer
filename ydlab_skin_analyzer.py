@@ -801,6 +801,34 @@ footer    { visibility: hidden !important; }
     color: #e2e8f0 !important;
 }
 .hair-loss-box span { color: inherit !important; }
+/* ══ 최소 글자 크기 보장 ══ */
+body, html {
+    font-size: 15px !important;
+}
+small,
+.small,
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploaderDropzoneInstructions"] small {
+    font-size: 0.82rem !important;
+}
+.stMarkdown p,
+.stMarkdown span,
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] span,
+[data-testid="stMarkdownContainer"] li,
+[data-testid="stMarkdownContainer"] * {
+    font-size: 0.88rem !important;
+    line-height: 1.7 !important;
+}
+.stSelectbox label,
+.stMultiSelect label,
+.stTextInput label,
+.stNumberInput label,
+[data-testid="stWidgetLabel"],
+[data-testid="stWidgetLabel"] * {
+    font-size: 0.88rem !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
