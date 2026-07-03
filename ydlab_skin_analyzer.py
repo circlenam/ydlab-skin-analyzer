@@ -577,7 +577,7 @@ def fetch_kma_humidity(region):
 
 
 # ══════════════════════════════════════════
-# AI 분析
+# AI 분석
 # ══════════════════════════════════════════
 def analyze_skin(images, api_key, body_parts=None):
     try:
@@ -594,7 +594,7 @@ def analyze_skin(images, api_key, body_parts=None):
         return json.loads(
             re.sub(r"```json|```", "", msg.content[0].text.strip()).strip())
     except Exception as e:
-        st.error(f"피부 분析 오류: {e}")
+        st.error(f"피부 분석 오류: {e}")
         return None
 
 
@@ -613,7 +613,7 @@ def analyze_scalp(images, api_key, body_parts=None):
         return json.loads(
             re.sub(r"```json|```", "", msg.content[0].text.strip()).strip())
     except Exception as e:
-        st.error(f"두피 분析 오류: {e}")
+        st.error(f"두피 분석 오류: {e}")
         return None
 
 
@@ -849,13 +849,13 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
         "<div class='patent-banner'>본 기술은 특허 출원 중입니다 (CEEI SEEI 알고리즘)</div>",
         unsafe_allow_html=True)
     st.markdown(
-        "<div class='medical-disclaimer'>본 분析 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다.</div>",
+        "<div class='medical-disclaimer'>본 분석 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다.</div>",
         unsafe_allow_html=True)
     show_air_status(air)
 
     st.markdown(
         f"<div class='card'>"
-        f"<div class='card-label'>피부 분析 종합 결과</div>"
+        f"<div class='card-label'>피부 분석 종합 결과</div>"
         f"<div style='display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;'>"
         f"<div style='text-align:center;'>"
         f"<div style='font-size:3.5rem;font-weight:700;color:{score_color(overall)};"
@@ -950,7 +950,7 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
         html = generate_skin_report_html(
             result, air, region, yrs, pid, age, gender, mixing_final)
         st.download_button(
-            "피부 분析 리포트 다운로드",
+            "피부 분석 리포트 다운로드",
             data=html.encode("utf-8"),
             file_name=f"YDLab_피부리포트_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
             mime="text/html", use_container_width=True, key="k_skin_report")
@@ -985,13 +985,13 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         "<div class='patent-banner'>본 기술은 특허 출원 중입니다 (CEEI SEEI 알고리즘 기상청 연동)</div>",
         unsafe_allow_html=True)
     st.markdown(
-        "<div class='medical-disclaimer'>본 분析 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다.</div>",
+        "<div class='medical-disclaimer'>본 분석 결과는 AI 기반 참고용 정보이며 의학적 진단이 아닙니다.</div>",
         unsafe_allow_html=True)
     show_air_status(air, uv_data, humidity_data)
 
     st.markdown(
         f"<div class='card' style='border-color:#a5d6a7;'>"
-        f"<div class='card-label'>두피 분析 종합 결과</div>"
+        f"<div class='card-label'>두피 분석 종합 결과</div>"
         f"<div style='display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;'>"
         f"<div style='text-align:center;'>"
         f"<div style='font-size:3.5rem;font-weight:700;color:{score_color(overall)};"
@@ -1016,7 +1016,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         ("모발 손상도",    result.get("hair_damage_score",      0), result.get("hair_damage_comment",      "")),
     ]
     st.markdown("<div class='scalp-card'>", unsafe_allow_html=True)
-    st.markdown("**두피 분析 6지표**")
+    st.markdown("**두피 분석 6지표**")
     cols = st.columns(3)
     for i, (lbl, val, cmt) in enumerate(scalp_metrics):
         with cols[i % 3]:
@@ -1140,7 +1140,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
             seei, seei_grade, seei_msg, seei_comp, season_corr,
             uv_val, uv_gstr, uv_corr, hum_val, hum_corr)
         st.download_button(
-            "두피 분析 리포트 다운로드",
+            "두피 분석 리포트 다운로드",
             data=html.encode("utf-8"),
             file_name=f"YDLab_두피리포트_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
             mime="text/html", use_container_width=True, key="k_scalp_report")
@@ -1260,9 +1260,9 @@ def generate_skin_report_html(result, air, region, yrs, pid, age, gender, mixing
     atxt    = (f"에어코리아 실측 / {air.get('station', '')} / {air.get('fetch_time', '')}"
                if not is_mock else "모의 데이터")
     return (
-        _html_head("YD Lab 피부 분析 리포트", "#0f3460") +
+        _html_head("YD Lab 피부 분석 리포트", "#0f3460") +
         f"<div class='header'>"
-        f"<div><h1>YD Lab 피부 분析 리포트</h1>"
+        f"<div><h1>YD Lab 피부 분석 리포트</h1>"
         f"<div style='font-size:9px;opacity:0.6;margin-top:3px;'>"
         f"재능대학교 / CEEI 특허 출원 중</div></div>"
         f"<div style='font-size:10px;opacity:0.75;'>"
@@ -1344,9 +1344,9 @@ def generate_scalp_report_html(result, air, region, yrs, pid, age, gender,
     uv_d  = f"{uv_val:.1f}" if uv_val is not None else "--"
     hum_d = f"{hum_val:.0f}%" if hum_val is not None else "--"
     return (
-        _html_head("YD Lab 두피 분析 리포트", "#1b5e20") +
+        _html_head("YD Lab 두피 분석 리포트", "#1b5e20") +
         f"<div class='header'>"
-        f"<div><h1>YD Lab 두피 분析 리포트</h1>"
+        f"<div><h1>YD Lab 두피 분석 리포트</h1>"
         f"<div style='font-size:9px;opacity:0.6;margin-top:3px;'>"
         f"재능대학교 / CEEI SEEI 특허 출원 중 / 기상청 연동</div></div>"
         f"<div style='font-size:10px;opacity:0.75;'>"
@@ -1448,7 +1448,7 @@ def generate_skin_order_html(result, air, region, yrs, pid, age, gender, mixing=
         f"<div class='header'>"
         f"<div><h1>YD Lab 피부 공방 주문서</h1>"
         f"<div style='font-size:9px;opacity:0.6;margin-top:3px;'>"
-        f"AI 피부 분析 기반 맞춤형 화장품 제조 요청 / 화장품과 공방 전용</div></div>"
+        f"AI 피부 분석 기반 맞춤형 화장품 제조 요청 / 화장품과 공방 전용</div></div>"
         f"<div style='font-family:monospace;background:rgba(255,255,255,0.15);"
         f"padding:4px 10px;border-radius:4px;'>{code}</div></div>"
         f"<div class='body'>"
@@ -1457,7 +1457,7 @@ def generate_skin_order_html(result, air, region, yrs, pid, age, gender, mixing=
         f"화장품과 공방에서 사전 준비된 권장농도 샘플을 사용하여 아래 비율대로 혼합하세요.</div>"
         f"<div style='font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;"
         f"border-bottom:1px solid #e4e8ee;'>"
-        f"분析일: {datetime.now().strftime('%Y년 %m월 %d일')} / "
+        f"분석일: {datetime.now().strftime('%Y년 %m월 %d일')} / "
         f"참여자: {pid} {age} {gender} / 거주지: {region} {yrs}년 / "
         f"피부타입: {st_type} / 종합점수: {overall}점 / 총 제조량: {total_ml}ml</div>"
         f"<div style='margin-bottom:16px;'>"
@@ -1480,7 +1480,7 @@ def generate_skin_order_html(result, air, region, yrs, pid, age, gender, mixing=
         f"CEEI {ceei} [{cg}] / PM2.5 {air.get('pm25', '-')}ug/m3 / "
         f"{'에어코리아 실측' if not is_mock else '모의데이터'} / {cm}</div>"
         f"</div><div class='footer'>"
-        f"<span>본 주문서는 AI 분析 기반이며 의료적 처방이 아닙니다.</span>"
+        f"<span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다.</span>"
         f"<span>YD Lab / 재능대학교</span></div></body></html>")
 
 
@@ -1554,7 +1554,7 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"<div class='header'>"
         f"<div><h1>YD Lab 두피 공방 주문서</h1>"
         f"<div style='font-size:9px;opacity:0.6;margin-top:3px;'>"
-        f"AI 두피 분析 + SEEI v3 기반 맞춤형 두피케어 제조 / 화장품과 공방 전용</div></div>"
+        f"AI 두피 분석 + SEEI v3 기반 맞춤형 두피케어 제조 / 화장품과 공방 전용</div></div>"
         f"<div style='font-family:monospace;background:rgba(255,255,255,0.15);"
         f"padding:4px 10px;border-radius:4px;'>{code}</div></div>"
         f"<div class='body'>"
@@ -1563,7 +1563,7 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"화장품과 공방에서 사전 준비된 권장농도 샘플을 사용하여 아래 비율대로 혼합하세요.</div>"
         f"<div style='font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;"
         f"border-bottom:1px solid #a5d6a7;'>"
-        f"분析일: {datetime.now().strftime('%Y년 %m월 %d일')} / "
+        f"분석일: {datetime.now().strftime('%Y년 %m월 %d일')} / "
         f"참여자: {pid} {age} {gender} / 거주지: {region} {yrs}년 / "
         f"두피타입: {st_type} / 종합점수: {overall}점 / 총 제조량: {total_ml}ml / "
         f"<span style='color:{sg};font-weight:700;'>SEEI {seei} [{seei_grade}]</span> / "
@@ -1590,7 +1590,7 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"{'에어코리아 실측' if not is_mock else '모의데이터'}<br>"
         f"<span style='font-size:9px;color:#666;'>{seei_msg}</span></div>"
         f"</div><div class='footer'>"
-        f"<span>본 주문서는 AI 분析 기반이며 의료적 처방이 아닙니다.</span>"
+        f"<span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다.</span>"
         f"<span>YD Lab / 재능대학교</span></div></body></html>")
 
 
@@ -1709,15 +1709,15 @@ def main():
     if not st.session_state["authed"]:
         st.markdown(
             "<div class='hero'>"
-            "<div class='hero-label'>YD Lab / 재능대학교 AI-바이오분析특화연구소</div>"
-            "<h1>AI 피부두피 분析</h1>"
+            "<div class='hero-label'>YD Lab / 재능대학교 AI-바이오분석특화연구소</div>"
+            "<h1>AI 피부두피 분석</h1>"
             "<p>오픈랩 이벤트 참여자 전용 서비스입니다.<br>"
             "행사장에서 받은 이벤트 코드를 입력해 주세요.</p></div>",
             unsafe_allow_html=True)
         gate_pw = st.text_input(
             "이벤트 코드", type="password",
             placeholder="이벤트 코드를 입력하세요", key="k_gate")
-        if st.button("분析 시작하기", type="primary", use_container_width=True):
+        if st.button("분석 시작하기", type="primary", use_container_width=True):
             if gate_pw.upper() in [c.upper() for c in valid_codes]:
                 st.session_state["authed"] = True
                 st.rerun()
@@ -1735,8 +1735,8 @@ def main():
 
     st.markdown(
         "<div class='hero'>"
-        "<div class='hero-label'>YD Lab / 재능대학교 AI-바이오분析특화연구소</div>"
-        "<h1>AI 피부두피 분析 v4.1</h1>"
+        "<div class='hero-label'>YD Lab / 재능대학교 AI-바이오분석특화연구소</div>"
+        "<h1>AI 피부두피 분석 v4.1</h1>"
         "<p>에어코리아(PM2.5 PM10 NO2 O3) + 기상청(UV 습도) + LLM 비전 AI<br>"
         "CEEI SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
         "화장품과 공방 협업 제조 서비스</p>"
@@ -1744,18 +1744,18 @@ def main():
         "</div>",
         unsafe_allow_html=True)
 
-    # 분析 모드 선택
+    # 분석 모드 선택
     st.markdown(
-        "<div class='card'><div class='card-label'>분析 모드 선택</div>",
+        "<div class='card'><div class='card-label'>분석 모드 선택</div>",
         unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
         skin_sel = st.button(
-            "피부 분析 (피부 5지표 + CEEI)",
+            "피부 분석 (피부 5지표 + CEEI)",
             use_container_width=True, key="k_mode_skin")
     with c2:
         scalp_sel = st.button(
-            "두피 분析 (두피 6지표 + SEEI v3)",
+            "두피 분석 (두피 6지표 + SEEI v3)",
             use_container_width=True, key="k_mode_scalp")
     if skin_sel:
         st.session_state["analysis_mode"] = "skin"
@@ -1763,11 +1763,11 @@ def main():
         st.session_state["analysis_mode"] = "scalp"
     mode = st.session_state.get("analysis_mode", None)
     if mode == "skin":
-        st.info("피부 분析 모드 - 피부 5지표 + CEEI 환경노출지수")
+        st.info("피부 분석 모드 - 피부 5지표 + CEEI 환경노출지수")
     elif mode == "scalp":
-        st.info("두피 분析 모드 - 두피 6지표 + SEEI v3 (PM2.5 PM10 NO2 O3 UV 습도)")
+        st.info("두피 분석 모드 - 두피 6지표 + SEEI v3 (PM2.5 PM10 NO2 O3 UV 습도)")
     else:
-        st.warning("위에서 분析 모드를 먼저 선택해 주세요.")
+        st.warning("위에서 분석 모드를 먼저 선택해 주세요.")
         st.markdown("</div>", unsafe_allow_html=True)
         st.stop()
     st.markdown("</div>", unsafe_allow_html=True)
@@ -1863,7 +1863,7 @@ def main():
             mkt_email = st.text_input("이메일 주소", key="k_mkt_email")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    btn_label = "피부 AI 분析 시작" if mode == "skin" else "두피 AI 분析 시작 (SEEI v3)"
+    btn_label = "피부 AI 분석 시작" if mode == "skin" else "두피 AI 분석 시작 (SEEI v3)"
     run = st.button(btn_label, use_container_width=True, type="primary", key="k_run")
 
     if run:
@@ -1898,14 +1898,14 @@ def main():
             else:
                 uv_data = hum_data = None
 
-        spin_label = "AI 피부 분析 중... (10~20초 소요)" if mode == "skin" else "AI 두피 분析 + SEEI v3 산출 중... (10~20초 소요)"
+        spin_label = "AI 피부 분석 중... (10~20초 소요)" if mode == "skin" else "AI 두피 분석 + SEEI v3 산출 중... (10~20초 소요)"
         with st.spinner(spin_label):
             result = (analyze_skin(images, api_key, parts)
                       if mode == "skin"
                       else analyze_scalp(images, api_key, parts))
 
         if result is None:
-            st.error("분析에 실패했습니다. 사진을 확인하고 다시 시도해 주세요.")
+            st.error("분석에 실패했습니다. 사진을 확인하고 다시 시도해 주세요.")
             st.stop()
 
         for k, v in {
@@ -1995,7 +1995,7 @@ def main():
 
     # 결과 표시
     if "result" in st.session_state:
-        st.success("분析 완료!")
+        st.success("분석 완료!")
         cm = st.session_state.get("current_mode", "skin")
         if cm == "skin":
             show_skin_result(
@@ -2031,9 +2031,9 @@ def main():
             if DATA_FILE.exists():
                 import pandas as pd
                 df = pd.read_csv(DATA_FILE, encoding="utf-8-sig")
-                st.markdown(f"**총 분析 건수:** {len(df)}건")
+                st.markdown(f"**총 분석 건수:** {len(df)}건")
                 if "analysis_mode" in df.columns:
-                    st.markdown("**분析 모드**")
+                    st.markdown("**분석 모드**")
                     st.bar_chart(df["analysis_mode"].value_counts())
                 if len(df) > 0:
                     st.markdown("**피부 타입**")
