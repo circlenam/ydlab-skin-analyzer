@@ -259,7 +259,7 @@ li[role="option"] *,
 [data-testid="stFileUploadDropzone"] button:hover {
     background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
     border-color: rgba(99,102,241,1.0) !important;
-    color: #ffffff !important;
+    color: #d3d3d3 !important;
 }
 
 
