@@ -166,58 +166,46 @@ ul[data-baseweb="menu"],
 [role="listbox"],
 [role="listbox"] > div,
 [role="listbox"] > div > div {
-    background: #1e1040 !important;
-    background-color: #1e1040 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     border: 1px solid rgba(99,102,241,0.45) !important;
     border-radius: 10px !important;
-    backdrop-filter: blur(20px) !important;
 }
 
 /* ══ 드롭다운 각 옵션 ══ */
 [role="option"],
-[role="option"] > div,
-[role="option"] > div > div,
-[role="option"] span,
-[role="option"] p,
 [role="option"] *,
 [data-baseweb="option"],
-[data-baseweb="option"] > div,
-[data-baseweb="option"] span,
 [data-baseweb="option"] *,
 li[role="option"],
 li[role="option"] *,
 [data-baseweb="menu"] li,
-[data-baseweb="menu"] li *,
-[data-baseweb="menu"] ul li {
-    color: #e2e8f0 !important;
+[data-baseweb="menu"] li * {
+    color: #111111 !important;
     background: transparent !important;
     background-color: transparent !important;
     font-family: 'Noto Sans KR', sans-serif !important;
     font-size: 0.87rem !important;
 }
 
-/* ══ 호버 & 선택 상태 ══ */
+/* ══ 호버 상태 ══ */
 [role="option"]:hover,
 [role="option"]:hover *,
 [data-baseweb="option"]:hover,
-[data-baseweb="option"]:hover *,
-[aria-selected="true"][role="option"],
-[aria-selected="true"][role="option"] * {
-    background: rgba(99,102,241,0.30) !important;
-    background-color: rgba(99,102,241,0.30) !important;
-    color: #ffffff !important;
+[data-baseweb="option"]:hover * {
+    background: rgba(99,102,241,0.12) !important;
+    background-color: rgba(99,102,241,0.12) !important;
+    color: #111111 !important;
 }
 
-/* ══ Multiselect placeholder "Choose options" ══ */
-[data-baseweb="select"] input,
-[data-baseweb="select"] input::placeholder {
-    color: rgba(200,200,230,0.60) !important;
+/* ══ 선택된 항목 ══ */
+[aria-selected="true"][role="option"],
+[aria-selected="true"][role="option"] * {
+    background: rgba(99,102,241,0.18) !important;
+    background-color: rgba(99,102,241,0.18) !important;
+    color: #111111 !important;
 }
-[data-baseweb="select"] > div > span,
-[data-baseweb="select"] [aria-live],
-[data-baseweb="select"] [data-testid="stMultiSelectPlaceholder"] {
-    color: rgba(200,200,230,0.60) !important;
-}
+
 
 
 /* ══════════════════════════════════════
