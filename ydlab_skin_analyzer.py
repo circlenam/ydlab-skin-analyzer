@@ -234,7 +234,7 @@ KMA_GRID = {
     "서울":       (60, 127), "기타":       (54, 124),
 }
 
-# 화장품과 공방 권장 성분 DB
+# 화장품 제조시 권장 성분 DB
 SAMPLE_CONC_DB = {
     "히알루론산":       {"pct": 1.0,   "note": "저분자고분자 혼합 권장"},
     "세라마이드":       {"pct": 1.5,   "note": "NP AP EOP 3종 혼합"},
@@ -739,7 +739,7 @@ def show_mixing_card(mixing, title, is_scalp=False):
         unsafe_allow_html=True)
     st.markdown(
         "<div class='workshop-banner'>"
-        "화장품과 공방에서 사전 준비된 성분 샘플로 즉시 제조 가능합니다. "
+        "각 준비된 성분 샘플들로 즉시 제조 가능합니다. "
         "아래 비율과 ml량을 참고하여 해당 성분만 선택해 혼합하세요."
         "</div>",
         unsafe_allow_html=True)
@@ -1448,13 +1448,13 @@ def generate_skin_order_html(result, air, region, yrs, pid, age, gender, mixing=
         f"<div class='header'>"
         f"<div><h1>YD Lab 피부 공방 주문서</h1>"
         f"<div style='font-size:9px;opacity:0.6;margin-top:3px;'>"
-        f"AI 피부 분석 기반 맞춤형 화장품 제조 요청 / 화장품과 공방 전용</div></div>"
+        f"AI 피부 분석 기반 맞춤형 화장품 제조 요청 / 제조 공방 전용</div></div>"
         f"<div style='font-family:monospace;background:rgba(255,255,255,0.15);"
         f"padding:4px 10px;border-radius:4px;'>{code}</div></div>"
         f"<div class='body'>"
         f"<div style='background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;"
         f"padding:8px 12px;margin-bottom:12px;font-size:9px;color:#1b5e20;font-weight:600;'>"
-        f"화장품과 공방에서 사전 준비된 권장농도 샘플을 사용하여 아래 비율대로 혼합하세요.</div>"
+        f"사전에 준비된 권장농도 샘플을 사용하여 아래 비율대로 혼합하세요.</div>"
         f"<div style='font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;"
         f"border-bottom:1px solid #e4e8ee;'>"
         f"분석일: {datetime.now().strftime('%Y년 %m월 %d일')} / "
@@ -1554,13 +1554,13 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"<div class='header'>"
         f"<div><h1>YD Lab 두피 공방 주문서</h1>"
         f"<div style='font-size:9px;opacity:0.6;margin-top:3px;'>"
-        f"AI 두피 분석 + SEEI v3 기반 맞춤형 두피케어 제조 / 화장품과 공방 전용</div></div>"
+        f"AI 두피 분석 + SEEI v3 기반 맞춤형 두피케어 제조 / 제조 공방 전용</div></div>"
         f"<div style='font-family:monospace;background:rgba(255,255,255,0.15);"
         f"padding:4px 10px;border-radius:4px;'>{code}</div></div>"
         f"<div class='body'>"
         f"<div style='background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;"
         f"padding:8px 12px;margin-bottom:12px;font-size:9px;color:#1b5e20;font-weight:600;'>"
-        f"화장품과 공방에서 사전 준비된 권장농도 샘플을 사용하여 아래 비율대로 혼합하세요.</div>"
+        f"제조 공방에서 사전 준비된 권장농도 샘플을 사용하여 아래 비율대로 혼합하세요.</div>"
         f"<div style='font-size:10px;color:#555;padding:10px 0;margin-bottom:14px;"
         f"border-bottom:1px solid #a5d6a7;'>"
         f"분석일: {datetime.now().strftime('%Y년 %m월 %d일')} / "
@@ -1739,7 +1739,7 @@ def main():
         "<h1>AI 피부두피 분석 v4.1</h1>"
         "<p>에어코리아(PM2.5 PM10 NO2 O3) + 기상청(UV 습도) + LLM 비전 AI<br>"
         "CEEI SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
-        "화장품과 공방 협업 제조 서비스</p>"
+        "공방 협업 제조 서비스</p>"
         f"<p style='font-size:0.75rem;opacity:0.6;margin-top:0.5rem;'>{kma_status}</p>"
         "</div>",
         unsafe_allow_html=True)
