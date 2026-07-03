@@ -229,29 +229,36 @@ li[role="option"] *,
 /* ══════════════════════════════════════
    7. 파일 업로더
 ══════════════════════════════════════ */
+/* ══ 파일 업로더 ══ */
 [data-testid="stFileUploader"] {
-    background: #ffffff !important;
-    border: 2px dashed rgba(99,102,241,0.45) !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 2px dashed rgba(99,102,241,0.50) !important;
     border-radius: 14px !important;
     padding: 16px !important;
 }
 [data-testid="stFileUploader"]:hover {
-    border-color: rgba(99,102,241,0.80) !important;
-    background: #ffffff !important;
+    border-color: rgba(99,102,241,0.85) !important;
+    background: rgba(99,102,241,0.10) !important;
 }
-[data-testid="stFileUploader"] span,
-[data-testid="stFileUploader"] p,
-[data-testid="stFileUploader"] small,
-[data-testid="stFileUploader"] div,
-[data-testid="stFileUploader"] button,
 [data-testid="stFileUploader"] *,
-[data-testid="stFileUploadDropzone"],
-[data-testid="stFileUploadDropzone"] span,
-[data-testid="stFileUploadDropzone"] p,
-[data-testid="stFileUploadDropzone"] small,
 [data-testid="stFileUploadDropzone"] * {
-    color: #111111 !important;
+    color: #e2e8f0 !important;
 }
+
+/* Upload 버튼 */
+[data-testid="stFileUploader"] button,
+[data-testid="stFileUploadDropzone"] button {
+    background: rgba(99,102,241,0.20) !important;
+    border: 1px solid rgba(99,102,241,0.50) !important;
+    border-radius: 8px !important;
+    color: #c4b5fd !important;
+}
+[data-testid="stFileUploader"] button:hover,
+[data-testid="stFileUploadDropzone"] button:hover {
+    background: rgba(99,102,241,0.35) !important;
+    color: #ffffff !important;
+}
+
 
 
 /* ══════════════════════════════════════
