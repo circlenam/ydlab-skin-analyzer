@@ -8,7 +8,7 @@ secrets.toml:
   AIRKOREA_API_KEY  = "..."
   KMA_API_KEY       = "..."
   ACCESS_PASSWORD   = "YDLAB2025"
-  ADMIN_PASSWORD    = "ydlab2024"
+  ADMIN_PASSWORD    = "YDLAB2025"
   GOOGLE_SHEETS_ID  = "..."
   [gcp_service_account] ...
 """
