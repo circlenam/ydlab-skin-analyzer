@@ -246,24 +246,17 @@ li[role="option"] *,
 }
 
 /* Upload 버튼 */
-[data-testid="stFileUploader"] button,
-[data-testid="stFileUploadDropzone"] button {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-    border: 1px solid rgba(99,102,241,0.80) !important;
-    border-radius: 8px !important;
-    color: #ffffff !important;
-    font-family: 'Noto Sans KR', sans-serif !important;
-    font-weight: 500 !important;
+/* 파일 업로더 안내 텍스트 (200MB per file 등) */
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] [data-testid="stFileUploaderFileData"],
+[data-testid="stFileUploader"] [data-testid="stFileUploaderFileData"] *,
+[data-testid="stFileUploaderDropzoneInstructions"] small,
+[data-testid="stFileUploaderDropzoneInstructions"] *,
+[data-testid="stFileUploader"] section small,
+[data-testid="stFileUploader"] section span,
+[data-testid="stFileUploader"] section p {
+    color: #a5b4fc !important; /* 옅은 보라 */
 }
-[data-testid="stFileUploader"] button:hover,
-[data-testid="stFileUploadDropzone"] button:hover {
-    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
-    border-color: rgba(99,102,241,1.0) !important;
-    color: #ffffff !important;
-}
-
-
-
 
 
 /* ══════════════════════════════════════
