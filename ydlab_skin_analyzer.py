@@ -248,16 +248,20 @@ li[role="option"] *,
 /* Upload 버튼 */
 [data-testid="stFileUploader"] button,
 [data-testid="stFileUploadDropzone"] button {
-    background: rgba(99,102,241,0.20) !important;
-    border: 1px solid rgba(99,102,241,0.50) !important;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    border: 1px solid rgba(99,102,241,0.80) !important;
     border-radius: 8px !important;
-    color: #111111 !important;
+    color: #ffffff !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
+    font-weight: 500 !important;
 }
 [data-testid="stFileUploader"] button:hover,
 [data-testid="stFileUploadDropzone"] button:hover {
-    background: rgba(99,102,241,0.35) !important;
-    color: #111111 !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+    border-color: rgba(99,102,241,1.0) !important;
+    color: #ffffff !important;
 }
+
 
 
 
