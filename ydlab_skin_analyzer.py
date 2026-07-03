@@ -1,5 +1,5 @@
 """
-YD Lab 피부·두피 분석 앱 v4.1
+YD Lab 피부·두피 분석 앱 v4.2
 설치: pip install streamlit anthropic pillow requests pandas gspread google-auth
 실행: streamlit run ydlab_skin_analyzer.py
 
@@ -234,28 +234,57 @@ KMA_GRID = {
     "서울":       (60, 127), "기타":       (54, 124),
 }
 
-# 화장품 제조시 권장 성분 DB
+# ══════════════════════════════════════════
+# 화장품 성분 샘플 DB  ← v4.2 최종 확정 20종
+# ══════════════════════════════════════════
+#
+# [피부용 13종]
+#   1. 히알루론산 1%          수용액   교반 2-4h  냉장
+#   2. 나이아신아마이드 5%     수용액   40-50°C    냉장
+#   3. 판테놀 3%              수용액   교반 30min 냉장/실온
+#   4. 아스코빌글루코사이드 5% 수용액   pH 5-7    냉장  (비타민C유도체 대체)
+#   5. 레티닐팔미테이트 0.3%  수용액   차광       냉장  (레티놀 대체)
+#   6. 아세틸헥사펩타이드-8 0.002% 수용액 냉장     (EGF 대체)
+#   7. 피토스핑고신 0.1%      수용액   40°C 가온  냉장  (세라마이드 대체)
+#   8. 펩타이드(콜라겐펩타이드) 3% 수용액 냉장
+#   9. 아데노신 0.04%         수용액   냉장
+#  10. 글리세린 5%            수용액   실온
+#  11. 알란토인 0.3%          수용액   냉장/실온
+#  12. 스쿠알란 3%            오일 단독 실온 차광
+#  13. 아스코빌글루코사이드(별칭 비타민C유도체) — 4번과 동일, 목록 중복 방지용 표기
+#
+# [두피용 7종]
+#  14. 살리실산 1%            에탄올수용액  냉장
+#  15. 피록톤올아민 0.5%      수용액        냉장  (징크피리치온 대체)
+#  16. 바이오틴 0.05%         수용액        냉장
+#  17. 티트리오일 1%          가용화액      실온 차광
+#  18. 로즈마리오일 0.5%      가용화액      실온 차광
+#  19. 멘톨 0.3%             에탄올수용액  실온 차광
+#  20. 소듐PCA 3%             수용액        실온
+#
 SAMPLE_CONC_DB = {
-    "히알루론산":       {"pct": 1.0,   "note": "저분자고분자 혼합 권장"},
-    "세라마이드":       {"pct": 1.5,   "note": "NP AP EOP 3종 혼합"},
-    "나이아신아마이드": {"pct": 5.0,   "note": "10% 초과 시 자극 가능"},
-    "레티놀":           {"pct": 0.1,   "note": "야간 전용"},
-    "비타민C":          {"pct": 10.0,  "note": "pH 3.5 이하 유지"},
-    "비타민C유도체":    {"pct": 5.0,   "note": "아스코빌글루코사이드"},
-    "펩타이드":         {"pct": 3.0,   "note": "아세틸헥사펩타이드-3"},
-    "판테놀":           {"pct": 3.0,   "note": "Pro-비타민B5"},
-    "아데노신":         {"pct": 0.04,  "note": "식약처 기능성 기준"},
-    "EGF":              {"pct": 0.001, "note": "냉장 보관 필요"},
-    "글리세린":         {"pct": 5.0,   "note": "기초 보습"},
-    "알란토인":         {"pct": 0.3,   "note": "피부 진정 재생"},
-    "스쿠알란":         {"pct": 3.0,   "note": "산화 안정적 오일"},
-    "징크피리치온":     {"pct": 0.5,   "note": "두피 항균 비듬 억제"},
-    "살리실산":         {"pct": 1.0,   "note": "두피 각질 용해"},
-    "바이오틴":         {"pct": 0.05,  "note": "모발 강화 성장"},
-    "티트리오일":       {"pct": 1.0,   "note": "두피 항균 진정"},
-    "로즈마리오일":     {"pct": 0.5,   "note": "두피 혈행 촉진"},
-    "멘톨":             {"pct": 0.3,   "note": "두피 청량감 항균"},
-    "소듐PCA":          {"pct": 3.0,   "note": "두피 보습"},
+    # ── 피부용 ──────────────────────────────────────────────────
+    "히알루론산":            {"pct": 1.0,    "note": "저분자·고분자 혼합 권장"},
+    "나이아신아마이드":      {"pct": 5.0,    "note": "10% 초과 시 자극 가능"},
+    "판테놀":                {"pct": 3.0,    "note": "Pro-비타민B5"},
+    "아스코빌글루코사이드":  {"pct": 5.0,    "note": "비타민C유도체 / pH 5-7 안정"},
+    "비타민C유도체":         {"pct": 5.0,    "note": "아스코빌글루코사이드"},    # 별칭 호환
+    "레티닐팔미테이트":      {"pct": 0.3,    "note": "주름개선 기능성 고시 / 차광 냉장"},
+    "아세틸헥사펩타이드-8":  {"pct": 0.002,  "note": "EGF 대체 펩타이드 / 냉장"},
+    "피토스핑고신":          {"pct": 0.1,    "note": "세라마이드 전구체 / 수용성"},
+    "펩타이드":              {"pct": 3.0,    "note": "콜라겐 펩타이드"},
+    "아데노신":              {"pct": 0.04,   "note": "식약처 주름개선 기능성 기준"},
+    "글리세린":              {"pct": 5.0,    "note": "기초 보습"},
+    "알란토인":              {"pct": 0.3,    "note": "피부 진정·재생"},
+    "스쿠알란":              {"pct": 3.0,    "note": "산화 안정적 오일"},
+    # ── 두피용 ──────────────────────────────────────────────────
+    "살리실산":              {"pct": 1.0,    "note": "두피 각질 용해 / 에탄올 선용해"},
+    "피록톤올아민":          {"pct": 0.5,    "note": "비듬·항균 / 징크피리치온 대체"},
+    "바이오틴":              {"pct": 0.05,   "note": "모발 강화·성장"},
+    "티트리오일":            {"pct": 1.0,    "note": "두피 항균·진정 / 가용화 필요"},
+    "로즈마리오일":          {"pct": 0.5,    "note": "두피 혈행 촉진 / 가용화 필요"},
+    "멘톨":                  {"pct": 0.3,    "note": "두피 청량감·항균 / 에탄올 선용해"},
+    "소듐PCA":               {"pct": 3.0,    "note": "두피 보습"},
 }
 
 VOL_PRESETS = [
@@ -265,16 +294,38 @@ VOL_PRESETS = [
     {"label": "1개월분 100ml",  "ml": 100},
 ]
 
+# ── AI 추천 성분 후보 목록 (프롬프트에 주입) ──────────────────
 SKIN_INGREDIENT_LIST = [
-    "히알루론산", "세라마이드", "나이아신아마이드", "레티놀",
-    "비타민C", "비타민C유도체", "펩타이드", "판테놀", "아데노신",
-    "살리실산", "글리세린", "알란토인", "스쿠알란", "EGF",
+    "히알루론산",
+    "나이아신아마이드",
+    "판테놀",
+    "아스코빌글루코사이드",   # 비타민C유도체 (안정형)
+    "레티닐팔미테이트",        # 레티놀 대체 (기능성 고시)
+    "아세틸헥사펩타이드-8",    # EGF 대체 펩타이드
+    "피토스핑고신",            # 세라마이드 대체 (수용성)
+    "펩타이드",
+    "아데노신",
+    "글리세린",
+    "알란토인",
+    "스쿠알란",
+    "살리실산",
 ]
+
 SCALP_INGREDIENT_LIST = [
-    "징크피리치온", "살리실산", "바이오틴", "판테놀",
-    "나이아신아마이드", "비타민C", "히알루론산", "세라마이드",
-    "티트리오일", "로즈마리오일", "멘톨", "소듐PCA",
+    "피록톤올아민",            # 징크피리치온 대체 (EU 허용)
+    "살리실산",
+    "바이오틴",
+    "판테놀",
+    "나이아신아마이드",
+    "히알루론산",
+    "피토스핑고신",            # 두피 장벽 강화
+    "티트리오일",
+    "로즈마리오일",
+    "멘톨",
+    "소듐PCA",
+    "아데노신",
 ]
+
 SKIN_ING_STR  = ", ".join(SKIN_INGREDIENT_LIST)
 SCALP_ING_STR = ", ".join(SCALP_INGREDIENT_LIST)
 
@@ -361,9 +412,9 @@ def get_sample_conc(ingredient):
 
 def get_pollution_alert(pm25, ceei):
     if isinstance(pm25, (int, float)) and float(pm25) > PM25_ALERT_THRESHOLD:
-        return "오늘 PM2.5 나쁨 - 항산화 성분(비타민C, 나이아신아마이드) 강화 권장"
+        return "오늘 PM2.5 나쁨 - 항산화 성분(아스코빌글루코사이드, 나이아신아마이드) 강화 권장"
     elif ceei >= CEEI_ANTIOXIDANT_THRESHOLD:
-        return "장기 오염 누적 노출 - 피부 광노화 대응 성분(레티놀, 펩타이드) 권장"
+        return "장기 오염 누적 노출 - 피부 광노화 대응 성분(레티닐팔미테이트, 펩타이드) 권장"
     return ""
 
 
@@ -487,7 +538,7 @@ def fetch_air(region):
         pm10=float(random.randint(18, 85)),
         o3=round(random.uniform(0.010, 0.080), 3),
         no2=round(random.uniform(0.010, 0.050), 3),
-        station="모의데이터",
+        station="시간대 추정값",
         fetch_time=datetime.now().strftime("%Y-%m-%d %H:%M"),
         mock=True)
 
@@ -618,26 +669,38 @@ def analyze_scalp(images, api_key, body_parts=None):
 
 
 # ══════════════════════════════════════════
-# 혼합 가이드 생성
+# 혼합 가이드 생성  ← v4.2 최종 20종 반영
 # ══════════════════════════════════════════
 def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=30):
+    # 기본 가중치 — 교체된 성분 포함
     BW = {
-        "히알루론산": 35, "세라마이드": 20, "나이아신아마이드": 20, "판테놀": 25,
-        "비타민C": 15, "비타민C유도체": 15, "펩타이드": 15, "아데노신": 10,
-        "레티놀": 8, "살리실산": 10, "EGF": 5, "글리세린": 20,
-        "알란토인": 10, "스쿠알란": 10,
+        "히알루론산":           35,
+        "나이아신아마이드":     20,
+        "판테놀":               25,
+        "아스코빌글루코사이드": 15,  # 비타민C유도체 대체
+        "비타민C유도체":        15,  # 별칭 호환
+        "레티닐팔미테이트":      8,  # 레티놀 대체
+        "아세틸헥사펩타이드-8":  8,  # EGF 대체
+        "피토스핑고신":         12,  # 세라마이드 대체
+        "펩타이드":             15,
+        "아데노신":             10,
+        "글리세린":             20,
+        "알란토인":             10,
+        "스쿠알란":             10,
+        "살리실산":             10,
     }
     boost = {
         "낮음": 1.0, "보통": 1.2, "높음": 1.5, "매우높음": 1.8
     }.get(ceei_grade, 1.0)
-    antioxidants = {"비타민C", "비타민C유도체", "나이아신아마이드", "펩타이드", "레티놀"}
-    sensitive_red = {"레티놀", "살리실산"}
+    antioxidants  = {"아스코빌글루코사이드", "비타민C유도체", "나이아신아마이드",
+                     "펩타이드", "레티닐팔미테이트"}
+    sensitive_red = {"레티닐팔미테이트", "살리실산"}
     is_s = skin_type in ["민감성", "건성"]
     weights = {}
     for ing in ingredients:
         w = BW.get(ing, 10)
-        if ing in antioxidants:   w = round(w * boost)
-        if is_s and ing in sensitive_red: w = max(3, round(w * 0.5))
+        if ing in antioxidants:               w = round(w * boost)
+        if is_s and ing in sensitive_red:     w = max(3, round(w * 0.5))
         weights[ing] = w
     tw     = sum(weights.values())
     ratios = {ing: round(w / tw * 100) for ing, w in weights.items()}
@@ -645,11 +708,13 @@ def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=30):
     if diff and ratios:
         ratios[max(ratios, key=ratios.get)] += diff
     ml_dict = {ing: round(total_ml * pct / 100, 1) for ing, pct in ratios.items()}
+
+    # 제조 단계 그룹 — 교체 성분 반영
     OG = {
         1: {"히알루론산", "판테놀", "글리세린"},
-        2: {"나이아신아마이드", "비타민C", "비타민C유도체", "펩타이드"},
-        3: {"아데노신", "EGF", "레티놀", "알란토인"},
-        4: {"세라마이드", "살리실산", "스쿠알란"},
+        2: {"나이아신아마이드", "아스코빌글루코사이드", "비타민C유도체", "펩타이드"},
+        3: {"아데노신", "아세틸헥사펩타이드-8", "레티닐팔미테이트", "알란토인", "피토스핑고신"},
+        4: {"살리실산", "스쿠알란"},
     }
     steps = {}
     for ing in ingredients:
@@ -657,9 +722,9 @@ def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=30):
         steps.setdefault(g, []).append(ing)
     SL = {
         1: "수용성 베이스 혼합 (기초 보습층)",
-        2: "기능성 성분 첨가 (항산화 미백 탄력)",
+        2: "기능성 성분 첨가 (항산화·미백·탄력)",
         3: "유효 성분 첨가 (고기능 활성 성분)",
-        4: "지용성 특수 성분 첨가 (장벽 각질 관리)",
+        4: "지용성·특수 성분 첨가 (장벽·각질 관리)",
         5: "기타 성분 첨가",
     }
     return {
@@ -672,11 +737,20 @@ def generate_mixing_guide(ingredients, skin_type, ceei_grade, total_ml=30):
 
 
 def generate_scalp_mixing_guide(ingredients, scalp_result, seei_grade, total_ml=30):
+    # 기본 가중치 — 피록톤올아민 추가, 징크피리치온 제거
     BW = {
-        "징크피리치온": 25, "살리실산": 20, "바이오틴": 20,
-        "판테놀": 25, "나이아신아마이드": 15, "비타민C": 10,
-        "히알루론산": 15, "세라마이드": 10,
-        "티트리오일": 15, "로즈마리오일": 10, "멘톨": 5, "소듐PCA": 15,
+        "피록톤올아민":         25,  # 징크피리치온 대체
+        "살리실산":             20,
+        "바이오틴":             20,
+        "판테놀":               25,
+        "나이아신아마이드":     15,
+        "히알루론산":           15,
+        "피토스핑고신":         12,  # 두피 장벽
+        "아데노신":             10,
+        "티트리오일":           15,
+        "로즈마리오일":         10,
+        "멘톨":                  5,
+        "소듐PCA":              15,
     }
     ks = scalp_result.get("keratin_score",          70)
     ps = scalp_result.get("pore_score",             70)
@@ -688,13 +762,26 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, seei_grade, total_ml=
     weights = {}
     for ing in ingredients:
         w = BW.get(ing, 10)
-        if ing in {"살리실산", "징크피리치온", "티트리오일"} and ks < 50: w = round(w * 1.5)
-        if ing == "살리실산" and ps < 50:                                  w = round(w * 1.3)
-        if ing in {"바이오틴", "판테놀"} and ts < 50:                     w = round(w * 1.5)
-        if ing == "판테놀" and cs < 50:                                    w = round(w * 1.4)
-        if ing in {"판테놀", "히알루론산"} and ms < 50:                    w = round(w * 1.3)
-        if ing in {"바이오틴", "판테놀"} and ds < 50:                     w = round(w * 1.3)
-        if ing in {"나이아신아마이드", "비타민C"}:                         w = round(w * eb)
+        # 각질이 심할 때 → 각질 용해·항균 성분 강화
+        if ing in {"살리실산", "피록톤올아민", "티트리오일"} and ks < 50:
+            w = round(w * 1.5)
+        if ing == "살리실산" and ps < 50:
+            w = round(w * 1.3)
+        # 모발이 가늘 때 → 모발 강화 성분 강화
+        if ing in {"바이오틴", "판테놀"} and ts < 50:
+            w = round(w * 1.5)
+        # 두피 염증·색상 이상 → 판테놀·피토스핑고신 강화
+        if ing in {"판테놀", "피토스핑고신"} and cs < 50:
+            w = round(w * 1.4)
+        # 수분 부족 → 보습 성분 강화
+        if ing in {"판테놀", "히알루론산", "소듐PCA"} and ms < 50:
+            w = round(w * 1.3)
+        # 모발 손상 → 회복 성분 강화
+        if ing in {"바이오틴", "판테놀"} and ds < 50:
+            w = round(w * 1.3)
+        # 환경 오염 누적 → 항산화 성분 강화
+        if ing in {"나이아신아마이드", "피토스핑고신"}:
+            w = round(w * eb)
         weights[ing] = max(w, 5)
     tw     = sum(weights.values())
     ratios = {ing: round(w / tw * 100) for ing, w in weights.items()}
@@ -702,21 +789,23 @@ def generate_scalp_mixing_guide(ingredients, scalp_result, seei_grade, total_ml=
     if diff and ratios:
         ratios[max(ratios, key=ratios.get)] += diff
     ml_dict = {ing: round(total_ml * pct / 100, 1) for ing, pct in ratios.items()}
+
+    # 제조 단계 그룹
     OG = {
         1: {"히알루론산", "판테놀", "소듐PCA"},
-        2: {"나이아신아마이드", "비타민C"},
-        3: {"바이오틴"},
-        4: {"징크피리치온", "살리실산", "세라마이드", "티트리오일", "로즈마리오일", "멘톨"},
+        2: {"나이아신아마이드", "아데노신"},
+        3: {"바이오틴", "피토스핑고신"},
+        4: {"피록톤올아민", "살리실산", "티트리오일", "로즈마리오일", "멘톨"},
     }
     steps = {}
     for ing in ingredients:
         g = next((k for k, s in OG.items() if ing in s), 5)
         steps.setdefault(g, []).append(ing)
     SL = {
-        1: "두피 베이스 혼합 (보습 진정층)",
-        2: "기능성 성분 첨가 (항산화 피지 조절)",
-        3: "모발 강화 성분 첨가 (성장 강화)",
-        4: "특수 성분 첨가 (항균 각질 장벽)",
+        1: "두피 베이스 혼합 (보습·진정층)",
+        2: "기능성 성분 첨가 (항산화·피지 조절)",
+        3: "모발·장벽 강화 성분 첨가",
+        4: "특수 성분 첨가 (항균·각질·청량감)",
         5: "기타 성분 첨가",
     }
     return {
@@ -783,6 +872,7 @@ def show_mixing_card(mixing, title, is_scalp=False):
 def show_air_status(air, uv_data=None, humidity_data=None):
     is_mock = air.get("mock")
     uv_mock = (uv_data or {}).get("mock", True)
+    # ── 텍스트 수정: "모의 데이터" → "시간대 추정값" ──
     air_txt = (
         f"에어코리아 실측 / {air.get('station', '')} / {air.get('fetch_time', '')}"
         if not is_mock else "에어코리아: 시간대 추정값")
@@ -802,10 +892,6 @@ def show_air_status(air, uv_data=None, humidity_data=None):
 # 용량 선택 위젯 (공통)
 # ══════════════════════════════════════════
 def vol_selector(key_prefix):
-    """
-    프리셋 버튼 + 직접 입력 조합.
-    선택된 ml 값을 반환한다.
-    """
     state_key = f"{key_prefix}_total_ml"
     if state_key not in st.session_state:
         st.session_state[state_key] = 30
@@ -839,9 +925,9 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
     pm25_avg = REGION_PM25_AVG.get(region, 22.0)
     yrs      = RESIDENCE_YEAR_MAP.get(res_str, 0)
     ceei, ceei_grade, ceei_chip, ceei_msg = calc_ceei(pm25_avg, yrs)
-    pm25_val = air.get("pm25")
-    alert    = get_pollution_alert(pm25_val, ceei)
-    overall  = result.get("overall_score", 0)
+    pm25_val  = air.get("pm25")
+    alert     = get_pollution_alert(pm25_val, ceei)
+    overall   = result.get("overall_score", 0)
     skin_type = result.get("skin_type", "")
     ings      = result.get("recommended_ingredients", [])
 
@@ -1008,12 +1094,12 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         unsafe_allow_html=True)
 
     scalp_metrics = [
-        ("각질 상태",      result.get("keratin_score",          0), result.get("keratin_comment",          "")),
-        ("모공 피지",      result.get("pore_score",             0), result.get("pore_comment",             "")),
-        ("모발 굵기",      result.get("hair_thickness_score",   0), result.get("hair_thickness_comment",   "")),
-        ("두피 색상 염증", result.get("scalp_color_score",      0), result.get("scalp_color_comment",      "")),
-        ("수분 유분 밸런스", result.get("moisture_balance_score", 0), result.get("moisture_balance_comment", "")),
-        ("모발 손상도",    result.get("hair_damage_score",      0), result.get("hair_damage_comment",      "")),
+        ("각질 상태",        result.get("keratin_score",          0), result.get("keratin_comment",          "")),
+        ("모공 피지",        result.get("pore_score",             0), result.get("pore_comment",             "")),
+        ("모발 굵기",        result.get("hair_thickness_score",   0), result.get("hair_thickness_comment",   "")),
+        ("두피 색상·염증",   result.get("scalp_color_score",      0), result.get("scalp_color_comment",      "")),
+        ("수분·유분 밸런스", result.get("moisture_balance_score", 0), result.get("moisture_balance_comment", "")),
+        ("모발 손상도",      result.get("hair_damage_score",      0), result.get("hair_damage_comment",      "")),
     ]
     st.markdown("<div class='scalp-card'>", unsafe_allow_html=True)
     st.markdown("**두피 분석 6지표**")
@@ -1042,7 +1128,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<span class='scalp-ingredient-chip'>{ing}</span>" for ing in ings])
     st.markdown(
         f"<div class='card' style='border-color:#a5d6a7;'>"
-        f"<div class='card-label'>AI 추천 두피 모발 성분</div>"
+        f"<div class='card-label'>AI 추천 두피·모발 성분</div>"
         f"<div style='margin-bottom:0.8rem;'>{ing_html}</div>"
         f"<div class='result-text'>{result.get('care_advice', '')}</div></div>",
         unsafe_allow_html=True)
@@ -1100,7 +1186,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<div style='color:#aaa;font-size:0.65rem;'>습도보정 x{hum_corr}</div></div>"
         f"</div></div>"
         f"<div style='font-size:0.75rem;color:#666;margin-top:0.6rem;font-style:italic;'>"
-        f"SEEI = (PM2.5x0.40 + PM10x0.25 + NO2x0.20 + O3x0.15) x 거주기간 x 계절보정 x UV보정 x 습도보정"
+        f"SEEI = (PM2.5×0.40 + PM10×0.25 + NO2×0.20 + O3×0.15) × 거주기간 × 계절보정 × UV보정 × 습도보정"
         f"</div>"
         f"<div style='font-size:0.84rem;color:#444;line-height:1.7;margin-top:0.5rem;'>"
         f"{seei_msg}</div></div>",
@@ -1110,8 +1196,8 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         "각질 상태":      result.get("keratin_score",          0),
         "모공 피지":      result.get("pore_score",             0),
         "모발 굵기":      result.get("hair_thickness_score",   0),
-        "두피 색상 염증": result.get("scalp_color_score",      0),
-        "수분 유분":      result.get("moisture_balance_score", 0),
+        "두피 색상·염증": result.get("scalp_color_score",      0),
+        "수분·유분":      result.get("moisture_balance_score", 0),
         "모발 손상도":    result.get("hair_damage_score",      0),
     }
     pri = sorted([(k, v) for k, v in pri_scores.items() if v > 0], key=lambda x: x[1])[:3]
@@ -1228,10 +1314,10 @@ def _mixing_html_table(mixing, color):
 # HTML 리포트 - 피부
 # ══════════════════════════════════════════
 def generate_skin_report_html(result, air, region, yrs, pid, age, gender, mixing=None):
-    overall   = result.get("overall_score", 0)
-    st_type   = result.get("skin_type", "")
-    ings      = result.get("recommended_ingredients", [])
-    pm25_avg  = REGION_PM25_AVG.get(region, 22.0)
+    overall  = result.get("overall_score", 0)
+    st_type  = result.get("skin_type", "")
+    ings     = result.get("recommended_ingredients", [])
+    pm25_avg = REGION_PM25_AVG.get(region, 22.0)
     ceei, cg, _, cm = calc_ceei(pm25_avg, yrs)
 
     def sc(s): return "#2e7d32" if s >= 70 else "#e65100" if s >= 40 else "#c62828"
@@ -1305,9 +1391,9 @@ def generate_scalp_report_html(result, air, region, yrs, pid, age, gender,
                                 seei_comp=None, season_corr=1.0,
                                 uv_val=None, uv_gstr="알수없음",
                                 uv_corr=1.0, hum_val=None, hum_corr=1.0):
-    overall   = result.get("overall_score", 0)
-    st_type   = result.get("scalp_type", "")
-    ings      = result.get("recommended_ingredients", [])
+    overall  = result.get("overall_score", 0)
+    st_type  = result.get("scalp_type", "")
+    ings     = result.get("recommended_ingredients", [])
     seei_comp = seei_comp or {}
 
     def sc(s): return "#2e7d32" if s >= 70 else "#e65100" if s >= 40 else "#c62828"
@@ -1334,8 +1420,8 @@ def generate_scalp_report_html(result, air, region, yrs, pid, age, gender,
         f"padding:3px 9px;font-size:9px;font-weight:500;"
         f"display:inline-block;margin:2px;'>{i}</span>"
         for i in ings])
-    sg      = {"낮음": "#2e7d32", "보통": "#1565c0", "높음": "#e65100", "매우높음": "#c62828"}.get(seei_grade, "#333")
-    comp_h  = "".join([
+    sg     = {"낮음": "#2e7d32", "보통": "#1565c0", "높음": "#e65100", "매우높음": "#c62828"}.get(seei_grade, "#333")
+    comp_h = "".join([
         f"<span class='chip' style='background:#f0faf4;color:#1b5e20;'>{k}: {v}</span>"
         for k, v in seei_comp.items()])
     is_mock = air.get("mock", True)
@@ -1372,7 +1458,7 @@ def generate_scalp_report_html(result, air, region, yrs, pid, age, gender,
         f"border-radius:6px;padding:6px 10px;font-size:9px;'>"
         f"탈모 진행도 (참고용): <span style='font-weight:700;color:{sc(hl)};'>{hl}점</span>"
         f" - {hlc}</div></div>"
-        f"<div class='section'><div class='stitle'>추천 두피 모발 성분</div>"
+        f"<div class='section'><div class='stitle'>추천 두피·모발 성분</div>"
         f"<div style='margin-bottom:7px;'>{ing_h}</div>"
         f"<div style='font-size:9px;color:#555;line-height:1.6;'>{result.get('care_advice', '')}</div></div>"
         f"{_mixing_html_table(mixing, '#1565c0')}"
@@ -1393,33 +1479,35 @@ def generate_scalp_report_html(result, air, region, yrs, pid, age, gender,
 
 
 # ══════════════════════════════════════════
-# HTML 주문서 - 피부
+# HTML 주문서 - 피부  ← v4.2 최종 20종 반영
 # ══════════════════════════════════════════
 def generate_skin_order_html(result, air, region, yrs, pid, age, gender, mixing=None):
-    code      = ("YDL-SKIN-" + datetime.now().strftime("%Y%m%d") + "-" +
-                 ''.join(random.choices(string.ascii_uppercase + string.digits, k=4)))
-    overall   = result.get("overall_score", 0)
-    st_type   = result.get("skin_type", "")
-    ings      = result.get("recommended_ingredients", [])
-    pm25_avg  = REGION_PM25_AVG.get(region, 22.0)
+    code     = ("YDL-SKIN-" + datetime.now().strftime("%Y%m%d") + "-" +
+                ''.join(random.choices(string.ascii_uppercase + string.digits, k=4)))
+    overall  = result.get("overall_score", 0)
+    st_type  = result.get("skin_type", "")
+    ings     = result.get("recommended_ingredients", [])
+    pm25_avg = REGION_PM25_AVG.get(region, 22.0)
     ceei, cg, _, cm = calc_ceei(pm25_avg, yrs)
-    is_mock   = air.get("mock", True)
-    total_ml  = mixing["total_ml"] if mixing else 30
-    purpose   = {
-        "히알루론산": "즉각 수분 공급 보습",
-        "세라마이드":  "피부 장벽 강화",
-        "나이아신아마이드": "피부톤 모공 관리",
-        "레티놀":    "주름 개선 탄력",
-        "비타민C":   "항산화 피부톤",
-        "비타민C유도체": "항산화 안정형",
-        "펩타이드":  "탄력 항노화",
-        "판테놀":    "진정 보습",
-        "살리실산":  "각질 용해",
-        "아데노신":  "주름 개선(식약처)",
-        "EGF":       "세포 재생 탄력",
-        "글리세린":  "기초 보습",
-        "알란토인":  "피부 진정 재생",
-        "스쿠알란":  "보습 장벽 강화",
+    is_mock  = air.get("mock", True)
+    total_ml = mixing["total_ml"] if mixing else 30
+
+    # ── 교체 성분 포함한 목적 딕셔너리 ──
+    purpose = {
+        "히알루론산":           "즉각 수분 공급·보습",
+        "나이아신아마이드":     "피부톤 균일화·모공 관리",
+        "판테놀":               "피부 진정·보습 (Pro-B5)",
+        "아스코빌글루코사이드": "항산화·미백 (안정형 비타민C)",
+        "비타민C유도체":        "항산화·미백 (안정형 비타민C)",
+        "레티닐팔미테이트":     "주름 개선·탄력 (기능성 고시)",
+        "아세틸헥사펩타이드-8": "주름 이완·탄력 (보톡스 대체 펩타이드)",
+        "피토스핑고신":         "피부 장벽 강화·보습 (세라마이드 전구체)",
+        "펩타이드":             "탄력·항노화 (콜라겐 펩타이드)",
+        "아데노신":             "주름 개선 (식약처 기능성)",
+        "글리세린":             "기초 보습",
+        "알란토인":             "피부 진정·재생",
+        "스쿠알란":             "보습·장벽 강화 (오일)",
+        "살리실산":             "각질 용해·모공 관리",
     }
     rows = "".join([
         f"<tr style='background:{'#f8faff' if i%2==0 else 'white'};'>"
@@ -1478,45 +1566,47 @@ def generate_skin_order_html(result, air, region, yrs, pid, age, gender, mixing=
         f"<div style='font-size:10px;color:#555;background:#f0f4ff;border:1px solid #c5cae9;"
         f"border-radius:6px;padding:8px 12px;'>"
         f"CEEI {ceei} [{cg}] / PM2.5 {air.get('pm25', '-')}ug/m3 / "
-        f"{'에어코리아 실측' if not is_mock else '모의데이터'} / {cm}</div>"
+        f"{'에어코리아 실측' if not is_mock else '시간대 추정값'} / {cm}</div>"
         f"</div><div class='footer'>"
         f"<span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다.</span>"
         f"<span>YD Lab / 재능대학교</span></div></body></html>")
 
 
 # ══════════════════════════════════════════
-# HTML 주문서 - 두피
+# HTML 주문서 - 두피  ← v4.2 최종 20종 반영
 # ══════════════════════════════════════════
 def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
                                mixing=None, seei=0, seei_grade="낮음", seei_msg="",
                                uv_val=None, uv_gstr="알수없음", hum_val=None):
-    code      = ("YDL-SCALP-" + datetime.now().strftime("%Y%m%d") + "-" +
-                 ''.join(random.choices(string.ascii_uppercase + string.digits, k=4)))
-    overall   = result.get("overall_score", 0)
-    st_type   = result.get("scalp_type", "")
-    ings      = result.get("recommended_ingredients", [])
-    is_mock   = air.get("mock", True)
-    total_ml  = mixing["total_ml"] if mixing else 30
-    sg        = {"낮음": "#2e7d32", "보통": "#1565c0", "높음": "#e65100", "매우높음": "#c62828"}.get(seei_grade, "#333")
-    purpose   = {
-        "징크피리치온": "두피 항균 비듬 억제",
-        "살리실산":    "두피 각질 용해",
-        "바이오틴":    "모발 강화 성장 촉진",
-        "판테놀":      "두피 진정 보습",
-        "나이아신아마이드": "두피 피지 조절 진정",
-        "비타민C":     "두피 항산화",
-        "히알루론산":  "두피 수분 공급",
-        "세라마이드":  "두피 장벽 강화",
-        "티트리오일":  "두피 항균 항염 진정",
-        "로즈마리오일": "두피 혈행 촉진 성장",
-        "멘톨":        "두피 청량감 항균",
-        "소듐PCA":     "두피 보습",
+    code     = ("YDL-SCALP-" + datetime.now().strftime("%Y%m%d") + "-" +
+                ''.join(random.choices(string.ascii_uppercase + string.digits, k=4)))
+    overall  = result.get("overall_score", 0)
+    st_type  = result.get("scalp_type", "")
+    ings     = result.get("recommended_ingredients", [])
+    is_mock  = air.get("mock", True)
+    total_ml = mixing["total_ml"] if mixing else 30
+    sg       = {"낮음": "#2e7d32", "보통": "#1565c0", "높음": "#e65100", "매우높음": "#c62828"}.get(seei_grade, "#333")
+
+    # ── 교체 성분 포함한 목적 딕셔너리 ──
+    purpose = {
+        "피록톤올아민":     "비듬·항균 억제 (징크피리치온 대체 / EU 허용)",
+        "살리실산":         "두피 각질 용해·모공 세정",
+        "바이오틴":         "모발 강화·성장 촉진",
+        "판테놀":           "두피 진정·보습 (Pro-B5)",
+        "나이아신아마이드": "두피 피지 조절·진정",
+        "히알루론산":       "두피 수분 공급",
+        "피토스핑고신":     "두피 장벽 강화 (세라마이드 전구체)",
+        "아데노신":         "두피 혈행·모발 성장",
+        "티트리오일":       "두피 항균·항염·진정",
+        "로즈마리오일":     "두피 혈행 촉진·모발 성장",
+        "멘톨":             "두피 청량감·항균",
+        "소듐PCA":          "두피 수분 보습",
     }
     rows = "".join([
         f"<tr style='background:{'#f0faf4' if i%2==0 else 'white'};'>"
         f"<td style='text-align:center;font-weight:600;color:#1b5e20;'>{i+1}</td>"
         f"<td style='font-weight:700;'>{ing}</td>"
-        f"<td style='color:#555;'>{purpose.get(ing, '두피 모발 상태 개선')}</td>"
+        f"<td style='color:#555;'>{purpose.get(ing, '두피·모발 상태 개선')}</td>"
         f"<td style='font-weight:700;color:#1565c0;'>"
         f"{mixing['ratios'].get(ing, '-') if mixing else '-'}%</td>"
         f"<td style='font-weight:700;color:#1b5e20;font-family:monospace;'>"
@@ -1541,7 +1631,8 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"border-radius:10px;overflow:hidden;'>"
         f"<div style='background:#1b5e20;color:white;padding:8px 14px;"
         f"font-size:10px;font-weight:700;'>맞춤 두피 세럼 사용법</div>"
-        f"<div style='padding:12px 14px;background:#f0faf4;font-size:10px;color:#333;line-height:1.8;'>"
+        f"<div style='padding:12px 14px;background:#f0faf4;font-size:10px;"
+        f"color:#333;line-height:1.8;'>"
         f"1. 샴푸 후 타월로 두피 물기를 가볍게 눌러 제거 (살짝 촉촉한 상태 유지)<br>"
         f"2. 세럼을 두피에 직접 소량씩 도포 (1회 약 1~2ml)<br>"
         f"3. 손가락 끝으로 두피 원형 마사지 (1~2분)<br>"
@@ -1587,7 +1678,7 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"<div style='font-size:10px;color:#555;background:#f0faf4;border:1px solid #a5d6a7;"
         f"border-radius:6px;padding:8px 12px;margin-bottom:16px;'>"
         f"SEEI {seei} [{seei_grade}] / PM2.5 {air.get('pm25', '-')}ug/m3 / "
-        f"{'에어코리아 실측' if not is_mock else '모의데이터'}<br>"
+        f"{'에어코리아 실측' if not is_mock else '시간대 추정값'}<br>"
         f"<span style='font-size:9px;color:#666;'>{seei_msg}</span></div>"
         f"</div><div class='footer'>"
         f"<span>본 주문서는 AI 분석 기반이며 의료적 처방이 아닙니다.</span>"
@@ -1710,7 +1801,7 @@ def main():
         st.markdown(
             "<div class='hero'>"
             "<div class='hero-label'>YD Lab / 재능대학교 AI-바이오분석특화연구소</div>"
-            "<h1>AI 피부두피 분석</h1>"
+            "<h1>AI 피부·두피 분석</h1>"
             "<p>오픈랩 이벤트 참여자 전용 서비스입니다.<br>"
             "행사장에서 받은 이벤트 코드를 입력해 주세요.</p></div>",
             unsafe_allow_html=True)
@@ -1731,15 +1822,15 @@ def main():
         st.stop()
 
     kma_key    = st.secrets.get("KMA_API_KEY", "")
-    kma_status = "기상청 API 연동" if kma_key else "기상청 API 미연동 (모의값 사용)"
+    kma_status = "기상청 API 연동" if kma_key else "기상청 API 미연동 (시간대 추정값 사용)"
 
     st.markdown(
         "<div class='hero'>"
         "<div class='hero-label'>YD Lab / 재능대학교 AI-바이오분석특화연구소</div>"
-        "<h1>AI 피부두피 분석 v4.1</h1>"
+        "<h1>AI 피부·두피 분석 v4.2</h1>"
         "<p>에어코리아(PM2.5 PM10 NO2 O3) + 기상청(UV 습도) + LLM 비전 AI<br>"
         "CEEI SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
-        "공방 협업 제조 서비스</p>"
+        "공방 협업 제조 서비스 | 최종 확정 성분 20종</p>"
         f"<p style='font-size:0.75rem;opacity:0.6;margin-top:0.5rem;'>{kma_status}</p>"
         "</div>",
         unsafe_allow_html=True)
@@ -1793,13 +1884,13 @@ def main():
     if mode == "skin":
         concern = st.multiselect(
             "주요 피부 고민",
-            ["주름 탄력", "모공", "피부톤 색소침착", "수분 건조", "민감성 홍조", "여드름 트러블", "기타"],
+            ["주름·탄력", "모공", "피부톤·색소침착", "수분·건조", "민감성·홍조", "여드름·트러블", "기타"],
             key="k_concern")
     else:
         concern = st.multiselect(
-            "주요 두피 모발 고민",
-            ["두피 각질", "두피 지루 피지", "탈모 모발 가늘어짐", "두피 염증 홍조",
-             "비듬", "두피 건조", "모발 손상 끊김", "기타"],
+            "주요 두피·모발 고민",
+            ["두피 각질", "두피 지루·피지", "탈모·모발 가늘어짐", "두피 염증·홍조",
+             "비듬", "두피 건조", "모발 손상·끊김", "기타"],
             key="k_concern")
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1890,7 +1981,7 @@ def main():
             except Exception:
                 pass
 
-        with st.spinner("실시간 환경 기상 데이터 수집 중..."):
+        with st.spinner("실시간 환경·기상 데이터 수집 중..."):
             air = fetch_air(region)
             if mode == "scalp":
                 uv_data  = fetch_kma_uv(region)
@@ -1898,7 +1989,9 @@ def main():
             else:
                 uv_data = hum_data = None
 
-        spin_label = "AI 피부 분석 중... (10~20초 소요)" if mode == "skin" else "AI 두피 분석 + SEEI v3 산출 중... (10~20초 소요)"
+        spin_label = ("AI 피부 분석 중... (10~20초 소요)"
+                      if mode == "skin"
+                      else "AI 두피 분석 + SEEI v3 산출 중... (10~20초 소요)")
         with st.spinner(spin_label):
             result = (analyze_skin(images, api_key, parts)
                       if mode == "skin"
@@ -1944,7 +2037,7 @@ def main():
             "o3":          air.get("o3",  ""),
             "no2":         air.get("no2", ""),
             "air_station": air.get("station", ""),
-            "air_source":  "실측" if not air.get("mock") else "모의",
+            "air_source":  "실측" if not air.get("mock") else "시간대 추정값",
             "uv_index":  uv_val  if mode == "scalp" and uv_val  is not None else "",
             "uv_grade":  uv_gstr if mode == "scalp" else "",
             "uv_mock":   (uv_data or {}).get("mock", True) if mode == "scalp" else "",
@@ -2026,7 +2119,7 @@ def main():
         admin_pw = st.text_input("관리자 비밀번호", type="password", key="k_admin")
         if admin_pw == st.secrets.get("ADMIN_PASSWORD", "ydlab2024"):
             st.success("관리자 모드")
-            kma_st = "실측 연동 중" if kma_key else "키 미등록 (모의값)"
+            kma_st = "실측 연동 중" if kma_key else "키 미등록 (시간대 추정값)"
             st.markdown(f"**기상청 API:** {kma_st}")
             if DATA_FILE.exists():
                 import pandas as pd
@@ -2048,8 +2141,8 @@ def main():
                             st.bar_chart(sd.value_counts())
                     if "air_source" in df.columns:
                         rc = (df["air_source"] == "실측").sum()
-                        mc = (df["air_source"] == "모의").sum()
-                        st.markdown(f"**대기데이터** - 실측:{rc} / 모의:{mc}")
+                        mc = (df["air_source"] == "시간대 추정값").sum()
+                        st.markdown(f"**대기데이터** - 실측:{rc} / 추정:{mc}")
                 st.download_button(
                     "전체 데이터 CSV 다운로드",
                     data=open(DATA_FILE, "rb").read(),
