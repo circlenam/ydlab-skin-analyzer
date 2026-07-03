@@ -1,5 +1,5 @@
 """
-YD Lab 피부·두피 분석 앱 v4.3  ─ Dark Glassmorphism Edition
+YD Lab 피부·두피 분석 앱 v4.4  ─ Dark Glassmorphism Edition (텍스트 가시성 완전 수정)
 설치: pip install streamlit anthropic pillow requests pandas gspread google-auth
 실행: streamlit run ydlab_skin_analyzer.py
 
@@ -39,17 +39,19 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&family=Orbitron:wght@400;700;900&display=swap');
 
-/* ── 전체 배경 ── */
+/* ══════════════════════════════════════
+   1. 전체 배경 & 기본 폰트
+══════════════════════════════════════ */
 html, body, [class*="css"], .stApp {
     font-family: 'Noto Sans KR', sans-serif;
-    background: linear-gradient(135deg, #0a0a1a 0%, #0d1b3e 30%, #1a0a2e 60%, #0a1628 100%) !important;
+    background: linear-gradient(135deg,
+        #0a0a1a 0%, #0d1b3e 30%, #1a0a2e 60%, #0a1628 100%) !important;
     min-height: 100vh;
 }
 .stApp {
-    background: linear-gradient(135deg, #0a0a1a 0%, #0d1b3e 30%, #1a0a2e 60%, #0a1628 100%) !important;
+    background: linear-gradient(135deg,
+        #0a0a1a 0%, #0d1b3e 30%, #1a0a2e 60%, #0a1628 100%) !important;
 }
-
-/* 배경 파티클 메시 효과 */
 .stApp::before {
     content: '';
     position: fixed;
@@ -62,7 +64,325 @@ html, body, [class*="css"], .stApp {
     z-index: 0;
 }
 
-/* ── 글래스 카드 공통 ── */
+/* ══════════════════════════════════════
+   2. 모든 기본 텍스트 → 밝은 색 강제 적용
+══════════════════════════════════════ */
+p, span, div, li, td, th, label,
+.stMarkdown, .stMarkdown p, .stMarkdown span,
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] span,
+[data-testid="stMarkdownContainer"] div {
+    color: #e2e8f0 !important;
+}
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* ══════════════════════════════════════
+   3. 위젯 라벨 (selectbox·input 위 한국어 라벨)
+══════════════════════════════════════ */
+label,
+.stTextInput label,
+.stSelectbox label,
+.stMultiSelect label,
+.stNumberInput label,
+.stTextArea label,
+.stRadio label,
+.stCheckbox label,
+.stSlider label,
+.stFileUploader label,
+[data-testid="stWidgetLabel"],
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] span,
+[data-testid="stWidgetLabel"] div,
+.stCheckbox label p,
+.stRadio [data-testid="stMarkdownContainer"] p {
+    color: #c4b5fd !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+}
+
+/* ══════════════════════════════════════
+   4. 입력 위젯 박스
+══════════════════════════════════════ */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea,
+.stNumberInput > div > div > input {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+    caret-color: #a78bfa !important;
+    padding: 10px 14px !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
+    font-size: 0.9rem !important;
+}
+.stTextInput > div > div > input::placeholder,
+.stTextArea > div > div > textarea::placeholder {
+    color: rgba(200,200,230,0.45) !important;
+}
+.stTextInput > div > div > input:focus,
+.stTextArea > div > div > textarea:focus {
+    border-color: rgba(99,102,241,0.70) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.18) !important;
+    outline: none !important;
+}
+
+/* ══════════════════════════════════════
+   5. Selectbox / Multiselect
+══════════════════════════════════════ */
+/* 컨테이너 */
+.stSelectbox > div > div,
+.stMultiSelect > div > div {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 10px !important;
+}
+/* 선택된 값 텍스트 */
+.stSelectbox [data-baseweb="select"] span,
+.stSelectbox [data-baseweb="select"] div,
+[data-testid="stSelectboxCurrentValue"],
+.stMultiSelect [data-baseweb="select"] span,
+.stMultiSelect [data-baseweb="select"] div {
+    color: #ffffff !important;
+    background: transparent !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
+}
+/* 드롭다운 화살표 */
+.stSelectbox svg, .stMultiSelect svg {
+    fill: #a78bfa !important;
+    color: #a78bfa !important;
+}
+/* 드롭다운 팝업 */
+[data-baseweb="popover"],
+[data-baseweb="menu"],
+[role="listbox"] {
+    background: #1e1040 !important;
+    border: 1px solid rgba(99,102,241,0.45) !important;
+    border-radius: 10px !important;
+    backdrop-filter: blur(20px) !important;
+}
+[role="option"],
+[data-baseweb="option"] {
+    color: #e2e8f0 !important;
+    background: transparent !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
+    font-size: 0.87rem !important;
+}
+[role="option"]:hover,
+[data-baseweb="option"]:hover {
+    background: rgba(99,102,241,0.25) !important;
+    color: #ffffff !important;
+}
+/* Multiselect 태그 칩 */
+.stMultiSelect [data-baseweb="tag"] {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 2px 10px !important;
+}
+.stMultiSelect [data-baseweb="tag"] span,
+.stMultiSelect [data-baseweb="tag"] div {
+    color: #ffffff !important;
+    font-size: 0.80rem !important;
+}
+.stMultiSelect [data-baseweb="tag"] button svg,
+.stMultiSelect [data-baseweb="tag"] svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+
+/* ══════════════════════════════════════
+   6. 체크박스 & 라디오
+══════════════════════════════════════ */
+.stCheckbox > label > div[data-testid="stMarkdownContainer"] p,
+.stCheckbox span,
+.stRadio > div label span,
+.stRadio span {
+    color: #e2e8f0 !important;
+    font-size: 0.87rem !important;
+}
+
+/* ══════════════════════════════════════
+   7. 파일 업로더
+══════════════════════════════════════ */
+[data-testid="stFileUploader"] {
+    background: rgba(255,255,255,0.04) !important;
+    border: 2px dashed rgba(99,102,241,0.45) !important;
+    border-radius: 14px !important;
+    padding: 16px !important;
+}
+[data-testid="stFileUploader"]:hover {
+    border-color: rgba(99,102,241,0.80) !important;
+    background: rgba(99,102,241,0.07) !important;
+}
+[data-testid="stFileUploader"] span,
+[data-testid="stFileUploader"] p,
+[data-testid="stFileUploadDropzone"] span,
+[data-testid="stFileUploadDropzone"] p,
+[data-testid="stFileUploadDropzone"] small {
+    color: #c4b5fd !important;
+}
+
+/* ══════════════════════════════════════
+   8. 알림 메시지 (info / warning / success / error)
+══════════════════════════════════════ */
+.stAlert > div,
+[data-testid="stAlert"] > div {
+    border-radius: 10px !important;
+}
+/* info */
+[data-testid="stAlert"][data-baseweb="notification"][kind="info"] > div,
+.stInfo > div {
+    background: rgba(59,130,246,0.12) !important;
+    border: 1px solid rgba(59,130,246,0.30) !important;
+}
+[data-testid="stAlert"][kind="info"] p,
+.stInfo p, .stInfo span {
+    color: #93c5fd !important;
+}
+/* warning */
+[data-testid="stAlert"][kind="warning"] > div,
+.stWarning > div {
+    background: rgba(245,158,11,0.12) !important;
+    border: 1px solid rgba(245,158,11,0.30) !important;
+}
+[data-testid="stAlert"][kind="warning"] p,
+.stWarning p, .stWarning span {
+    color: #fcd34d !important;
+}
+/* success */
+[data-testid="stAlert"][kind="success"] > div,
+.stSuccess > div {
+    background: rgba(16,185,129,0.12) !important;
+    border: 1px solid rgba(16,185,129,0.30) !important;
+}
+[data-testid="stAlert"][kind="success"] p,
+.stSuccess p, .stSuccess span {
+    color: #6ee7b7 !important;
+}
+/* error */
+[data-testid="stAlert"][kind="error"] > div,
+.stError > div {
+    background: rgba(239,68,68,0.12) !important;
+    border: 1px solid rgba(239,68,68,0.30) !important;
+}
+[data-testid="stAlert"][kind="error"] p,
+.stError p, .stError span {
+    color: #fca5a5 !important;
+}
+
+/* ══════════════════════════════════════
+   9. 버튼
+══════════════════════════════════════ */
+.stButton > button {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    padding: 0.6rem 1.2rem !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.35) !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
+}
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(99,102,241,0.55) !important;
+    filter: brightness(1.1) !important;
+}
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg,
+        #6366f1 0%, #8b5cf6 50%, #10b981 100%) !important;
+    font-size: 1rem !important;
+    padding: 0.8rem 1.5rem !important;
+    box-shadow: 0 6px 25px rgba(99,102,241,0.45) !important;
+}
+.stDownloadButton > button {
+    background: rgba(99,102,241,0.15) !important;
+    border: 1px solid rgba(99,102,241,0.35) !important;
+    color: #a5b4fc !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+}
+.stDownloadButton > button:hover {
+    background: rgba(99,102,241,0.28) !important;
+    box-shadow: 0 0 15px rgba(99,102,241,0.35) !important;
+}
+
+/* ══════════════════════════════════════
+   10. 사이드바
+══════════════════════════════════════ */
+[data-testid="stSidebar"] {
+    background: rgba(10,10,26,0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border-right: 1px solid rgba(255,255,255,0.07) !important;
+}
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] div,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: #d4d4e8 !important;
+}
+
+/* ══════════════════════════════════════
+   11. Expander
+══════════════════════════════════════ */
+.stExpander {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    border-radius: 12px !important;
+}
+.stExpander summary span,
+.stExpander summary p {
+    color: #c4b5fd !important;
+    font-weight: 500 !important;
+}
+
+/* ══════════════════════════════════════
+   12. 데이터프레임 / 테이블
+══════════════════════════════════════ */
+[data-testid="stDataFrame"] th {
+    background: rgba(99,102,241,0.28) !important;
+    color: #c7d2fe !important;
+}
+[data-testid="stDataFrame"] td {
+    color: #cbd5e1 !important;
+}
+
+/* ══════════════════════════════════════
+   13. Spinner
+══════════════════════════════════════ */
+[data-testid="stSpinner"] p,
+[data-testid="stSpinner"] span {
+    color: #c4b5fd !important;
+}
+
+/* ══════════════════════════════════════
+   14. 기타 Streamlit 요소 정리
+══════════════════════════════════════ */
+hr { border-color: rgba(255,255,255,0.08) !important; }
+[data-testid="stToolbar"]  { display: none !important; }
+#MainMenu { visibility: hidden !important; }
+footer    { visibility: hidden !important; }
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: rgba(255,255,255,0.03); }
+::-webkit-scrollbar-thumb  { background: rgba(99,102,241,0.50); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.80); }
+
+/* ══════════════════════════════════════
+   15. 커스텀 컴포넌트 클래스들
+══════════════════════════════════════ */
+
+/* 글래스 카드 */
 .glass-card {
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(20px);
@@ -71,20 +391,21 @@ html, body, [class*="css"], .stApp {
     border-radius: 20px;
     padding: 1.6rem;
     margin-bottom: 1.2rem;
-    box-shadow:
-        0 8px 32px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.08);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.08);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: #e2e8f0;
 }
 .glass-card:hover {
     transform: translateY(-2px);
-    box-shadow:
-        0 16px 48px rgba(0,0,0,0.5),
-        0 0 0 1px rgba(99,102,241,0.3),
-        inset 0 1px 0 rgba(255,255,255,0.12);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(99,102,241,0.30),
+                inset 0 1px 0 rgba(255,255,255,0.12);
 }
+.glass-card p, .glass-card span, .glass-card div { color: #e2e8f0 !important; }
+.glass-card h1, .glass-card h2, .glass-card h3 { color: #ffffff !important; }
 
-/* ── 히어로 배너 ── */
+/* 히어로 배너 */
 .hero {
     background: linear-gradient(135deg,
         rgba(99,102,241,0.25) 0%,
@@ -96,9 +417,8 @@ html, body, [class*="css"], .stApp {
     border-radius: 24px;
     padding: 2.4rem 2rem 2rem;
     margin-bottom: 1.6rem;
-    box-shadow:
-        0 20px 60px rgba(99,102,241,0.20),
-        inset 0 1px 0 rgba(255,255,255,0.10);
+    box-shadow: 0 20px 60px rgba(99,102,241,0.20),
+                inset 0 1px 0 rgba(255,255,255,0.10);
     position: relative;
     overflow: hidden;
 }
@@ -115,46 +435,47 @@ html, body, [class*="css"], .stApp {
         rgba(16,185,129,0.05) 180deg,
         transparent 240deg,
         rgba(139,92,246,0.05) 300deg,
-        transparent 360deg
-    );
+        transparent 360deg);
     animation: rotate 20s linear infinite;
     pointer-events: none;
 }
-@keyframes rotate { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
 .hero-label {
     font-size: 0.68rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: rgba(16,185,129,0.85);
+    color: rgba(16,185,129,0.90) !important;
     margin-bottom: 0.6rem;
     font-family: 'DM Mono', monospace;
 }
 .hero h1 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: white;
+    color: white !important;
     margin-bottom: 0.5rem;
     text-shadow: 0 0 30px rgba(99,102,241,0.5);
 }
 .hero p {
     font-size: 0.82rem;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.70) !important;
     line-height: 1.75;
 }
 .hero-version {
     font-family: 'DM Mono', monospace;
     font-size: 0.70rem;
-    color: rgba(16,185,129,0.70);
+    color: rgba(16,185,129,0.80) !important;
     margin-top: 0.5rem;
 }
 
-/* ── 카드 라벨 ── */
+/* 카드 라벨 */
 .card-label {
     font-size: 0.65rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(99,102,241,0.90);
+    color: rgba(165,180,252,1) !important;
     font-weight: 700;
     font-family: 'DM Mono', monospace;
     margin-bottom: 1rem;
@@ -165,7 +486,7 @@ html, body, [class*="css"], .stApp {
     font-size: 0.65rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(16,185,129,0.90);
+    color: rgba(110,231,183,1) !important;
     font-weight: 700;
     font-family: 'DM Mono', monospace;
     margin-bottom: 1rem;
@@ -173,36 +494,18 @@ html, body, [class*="css"], .stApp {
     border-bottom: 1px solid rgba(16,185,129,0.20);
 }
 
-/* ── 점수 원형 게이지 ── */
-.gauge-wrap {
-    text-align: center;
-    padding: 0.8rem 0.4rem;
-}
-.gauge-num {
-    font-size: 1.9rem;
-    font-weight: 700;
-    font-family: 'DM Mono', monospace;
-    line-height: 1;
-    text-shadow: 0 0 20px currentColor;
-}
-.gauge-lbl {
-    font-size: 0.68rem;
-    color: rgba(255,255,255,0.45);
-    margin-top: 0.25rem;
-}
-.gauge-cmt {
-    font-size: 0.64rem;
-    color: rgba(255,255,255,0.35);
-    margin-top: 0.3rem;
-    line-height: 1.3;
-}
+/* 점수 게이지 */
+.gauge-wrap  { text-align: center; padding: 0.8rem 0.4rem; }
+.gauge-num   { font-size: 1.9rem; font-weight: 700; font-family: 'DM Mono', monospace;
+               line-height: 1; text-shadow: 0 0 20px currentColor; }
+.gauge-lbl   { font-size: 0.68rem; color: rgba(255,255,255,0.55) !important; margin-top: 0.25rem; }
+.gauge-cmt   { font-size: 0.64rem; color: rgba(255,255,255,0.40) !important;
+               margin-top: 0.3rem; line-height: 1.3; }
+.score-high  { color: #10b981 !important; }
+.score-mid   { color: #f59e0b !important; }
+.score-low   { color: #ef4444 !important; }
 
-/* 점수 색상 */
-.score-high  { color: #10b981; }
-.score-mid   { color: #f59e0b; }
-.score-low   { color: #ef4444; }
-
-/* ── 빅 스코어 ── */
+/* 빅 스코어 */
 .big-score {
     font-size: 5rem;
     font-weight: 900;
@@ -212,12 +515,12 @@ html, body, [class*="css"], .stApp {
     letter-spacing: -2px;
 }
 
-/* ── 성분 칩 ── */
+/* 성분 칩 */
 .ing-chip {
     display: inline-block;
-    background: rgba(99,102,241,0.15);
-    border: 1px solid rgba(99,102,241,0.35);
-    color: rgba(165,180,252,1);
+    background: rgba(99,102,241,0.16);
+    border: 1px solid rgba(99,102,241,0.38);
+    color: rgba(165,180,252,1) !important;
     border-radius: 8px;
     padding: 0.28rem 0.75rem;
     font-size: 0.78rem;
@@ -227,16 +530,16 @@ html, body, [class*="css"], .stApp {
     cursor: default;
 }
 .ing-chip:hover {
-    background: rgba(99,102,241,0.30);
-    border-color: rgba(99,102,241,0.70);
-    box-shadow: 0 0 12px rgba(99,102,241,0.40);
+    background: rgba(99,102,241,0.32);
+    border-color: rgba(99,102,241,0.72);
+    box-shadow: 0 0 12px rgba(99,102,241,0.42);
     transform: translateY(-1px);
 }
 .scalp-chip {
     display: inline-block;
-    background: rgba(16,185,129,0.15);
-    border: 1px solid rgba(16,185,129,0.35);
-    color: rgba(110,231,183,1);
+    background: rgba(16,185,129,0.16);
+    border: 1px solid rgba(16,185,129,0.38);
+    color: rgba(110,231,183,1) !important;
     border-radius: 8px;
     padding: 0.28rem 0.75rem;
     font-size: 0.78rem;
@@ -246,13 +549,13 @@ html, body, [class*="css"], .stApp {
     cursor: default;
 }
 .scalp-chip:hover {
-    background: rgba(16,185,129,0.30);
-    border-color: rgba(16,185,129,0.70);
-    box-shadow: 0 0 12px rgba(16,185,129,0.40);
+    background: rgba(16,185,129,0.32);
+    border-color: rgba(16,185,129,0.72);
+    box-shadow: 0 0 12px rgba(16,185,129,0.42);
     transform: translateY(-1px);
 }
 
-/* ── 상태 칩 ── */
+/* 상태 칩 */
 .chip {
     display: inline-flex; align-items: center;
     padding: 0.28rem 0.75rem;
@@ -261,13 +564,14 @@ html, body, [class*="css"], .stApp {
     font-weight: 600;
     margin: 0.2rem;
 }
-.chip-good { background:rgba(16,185,129,0.15); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3); }
-.chip-mid  { background:rgba(59,130,246,0.15);  color:#93c5fd; border:1px solid rgba(59,130,246,0.3); }
-.chip-warn { background:rgba(245,158,11,0.15);  color:#fcd34d; border:1px solid rgba(245,158,11,0.3); }
-.chip-bad  { background:rgba(239,68,68,0.15);   color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }
-.chip-neu  { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.12); }
+.chip-good { background:rgba(16,185,129,0.16); color:#6ee7b7 !important; border:1px solid rgba(16,185,129,0.32); }
+.chip-mid  { background:rgba(59,130,246,0.16);  color:#93c5fd !important; border:1px solid rgba(59,130,246,0.32); }
+.chip-warn { background:rgba(245,158,11,0.16);  color:#fcd34d !important; border:1px solid rgba(245,158,11,0.32); }
+.chip-bad  { background:rgba(239,68,68,0.16);   color:#fca5a5 !important; border:1px solid rgba(239,68,68,0.32); }
+.chip-neu  { background:rgba(255,255,255,0.07); color:rgba(210,210,235,0.80) !important;
+             border:1px solid rgba(255,255,255,0.13); }
 
-/* ── 혼합 바 ── */
+/* 혼합 카드 */
 .mixing-card {
     background: rgba(255,255,255,0.04);
     backdrop-filter: blur(20px);
@@ -280,12 +584,14 @@ html, body, [class*="css"], .stApp {
 .mixing-row {
     display: flex; align-items: center; gap: 0.8rem;
     padding: 0.55rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.mixing-ing  { font-weight: 600; flex: 1; font-size: 0.84rem; color: rgba(255,255,255,0.85); }
-.mixing-pct  { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.88rem; color: #10b981; min-width: 48px; }
-.mixing-ml   { font-size: 0.78rem; color: #93c5fd; font-weight: 600; min-width: 52px; font-family: 'DM Mono', monospace; }
-.mixing-bar-wrap { flex: 2; background: rgba(255,255,255,0.08); border-radius: 4px; height: 7px; }
+.mixing-ing  { font-weight: 600; flex: 1; font-size: 0.84rem; color: rgba(255,255,255,0.90) !important; }
+.mixing-pct  { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.88rem;
+               color: #10b981 !important; min-width: 48px; }
+.mixing-ml   { font-size: 0.78rem; color: #93c5fd !important; font-weight: 600;
+               min-width: 52px; font-family: 'DM Mono', monospace; }
+.mixing-bar-wrap { flex: 2; background: rgba(255,255,255,0.09); border-radius: 4px; height: 7px; }
 .mixing-bar {
     height: 7px; border-radius: 4px;
     background: linear-gradient(90deg, #10b981, #6ee7b7);
@@ -297,14 +603,14 @@ html, body, [class*="css"], .stApp {
     background: linear-gradient(90deg, #6366f1, #a78bfa);
     box-shadow: 0 0 8px rgba(99,102,241,0.5);
 }
-.mixing-conc { font-size: 0.68rem; color: rgba(255,255,255,0.30); min-width: 72px; }
+.mixing-conc { font-size: 0.68rem; color: rgba(200,200,230,0.45) !important; min-width: 72px; }
 
-/* ── 스텝 배지 ── */
+/* 스텝 배지 */
 .step-badge {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px; border-radius: 50%;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white; font-size: 0.68rem; font-weight: 700;
+    color: white !important; font-size: 0.68rem; font-weight: 700;
     margin-right: 0.5rem; flex-shrink: 0;
     box-shadow: 0 0 8px rgba(99,102,241,0.5);
 }
@@ -312,84 +618,84 @@ html, body, [class*="css"], .stApp {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px; border-radius: 50%;
     background: linear-gradient(135deg, #10b981, #059669);
-    color: white; font-size: 0.68rem; font-weight: 700;
+    color: white !important; font-size: 0.68rem; font-weight: 700;
     margin-right: 0.5rem; flex-shrink: 0;
     box-shadow: 0 0 8px rgba(16,185,129,0.5);
 }
 
-/* ── 우선 개선 항목 ── */
+/* 우선 개선 항목 */
 .priority-item {
     display: flex; align-items: center; gap: 0.8rem;
     padding: 0.65rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 .priority-num {
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white; border-radius: 50%;
+    color: white !important; border-radius: 50%;
     width: 24px; height: 24px; min-width: 24px;
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 0.70rem; font-weight: 700;
     box-shadow: 0 0 10px rgba(99,102,241,0.4);
 }
-.priority-label { font-weight: 600; flex: 1; font-size: 0.84rem; color: rgba(255,255,255,0.85); }
+.priority-label { font-weight: 600; flex: 1; font-size: 0.84rem; color: rgba(255,255,255,0.90) !important; }
 .priority-score { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.84rem; }
-.priority-msg   { font-size: 0.75rem; color: rgba(255,255,255,0.40); }
+.priority-msg   { font-size: 0.75rem; color: rgba(200,200,230,0.55) !important; }
 
-/* ── 배너 ── */
+/* 배너들 */
 .patent-banner {
     background: rgba(59,130,246,0.12);
-    border: 1px solid rgba(59,130,246,0.25);
+    border: 1px solid rgba(59,130,246,0.28);
     border-radius: 10px;
     padding: 0.6rem 1rem;
     font-size: 0.76rem;
-    color: #93c5fd;
+    color: #93c5fd !important;
     margin-bottom: 1rem;
     text-align: center;
     font-weight: 600;
 }
 .medical-disclaimer {
     background: rgba(239,68,68,0.10);
-    border: 1px solid rgba(239,68,68,0.25);
+    border: 1px solid rgba(239,68,68,0.28);
     border-radius: 10px;
     padding: 0.6rem 1rem;
     font-size: 0.76rem;
-    color: #fca5a5;
+    color: #fca5a5 !important;
     margin-bottom: 1rem;
     text-align: center;
     font-weight: 600;
 }
 .air-real {
     background: rgba(16,185,129,0.10);
-    border: 1px solid rgba(16,185,129,0.25);
+    border: 1px solid rgba(16,185,129,0.28);
     border-radius: 10px;
     padding: 0.5rem 1rem;
     font-size: 0.76rem;
-    color: #6ee7b7;
+    color: #6ee7b7 !important;
     margin-bottom: 0.8rem;
     font-weight: 600;
 }
 .air-mock {
     background: rgba(245,158,11,0.10);
-    border: 1px solid rgba(245,158,11,0.25);
+    border: 1px solid rgba(245,158,11,0.28);
     border-radius: 10px;
     padding: 0.5rem 1rem;
     font-size: 0.76rem;
-    color: #fcd34d;
+    color: #fcd34d !important;
     margin-bottom: 0.8rem;
     font-weight: 600;
 }
 .workshop-banner {
     background: rgba(16,185,129,0.08);
-    border: 1px solid rgba(16,185,129,0.20);
+    border: 1px solid rgba(16,185,129,0.22);
     border-radius: 10px;
     padding: 0.7rem 1rem;
     margin-bottom: 1rem;
     font-size: 0.80rem;
-    color: #6ee7b7;
+    color: #6ee7b7 !important;
     font-weight: 500;
 }
 
-/* ── SEEI 박스 ── */
+/* SEEI 박스 */
 .seei-box {
     background: rgba(16,185,129,0.06);
     backdrop-filter: blur(20px);
@@ -400,34 +706,36 @@ html, body, [class*="css"], .stApp {
 }
 .kma-box {
     background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(245,158,11,0.20);
+    border: 1px solid rgba(245,158,11,0.22);
     border-radius: 12px;
     padding: 0.8rem;
     margin-top: 0.7rem;
 }
 
-/* ── 동의 박스 ── */
+/* 동의 박스 */
 .consent-box {
     background: rgba(255,255,255,0.04);
-    border-left: 3px solid rgba(99,102,241,0.60);
+    border-left: 3px solid rgba(99,102,241,0.65);
     border-radius: 0 10px 10px 0;
     padding: 0.9rem 1rem;
     font-size: 0.78rem;
-    color: rgba(255,255,255,0.55);
+    color: rgba(220,220,240,0.70) !important;
     line-height: 1.75;
     margin-bottom: 1rem;
 }
 
-/* ── confound 카드 ── */
+/* 혼탁 카드 */
 .confound-card {
     background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.09);
     border-radius: 16px;
     padding: 1.2rem;
     margin-bottom: 1rem;
+    color: #e2e8f0 !important;
 }
+.confound-card p, .confound-card span, .confound-card div { color: #e2e8f0 !important; }
 
-/* ── 두피 카드 ── */
+/* 두피 섹션 */
 .scalp-section {
     background: rgba(16,185,129,0.06);
     border: 1px solid rgba(16,185,129,0.18);
@@ -435,99 +743,14 @@ html, body, [class*="css"], .stApp {
     padding: 1.2rem;
     margin-bottom: 1rem;
 }
-
-/* ── Streamlit 기본 요소 오버라이드 ── */
-.stTextInput > div > div > input,
-.stSelectbox > div > div > div,
-.stMultiSelect > div > div {
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    border-radius: 10px !important;
-    color: white !important;
-}
-.stTextInput > div > div > input:focus {
-    border-color: rgba(99,102,241,0.60) !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
-}
-label, .stCheckbox label p {
-    color: rgba(255,255,255,0.75) !important;
-}
-.stButton > button {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    font-size: 0.88rem !important;
-    padding: 0.6rem 1.2rem !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 4px 15px rgba(99,102,241,0.35) !important;
-}
-.stButton > button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(99,102,241,0.55) !important;
-}
-.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #10b981 100%) !important;
-    font-size: 1rem !important;
-    padding: 0.8rem 1.5rem !important;
-    box-shadow: 0 6px 25px rgba(99,102,241,0.45) !important;
-}
-.stDownloadButton > button {
-    background: rgba(99,102,241,0.15) !important;
-    border: 1px solid rgba(99,102,241,0.35) !important;
-    color: #a5b4fc !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    transition: all 0.2s ease !important;
-}
-.stDownloadButton > button:hover {
-    background: rgba(99,102,241,0.28) !important;
-    box-shadow: 0 0 15px rgba(99,102,241,0.35) !important;
-}
-.stAlert {
-    background: rgba(245,158,11,0.10) !important;
-    border: 1px solid rgba(245,158,11,0.25) !important;
-    border-radius: 10px !important;
-    color: #fcd34d !important;
-}
-.stSuccess {
-    background: rgba(16,185,129,0.10) !important;
-    border: 1px solid rgba(16,185,129,0.25) !important;
-    color: #6ee7b7 !important;
-}
-.stInfo > div {
-    background: rgba(59,130,246,0.10) !important;
-    border: 1px solid rgba(59,130,246,0.25) !important;
-    color: #93c5fd !important;
-    border-radius: 10px !important;
-}
-.stWarning > div {
-    background: rgba(245,158,11,0.10) !important;
-    border: 1px solid rgba(245,158,11,0.25) !important;
-    border-radius: 10px !important;
-}
-.stError > div {
-    background: rgba(239,68,68,0.10) !important;
-    border: 1px solid rgba(239,68,68,0.25) !important;
-    border-radius: 10px !important;
-}
-hr { border-color: rgba(255,255,255,0.08) !important; }
-.stExpander {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 12px !important;
-}
-/* 사이드바 */
-[data-testid="stSidebar"] {
-    background: rgba(10,10,26,0.85) !important;
-    backdrop-filter: blur(20px) !important;
-    border-right: 1px solid rgba(255,255,255,0.06) !important;
-}
-[data-testid="stSidebar"] * { color: rgba(255,255,255,0.80) !important; }
+.scalp-section p, .scalp-section span, .scalp-section div { color: #e2e8f0 !important; }
 
 /* 결과 텍스트 */
-.result-text { font-size: 0.84rem; color: rgba(255,255,255,0.65); line-height: 1.7; }
+.result-text {
+    font-size: 0.84rem;
+    color: rgba(220,220,245,0.80) !important;
+    line-height: 1.7;
+}
 
 /* 탈모 위험 박스 */
 .hair-loss-box {
@@ -537,7 +760,9 @@ hr { border-color: rgba(255,255,255,0.08) !important; }
     padding: 0.7rem 1rem;
     font-size: 0.82rem;
     margin-top: 0.8rem;
+    color: #e2e8f0 !important;
 }
+.hair-loss-box span { color: inherit !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -714,7 +939,6 @@ def get_pollution_alert(pm25, ceei):
         return "장기 오염 누적 — 레티닐팔미테이트·펩타이드 광노화 대응 권장"
     return ""
 
-# SVG 원형 게이지
 def svg_gauge(score, label, comment="", size=100):
     c = score_color(score)
     r = 38
@@ -737,11 +961,12 @@ def svg_gauge(score, label, comment="", size=100):
       font-family="DM Mono,monospace"
       style="filter:drop-shadow(0 0 4px {c})">{score}</text>
     <text x="50" y="60" text-anchor="middle"
-      fill="rgba(255,255,255,0.45)" font-size="8.5"
+      fill="rgba(255,255,255,0.60)" font-size="8.5"
       font-family="Noto Sans KR,sans-serif">{label}</text>
   </svg>
-  <div style="font-size:0.62rem;color:rgba(255,255,255,0.32);
-    line-height:1.3;margin-top:0.1rem;max-width:90px;margin-left:auto;margin-right:auto;">
+  <div style="font-size:0.62rem;color:rgba(210,210,240,0.50);
+    line-height:1.3;margin-top:0.1rem;max-width:90px;
+    margin-left:auto;margin-right:auto;">
     {comment}</div>
 </div>"""
 
@@ -805,13 +1030,21 @@ def calc_seei(air, residence_years, uv_data=None, humidity_data=None):
     hum_corr = humidity_correction(hum_val)
     seei = round(composite * residence_years * season * uv_corr * hum_corr, 1)
     if seei < 50:
-        grade,chip,msg = "낮음","<span class='chip chip-good'>SEEI "+str(seei)+" 낮음</span>","복합 환경 노출 낮음 — 기본 두피 보습·청결 유지"
+        grade,chip,msg = ("낮음",
+            "<span class='chip chip-good'>SEEI "+str(seei)+" 낮음</span>",
+            "복합 환경 노출 낮음 — 기본 두피 보습·청결 유지")
     elif seei < 150:
-        grade,chip,msg = "보통","<span class='chip chip-mid'>SEEI "+str(seei)+" 보통</span>","중간 수준 복합 오염 — 두피 항산화·항균 성분 정기 사용 권장"
+        grade,chip,msg = ("보통",
+            "<span class='chip chip-mid'>SEEI "+str(seei)+" 보통</span>",
+            "중간 수준 복합 오염 — 두피 항산화·항균 성분 정기 사용 권장")
     elif seei < 300:
-        grade,chip,msg = "높음","<span class='chip chip-warn'>SEEI "+str(seei)+" 높음</span>","높은 복합 오염 누적 — 탈모 위험 증가, 두피케어 집중 필요"
+        grade,chip,msg = ("높음",
+            "<span class='chip chip-warn'>SEEI "+str(seei)+" 높음</span>",
+            "높은 복합 오염 누적 — 탈모 위험 증가, 두피케어 집중 필요")
     else:
-        grade,chip,msg = "매우높음","<span class='chip chip-bad'>SEEI "+str(seei)+" 매우높음</span>","매우 높은 누적 — 두피 전문 케어·피부과 상담 권장"
+        grade,chip,msg = ("매우높음",
+            "<span class='chip chip-bad'>SEEI "+str(seei)+" 매우높음</span>",
+            "매우 높은 누적 — 두피 전문 케어·피부과 상담 권장")
     return (seei,grade,chip,msg,components,season,uv_val,uv_gstr,hum_val,hum_corr)
 
 # ══════════════════════════════════════════
@@ -1059,20 +1292,20 @@ def show_mixing_card(mixing, title, is_scalp=False):
     st.markdown(rows, unsafe_allow_html=True)
     st.markdown(
         f"<div style='text-align:right;font-size:0.80rem;font-weight:700;"
-        f"color:rgba(255,255,255,0.5);padding:0.5rem 0;'>총 {mixing['total_ml']}ml</div>",
+        f"color:rgba(220,220,240,0.65);padding:0.5rem 0;'>총 {mixing['total_ml']}ml</div>",
         unsafe_allow_html=True)
     badge = "step-badge-green" if is_scalp else "step-badge"
     st.markdown(
         "<div style='margin-top:0.8rem;font-size:0.75rem;font-weight:700;"
-        "color:rgba(255,255,255,0.5);margin-bottom:0.5rem;letter-spacing:0.08em;'>"
+        "color:rgba(210,210,240,0.65);margin-bottom:0.5rem;letter-spacing:0.08em;'>"
         "MIXING ORDER</div>", unsafe_allow_html=True)
     for dn, s in enumerate(mixing["steps"], start=1):
         items_str = " + ".join(s["items"])
         st.markdown(
             f"<div style='display:flex;align-items:center;gap:0.5rem;"
-            f"padding:0.4rem 0;font-size:0.82rem;color:rgba(255,255,255,0.70);'>"
+            f"padding:0.4rem 0;font-size:0.82rem;color:rgba(220,220,240,0.80);'>"
             f"<span class='{badge}'>{dn}</span>"
-            f"<span><b style='color:rgba(255,255,255,0.85);'>{s['label']}</b>"
+            f"<span><b style='color:rgba(255,255,255,0.92);'>{s['label']}</b>"
             f" — {items_str}</span></div>",
             unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -1136,7 +1369,6 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
                 unsafe_allow_html=True)
     show_air_status(air)
 
-    # 종합 결과 카드
     sc = score_color(overall)
     st.markdown(
         f"<div class='glass-card'>"
@@ -1144,7 +1376,7 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
         f"<div style='display:flex;align-items:center;gap:2rem;flex-wrap:wrap;'>"
         f"<div style='text-align:center;'>"
         f"<div class='big-score' style='color:{sc};'>{overall}</div>"
-        f"<div style='font-size:0.70rem;color:rgba(255,255,255,0.40);margin-top:0.3rem;"
+        f"<div style='font-size:0.70rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
         f"font-family:DM Mono,monospace;letter-spacing:0.1em;'>OVERALL SCORE</div>"
         f"</div>"
         f"<div style='flex:1;'>"
@@ -1158,7 +1390,6 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
     if alert:
         st.warning(alert)
 
-    # 5지표 SVG 게이지
     metrics = [
         ("주름",   result.get("wrinkle_score",0),  result.get("wrinkle_comment","")),
         ("모공",   result.get("pore_score",0),      result.get("pore_comment","")),
@@ -1174,7 +1405,6 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
             st.markdown(svg_gauge(val,lbl,cmt,96), unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # 추천 성분
     ing_html = "".join([f"<span class='ing-chip'>{ing}</span>" for ing in ings])
     st.markdown(
         f"<div class='glass-card'><div class='card-label'>AI 추천 화장품 성분</div>"
@@ -1188,7 +1418,6 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
         show_mixing_card(mixing,
             f"피부 맞춤 혼합 — {chosen_ml}ml / {skin_type}",is_scalp=False)
 
-    # CEEI
     st.markdown(
         f"<div class='glass-card'><div class='card-label'>CEEI 피부 누적 환경노출지수</div>"
         f"<div style='display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.7rem;'>"
@@ -1198,7 +1427,6 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
         f"<div class='result-text'>{ceei_msg}</div></div>",
         unsafe_allow_html=True)
 
-    # 우선 개선
     scores = {"주름":result.get("wrinkle_score",0),"모공":result.get("pore_score",0),
               "피부결":result.get("texture_score",0),"피부톤":result.get("tone_score",0),
               "수분":result.get("moisture_score",0)}
@@ -1212,7 +1440,8 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
             f"<div class='priority-item'>"
             f"<span class='priority-num'>{i+1}</span>"
             f"<span class='priority-label'>{lbl}</span>"
-            f"<span class='priority-score' style='color:{score_color(sc_)};text-shadow:0 0 10px {score_color(sc_)};'>{sc_}</span>"
+            f"<span class='priority-score' style='color:{score_color(sc_)};"
+            f"text-shadow:0 0 10px {score_color(sc_)};'>{sc_}</span>"
             f"<span class='priority-msg'>{cm}</span></div>",
             unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -1260,7 +1489,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<div style='display:flex;align-items:center;gap:2rem;flex-wrap:wrap;'>"
         f"<div style='text-align:center;'>"
         f"<div class='big-score' style='color:{sc};'>{overall}</div>"
-        f"<div style='font-size:0.70rem;color:rgba(255,255,255,0.40);margin-top:0.3rem;"
+        f"<div style='font-size:0.70rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
         f"font-family:DM Mono,monospace;letter-spacing:0.1em;'>SCALP SCORE</div>"
         f"</div>"
         f"<div style='flex:1;'>"
@@ -1271,7 +1500,6 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"</div></div></div>",
         unsafe_allow_html=True)
 
-    # 두피 6지표 SVG 게이지
     scalp_metrics = [
         ("각질",     result.get("keratin_score",0),          result.get("keratin_comment","")),
         ("모공피지", result.get("pore_score",0),             result.get("pore_comment","")),
@@ -1290,11 +1518,11 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
     hlc = result.get("hair_loss_risk_comment","")
     st.markdown(
         f"<div class='hair-loss-box'>"
-        f"<span style='color:rgba(255,255,255,0.60);font-size:0.80rem;'>"
+        f"<span style='color:rgba(220,220,240,0.75);font-size:0.80rem;'>"
         f"탈모 진행도 (참고용)</span> "
         f"<span style='font-weight:700;font-family:DM Mono,monospace;"
         f"color:{score_color(hl)};text-shadow:0 0 10px {score_color(hl)};'>{hl}점</span>"
-        f"<span style='color:rgba(255,255,255,0.45);font-size:0.78rem;'> — {hlc}</span></div>",
+        f"<span style='color:rgba(200,200,230,0.60);font-size:0.78rem;'> — {hlc}</span></div>",
         unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1313,13 +1541,12 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
             f"두피 맞춤 혼합 — {chosen_ml}ml / {scalp_type} / SEEI {seei_grade}",
             is_scalp=True)
 
-    # SEEI 박스
     comp_boxes = "".join([
-        f"<div style='background:rgba(255,255,255,0.04);border:1px solid rgba(16,185,129,0.15);"
+        f"<div style='background:rgba(255,255,255,0.05);border:1px solid rgba(16,185,129,0.16);"
         f"border-radius:10px;padding:0.6rem;text-align:center;'>"
         f"<div style='font-weight:700;color:#6ee7b7;font-size:0.88rem;"
         f"font-family:DM Mono,monospace;'>{v}</div>"
-        f"<div style='color:rgba(255,255,255,0.38);font-size:0.65rem;margin-top:0.2rem;'>{k}</div></div>"
+        f"<div style='color:rgba(200,200,230,0.55);font-size:0.65rem;margin-top:0.2rem;'>{k}</div></div>"
         for k,v in seei_comp.items()])
     uv_d  = f"{uv_val:.1f}" if uv_val is not None else "--"
     hum_d = f"{hum_val:.0f}%" if hum_val is not None else "--"
@@ -1328,8 +1555,8 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
     st.markdown(
         f"<div class='seei-box'>"
         f"<div style='font-size:0.65rem;letter-spacing:0.16em;text-transform:uppercase;"
-        f"color:rgba(16,185,129,0.85);font-weight:700;font-family:DM Mono,monospace;"
-        f"margin-bottom:0.8rem;padding-bottom:0.5rem;border-bottom:1px solid rgba(16,185,129,0.15);'>"
+        f"color:rgba(110,231,183,0.90);font-weight:700;font-family:DM Mono,monospace;"
+        f"margin-bottom:0.8rem;padding-bottom:0.5rem;border-bottom:1px solid rgba(16,185,129,0.18);'>"
         f"SEEI v3 — 두피 복합 환경노출지수 (특허 출원 중)</div>"
         f"<div style='display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem;'>"
         f"{seei_chip} {ceei_chip}"
@@ -1338,30 +1565,29 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;"
         f"margin-bottom:0.8rem;'>{comp_boxes}</div>"
         f"<div class='kma-box'>"
-        f"<div style='font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.40);"
+        f"<div style='font-size:0.68rem;font-weight:700;color:rgba(220,220,240,0.55);"
         f"margin-bottom:0.5rem;letter-spacing:0.1em;'>KMA 기상청</div>"
         f"<div style='display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;'>"
-        f"<div style='background:rgba(255,255,255,0.04);border:1px solid rgba(245,158,11,0.20);"
+        f"<div style='background:rgba(255,255,255,0.04);border:1px solid rgba(245,158,11,0.22);"
         f"border-radius:10px;padding:0.6rem;text-align:center;'>"
         f"<div style='font-weight:700;color:{uv_color};font-size:1rem;"
         f"font-family:DM Mono,monospace;text-shadow:0 0 10px {uv_color};'>{uv_d}{uv_mt}</div>"
-        f"<div style='color:rgba(255,255,255,0.38);font-size:0.65rem;margin-top:0.2rem;'>"
+        f"<div style='color:rgba(200,200,230,0.55);font-size:0.65rem;margin-top:0.2rem;'>"
         f"자외선 [{uv_gstr}]</div>"
-        f"<div style='color:rgba(255,255,255,0.25);font-size:0.60rem;'>UV ×{uv_corr}</div></div>"
-        f"<div style='background:rgba(255,255,255,0.04);border:1px solid rgba(59,130,246,0.20);"
+        f"<div style='color:rgba(180,180,220,0.35);font-size:0.60rem;'>UV ×{uv_corr}</div></div>"
+        f"<div style='background:rgba(255,255,255,0.04);border:1px solid rgba(59,130,246,0.22);"
         f"border-radius:10px;padding:0.6rem;text-align:center;'>"
         f"<div style='font-weight:700;color:#93c5fd;font-size:1rem;"
         f"font-family:DM Mono,monospace;text-shadow:0 0 10px #93c5fd;'>{hum_d}{hum_mt}</div>"
-        f"<div style='color:rgba(255,255,255,0.38);font-size:0.65rem;margin-top:0.2rem;'>습도</div>"
-        f"<div style='color:rgba(255,255,255,0.25);font-size:0.60rem;'>습도 ×{hum_corr}</div></div>"
+        f"<div style='color:rgba(200,200,230,0.55);font-size:0.65rem;margin-top:0.2rem;'>습도</div>"
+        f"<div style='color:rgba(180,180,220,0.35);font-size:0.60rem;'>습도 ×{hum_corr}</div></div>"
         f"</div></div>"
-        f"<div style='font-size:0.72rem;color:rgba(255,255,255,0.28);margin-top:0.6rem;"
+        f"<div style='font-size:0.72rem;color:rgba(180,180,220,0.40);margin-top:0.6rem;"
         f"font-style:italic;font-family:DM Mono,monospace;'>"
         f"SEEI = (PM2.5×0.40+PM10×0.25+NO2×0.20+O3×0.15)×거주기간×계절×UV×습도</div>"
         f"<div class='result-text' style='margin-top:0.5rem;'>{seei_msg}</div></div>",
         unsafe_allow_html=True)
 
-    # 우선 개선 (두피)
     pri_scores = {
         "각질":result.get("keratin_score",0),"모공피지":result.get("pore_score",0),
         "모발굵기":result.get("hair_thickness_score",0),
@@ -1381,7 +1607,8 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
             f"<span class='priority-num' style='background:linear-gradient(135deg,#10b981,#059669);"
             f"box-shadow:0 0 10px rgba(16,185,129,0.4);'>{i+1}</span>"
             f"<span class='priority-label'>{lbl}</span>"
-            f"<span class='priority-score' style='color:{score_color(sc_)};text-shadow:0 0 10px {score_color(sc_)};'>{sc_}</span>"
+            f"<span class='priority-score' style='color:{score_color(sc_)};"
+            f"text-shadow:0 0 10px {score_color(sc_)};'>{sc_}</span>"
             f"<span class='priority-msg'>{cm}</span></div>",
             unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -1422,7 +1649,7 @@ def _html_head(title, bg_from, bg_to):
         f"padding:20px 28px;margin-bottom:16px;"
         f"display:flex;justify-content:space-between;align-items:center;}}"
         f".header h1{{font-size:18px;font-weight:700;color:white;}}"
-        f".header .sub{{font-size:9px;opacity:0.5;margin-top:3px;color:#a5b4fc;}}"
+        f".header .sub{{font-size:9px;opacity:0.6;margin-top:3px;color:#a5b4fc;}}"
         f".card{{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);"
         f"border-radius:14px;padding:16px 20px;margin-bottom:12px;}}"
         f".stitle{{font-size:8px;font-weight:700;letter-spacing:0.14em;"
@@ -1437,7 +1664,7 @@ def _html_head(title, bg_from, bg_to):
         f".chip{{background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:10px;"
         f"padding:2px 8px;font-size:9px;display:inline-block;margin:2px;"
         f"border:1px solid rgba(255,255,255,0.10);}}"
-        f".footer{{text-align:center;color:rgba(255,255,255,0.25);"
+        f".footer{{text-align:center;color:rgba(255,255,255,0.30);"
         f"font-size:8px;padding:12px;margin-top:8px;}}"
         f".print-btn{{position:fixed;bottom:20px;right:20px;"
         f"background:linear-gradient(135deg,#6366f1,#8b5cf6);"
@@ -1745,7 +1972,7 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"② 세럼을 두피에 직접 소량 도포 (1회 약 1~2ml)<br>"
         f"③ 손가락 끝으로 두피 원형 마사지 1~2분<br>"
         f"④ 씻어내지 않고 미지근한 바람으로 건조 (Leave-on)<br>"
-        f"<span style='color:#64748b;font-size:9px;'>보관: 서늘한 곳 / 개봉 후 3개월 내 사용 / 눈 접촉 금지</span>"
+        f"<span style='font-size:9px;color:#64748b;'>보관: 서늘한 곳 / 개봉 후 3개월 내 사용 / 눈 접촉 금지</span>"
         f"</div></div>")
     return (
         _html_head(f"YD Lab 두피 공방 주문서 {code}","#0a0a1a","#0a1a0d") +
@@ -1763,7 +1990,8 @@ def generate_scalp_order_html(result, air, region, yrs, pid, age, gender,
         f"<span style='color:{sg};font-weight:700;'>SEEI {seei} [{seei_grade}]</span> / "
         f"UV:{uv_d}[{uv_gstr}] / 습도:{hum_d}</div></div>"
         f"<div class='card'><div class='stitle-green'>두피 성분 처방 SEEI v3 반영</div>"
-        f"<table><tr><th style='background:rgba(16,185,129,0.20);color:#6ee7b7;border-color:rgba(16,185,129,0.15);'>#</th>"
+        f"<table>"
+        f"<tr><th style='background:rgba(16,185,129,0.20);color:#6ee7b7;border-color:rgba(16,185,129,0.15);'>#</th>"
         f"<th style='background:rgba(16,185,129,0.20);color:#6ee7b7;border-color:rgba(16,185,129,0.15);'>성분명</th>"
         f"<th style='background:rgba(16,185,129,0.20);color:#6ee7b7;border-color:rgba(16,185,129,0.15);'>목적</th>"
         f"<th style='background:rgba(16,185,129,0.20);color:#6ee7b7;border-color:rgba(16,185,129,0.15);'>혼합비율</th>"
@@ -1808,7 +2036,8 @@ def get_sheet():
     try:
         cd = dict(st.secrets["gcp_service_account"])
         cd["private_key"] = cd["private_key"].replace("\\n","\n")
-        scopes = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/drive"]
+        scopes = ["https://spreadsheets.google.com/feeds",
+                  "https://www.googleapis.com/auth/drive"]
         creds  = Credentials.from_service_account_info(cd,scopes=scopes)
         client = gspread.authorize(creds)
         return client.open_by_key(st.secrets.get("GOOGLE_SHEETS_ID","")).sheet1
@@ -1818,12 +2047,14 @@ def get_marketing_sheet():
     try:
         cd = dict(st.secrets["gcp_service_account"])
         cd["private_key"] = cd["private_key"].replace("\\n","\n")
-        scopes = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/drive"]
+        scopes = ["https://spreadsheets.google.com/feeds",
+                  "https://www.googleapis.com/auth/drive"]
         creds  = Credentials.from_service_account_info(cd,scopes=scopes)
         client = gspread.authorize(creds)
         sh = client.open_by_key(st.secrets.get("GOOGLE_SHEETS_ID",""))
         try:    ws = sh.worksheet("marketing_opt")
-        except: ws = sh.add_worksheet("marketing_opt",rows=200,cols=4); ws.append_row(["participant_id","email","opt_in_date","region"])
+        except: ws = sh.add_worksheet("marketing_opt",rows=200,cols=4)
+                    ws.append_row(["participant_id","email","opt_in_date","region"])
         return ws
     except Exception: return None
 
@@ -1837,13 +2068,16 @@ def ensure_header(sheet):
     try:
         existing = sheet.row_values(1)
         if not existing: sheet.insert_row(FIELDS,1)
-        elif existing != FIELDS: sheet.delete_rows(1); sheet.insert_row(FIELDS,1)
+        elif existing != FIELDS:
+            sheet.delete_rows(1); sheet.insert_row(FIELDS,1)
     except Exception as e: st.warning(f"헤더 확인 오류: {e}")
 
 def save_record(r):
     try:
         sheet = get_sheet()
-        if sheet: ensure_header(sheet); sheet.append_row([r.get(k,"") for k in FIELDS])
+        if sheet:
+            ensure_header(sheet)
+            sheet.append_row([r.get(k,"") for k in FIELDS])
     except Exception: pass
     header = not DATA_FILE.exists()
     with open(DATA_FILE,"a",newline="",encoding="utf-8-sig") as f:
@@ -1855,13 +2089,15 @@ def save_record(r):
 # 메인
 # ══════════════════════════════════════════
 def main():
-    valid_codes = st.secrets.get("ACCESS_CODES",[st.secrets.get("ACCESS_PASSWORD","YDLAB2025")])
+    valid_codes = st.secrets.get("ACCESS_CODES",
+                  [st.secrets.get("ACCESS_PASSWORD","YDLAB2025")])
     if isinstance(valid_codes,str): valid_codes=[valid_codes]
 
     if "authed" not in st.session_state: st.session_state["authed"]=False
     if not st.session_state["authed"]:
         url_code = st.query_params.get("code","")
-        if url_code and url_code in valid_codes: st.session_state["authed"]=True
+        if url_code and url_code in valid_codes:
+            st.session_state["authed"]=True
 
     if not st.session_state["authed"]:
         st.markdown(
@@ -1880,7 +2116,8 @@ def main():
         st.stop()
 
     api_key = st.secrets.get("ANTHROPIC_API_KEY","")
-    if not api_key: st.error("ANTHROPIC_API_KEY가 설정되지 않았습니다."); st.stop()
+    if not api_key:
+        st.error("ANTHROPIC_API_KEY가 설정되지 않았습니다."); st.stop()
 
     kma_key    = st.secrets.get("KMA_API_KEY","")
     kma_status = "기상청 API 연동 중" if kma_key else "기상청 API 미연동 (시간대 추정값)"
@@ -1892,7 +2129,7 @@ def main():
         "<p>에어코리아(PM2.5·PM10·NO2·O3) + 기상청(UV·습도) + LLM 비전 AI<br>"
         "CEEI·SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
         "공방 협업 제조 서비스 | 최종 확정 성분 20종</p>"
-        f"<div class='hero-version'>v4.3 Dark Edition · {kma_status}</div>"
+        f"<div class='hero-version'>v4.4 Dark Edition · {kma_status}</div>"
         "</div>",
         unsafe_allow_html=True)
 
@@ -1909,8 +2146,10 @@ def main():
     if skin_sel:  st.session_state["analysis_mode"]="skin"
     if scalp_sel: st.session_state["analysis_mode"]="scalp"
     mode = st.session_state.get("analysis_mode",None)
-    if mode=="skin":   st.info("🧬 피부 분석 모드 — 피부 5지표 + CEEI 환경노출지수")
-    elif mode=="scalp":st.info("🌿 두피 분석 모드 — 두피 6지표 + SEEI v3 (PM2.5·PM10·NO2·O3·UV·습도)")
+    if mode=="skin":
+        st.info("🧬 피부 분석 모드 — 피부 5지표 + CEEI 환경노출지수")
+    elif mode=="scalp":
+        st.info("🌿 두피 분석 모드 — 두피 6지표 + SEEI v3 (PM2.5·PM10·NO2·O3·UV·습도)")
     else:
         st.warning("위에서 분석 모드를 먼저 선택해 주세요.")
         st.markdown("</div>",unsafe_allow_html=True); st.stop()
@@ -1920,15 +2159,22 @@ def main():
     st.markdown("<div class='glass-card'><div class='card-label'>기본 정보 입력</div>",
                 unsafe_allow_html=True)
     c1,c2,c3 = st.columns(3)
-    with c1: pid = st.text_input("익명 참여 코드",placeholder="YD-001",key="k_pid")
-    with c2: age = st.selectbox("연령대",["선택","10대","20대","30대","40대","50대","60대 이상"],key="k_age")
-    with c3: gender = st.selectbox("성별",["선택","여성","남성","기타"],key="k_gender")
+    with c1:
+        pid = st.text_input("익명 참여 코드",placeholder="YD-001",key="k_pid")
+    with c2:
+        age = st.selectbox("연령대",
+            ["선택","10대","20대","30대","40대","50대","60대 이상"],key="k_age")
+    with c3:
+        gender = st.selectbox("성별",["선택","여성","남성","기타"],key="k_gender")
     c4,c5 = st.columns(2)
-    with c4: region = st.selectbox("거주 지역",list(REGION_PM25_AVG.keys()),key="k_region")
-    with c5: res_str = st.selectbox("거주 기간",list(RESIDENCE_YEAR_MAP.keys()),key="k_residence")
+    with c4:
+        region = st.selectbox("거주 지역",list(REGION_PM25_AVG.keys()),key="k_region")
+    with c5:
+        res_str = st.selectbox("거주 기간",list(RESIDENCE_YEAR_MAP.keys()),key="k_residence")
     if mode=="skin":
         concern = st.multiselect("주요 피부 고민",
-            ["주름·탄력","모공","피부톤·색소침착","수분·건조","민감성·홍조","여드름·트러블","기타"],key="k_concern")
+            ["주름·탄력","모공","피부톤·색소침착","수분·건조","민감성·홍조","여드름·트러블","기타"],
+            key="k_concern")
     else:
         concern = st.multiselect("주요 두피·모발 고민",
             ["두피 각질","두피 지루·피지","탈모·모발 가늘어짐","두피 염증·홍조",
@@ -1939,9 +2185,15 @@ def main():
     st.markdown("<div class='confound-card'><div class='card-label'>생활습관 (연구용)</div>",
                 unsafe_allow_html=True)
     c1,c2,c3 = st.columns(3)
-    with c1: sunscreen = st.selectbox("자외선차단제",["매일 사용","가끔 사용","거의 안함"],key="k_sun")
-    with c2: smoking   = st.selectbox("흡연 여부",["비흡연","흡연","과거 흡연"],key="k_smoke")
-    with c3: sleep_hr  = st.selectbox("평균 수면",["7시간 이상","5~7시간","5시간 미만"],key="k_sleep")
+    with c1:
+        sunscreen = st.selectbox("자외선차단제",
+            ["매일 사용","가끔 사용","거의 안함"],key="k_sun")
+    with c2:
+        smoking = st.selectbox("흡연 여부",
+            ["비흡연","흡연","과거 흡연"],key="k_smoke")
+    with c3:
+        sleep_hr = st.selectbox("평균 수면",
+            ["7시간 이상","5~7시간","5시간 미만"],key="k_sleep")
     st.markdown("</div>",unsafe_allow_html=True)
 
     # 촬영 부위
@@ -1953,8 +2205,10 @@ def main():
 
     # 업로드
     label_mode = "피부" if mode=="skin" else "두피"
-    st.markdown(f"<div class='glass-card'><div class='card-label'>{label_mode} 사진 업로드 (최대 3장)</div>",
-                unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='glass-card'>"
+        f"<div class='card-label'>{label_mode} 사진 업로드 (최대 3장)</div>",
+        unsafe_allow_html=True)
     uploaded = st.file_uploader("JPG / PNG",type=["jpg","jpeg","png"],
                                 accept_multiple_files=True,key="k_upload")
     if uploaded:
@@ -1965,25 +2219,37 @@ def main():
 
     # 동의
     st.markdown("<div class='consent-box'>",unsafe_allow_html=True)
-    consent  = st.checkbox("[필수] 본 연구는 IRB 승인 후 연구담당자를 통해 별도 동의서를 작성합니다",key="k_consent")
-    research = st.checkbox("[선택] 익명화된 데이터를 학술 연구에 활용하는 것에 동의합니다.",key="k_research")
+    consent  = st.checkbox(
+        "[필수] 본 연구는 IRB 승인 후 연구담당자를 통해 별도 동의서를 작성합니다",
+        key="k_consent")
+    research = st.checkbox(
+        "[선택] 익명화된 데이터를 학술 연구에 활용하는 것에 동의합니다.",
+        key="k_research")
     st.markdown("</div>",unsafe_allow_html=True)
 
     with st.expander("📧 결과 알림 수신 동의 (선택)",expanded=False):
-        mkt = st.checkbox("SKIN-X 플랫폼 정식 출시 시 안내를 받겠습니다.",key="k_marketing")
+        mkt = st.checkbox(
+            "SKIN-X 플랫폼 정식 출시 시 안내를 받겠습니다.",key="k_marketing")
         mkt_email = ""
-        if mkt: mkt_email = st.text_input("이메일 주소",key="k_mkt_email")
+        if mkt:
+            mkt_email = st.text_input("이메일 주소",key="k_mkt_email")
 
     st.markdown("<br>",unsafe_allow_html=True)
-    btn_label = "🧬 피부 AI 분석 시작" if mode=="skin" else "🌿 두피 AI 분석 시작 (SEEI v3)"
+    btn_label = ("🧬 피부 AI 분석 시작" if mode=="skin"
+                 else "🌿 두피 AI 분석 시작 (SEEI v3)")
     run = st.button(btn_label,use_container_width=True,type="primary",key="k_run")
 
     if run:
-        if not uploaded:          st.error("사진을 업로드해 주세요."); st.stop()
-        if not consent:           st.error("IRB 동의 확인이 필요합니다."); st.stop()
-        if not pid.strip():       st.error("익명 참여 코드를 입력해 주세요."); st.stop()
-        if age=="선택" or gender=="선택": st.warning("연령대와 성별을 선택해 주세요."); st.stop()
-        if not parts:             st.warning("촬영 부위를 하나 이상 선택해 주세요."); st.stop()
+        if not uploaded:
+            st.error("사진을 업로드해 주세요."); st.stop()
+        if not consent:
+            st.error("IRB 동의 확인이 필요합니다."); st.stop()
+        if not pid.strip():
+            st.error("익명 참여 코드를 입력해 주세요."); st.stop()
+        if age=="선택" or gender=="선택":
+            st.warning("연령대와 성별을 선택해 주세요."); st.stop()
+        if not parts:
+            st.warning("촬영 부위를 하나 이상 선택해 주세요."); st.stop()
 
         images = []
         for f in uploaded[:3]:
@@ -1998,13 +2264,16 @@ def main():
             else: uv_data=hum_data=None
 
         spin_label = ("🧬 AI 피부 분석 중... (10~20초 소요)"
-                      if mode=="skin" else "🌿 AI 두피 분석 + SEEI v3 산출 중... (10~20초 소요)")
+                      if mode=="skin"
+                      else "🌿 AI 두피 분석 + SEEI v3 산출 중... (10~20초 소요)")
         with st.spinner(spin_label):
             result = (analyze_skin(images,api_key,parts)
-                      if mode=="skin" else analyze_scalp(images,api_key,parts))
+                      if mode=="skin"
+                      else analyze_scalp(images,api_key,parts))
 
         if result is None:
-            st.error("분석에 실패했습니다. 사진을 확인하고 다시 시도해 주세요."); st.stop()
+            st.error("분석에 실패했습니다. 사진을 확인하고 다시 시도해 주세요.")
+            st.stop()
 
         for k,v in {
             "result":result,"air":air,"uv_data":uv_data,"humidity_data":hum_data,
@@ -2020,7 +2289,8 @@ def main():
         (seei,seei_grade,_,_,_,season_corr,
          uv_val,uv_gstr,hum_val,hum_corr) = calc_seei(air,yrs,uv_data,hum_data)
         _,uv_corr,_ = uv_index_grade(uv_val)
-        pm25_safe = air.get("pm25","") if isinstance(air.get("pm25"),(int,float)) else ""
+        pm25_safe = (air.get("pm25","")
+                     if isinstance(air.get("pm25"),(int,float)) else "")
 
         save_record({
             "timestamp":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -2063,7 +2333,8 @@ def main():
             "sunscreen":sunscreen,"smoking":smoking,"sleep_hours":sleep_hr,
             "consent":consent,"research_consent":research,"marketing_opt_in":mkt,
         })
-        if mkt and mkt_email.strip(): save_marketing_opt(pid,mkt_email.strip(),region)
+        if mkt and mkt_email.strip():
+            save_marketing_opt(pid,mkt_email.strip(),region)
 
     if "result" in st.session_state:
         st.success("✅ 분석 완료!")
@@ -2116,7 +2387,8 @@ def main():
                     data=open(DATA_FILE,"rb").read(),
                     file_name=f"ydlab_data_{datetime.now().strftime('%Y%m%d')}.csv",
                     mime="text/csv",key="k_csv")
-            else: st.info("아직 수집된 데이터가 없습니다.")
+            else:
+                st.info("아직 수집된 데이터가 없습니다.")
 
 if __name__ == "__main__":
     main()
