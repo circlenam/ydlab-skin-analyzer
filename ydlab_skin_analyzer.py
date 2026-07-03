@@ -803,13 +803,13 @@ footer    { visibility: hidden !important; }
 .hair-loss-box span { color: inherit !important; }
 /* ══ 최소 글자 크기 보장 ══ */
 body, html {
-    font-size: 16px !important;
+    font-size: 15px !important;
 }
 small,
 .small,
 [data-testid="stFileUploader"] small,
 [data-testid="stFileUploaderDropzoneInstructions"] small {
-    font-size: 0.88rem !important;
+    font-size: 0.78rem !important;
 }
 .stMarkdown p,
 .stMarkdown span,
@@ -818,7 +818,7 @@ small,
 [data-testid="stMarkdownContainer"] li,
 [data-testid="stMarkdownContainer"] * {
     font-size: 1.0rem !important;
-    line-height: 1.8 !important;
+    line-height: 1.6 !important;
 }
 .stSelectbox label,
 .stMultiSelect label,
@@ -826,7 +826,7 @@ small,
 .stNumberInput label,
 [data-testid="stWidgetLabel"],
 [data-testid="stWidgetLabel"] * {
-    font-size: 1.0rem !important;
+    font-size: 0.8rem !important;
 }
 
 </style>
