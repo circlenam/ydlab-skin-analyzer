@@ -803,7 +803,7 @@ footer    { visibility: hidden !important; }
 .hair-loss-box span { color: inherit !important; }
 /* ══ 최소 글자 크기 보장 ══ */
 body, html {
-    font-size: 15px !important;
+    font-size: 14px !important;
 }
 small,
 .small,
@@ -817,7 +817,7 @@ small,
 [data-testid="stMarkdownContainer"] span,
 [data-testid="stMarkdownContainer"] li,
 [data-testid="stMarkdownContainer"] * {
-    font-size: 1.0rem !important;
+    font-size: 0.8rem !important;
     line-height: 1.6 !important;
 }
 .stSelectbox label,
