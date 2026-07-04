@@ -378,7 +378,7 @@ small, .small,
     to   { transform: rotate(360deg); }
 }
 .hero-label {
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: rgba(16,185,129,0.90) !important;
@@ -386,26 +386,26 @@ small, .small,
     font-family: 'DM Mono', monospace;
 }
 .hero h1 {
-    font-size: 3.0rem;
-    font-weight: 800;
+    font-size: 1.95rem;
+    font-weight: 700;
     color: white !important;
     margin-bottom: 0.5rem;
     text-shadow: 0 0 30px rgba(99,102,241,0.5);
 }
 .hero p {
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     color: rgba(255,255,255,0.70) !important;
     line-height: 1.75;
 }
 .hero-version {
     font-family: 'DM Mono', monospace;
-    font-size: 0.70rem;
+    font-size: 0.74rem;
     color: rgba(16,185,129,0.80) !important;
     margin-top: 0.5rem;
 }
 
 .card-label {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: rgba(165,180,252,1) !important;
@@ -416,7 +416,7 @@ small, .small,
     border-bottom: 1px solid rgba(99,102,241,0.20);
 }
 .card-label-green {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: rgba(110,231,183,1) !important;
@@ -428,17 +428,17 @@ small, .small,
 }
 
 .gauge-wrap  { text-align: center; padding: 0.8rem 0.4rem; }
-.gauge-num   { font-size: 1.9rem; font-weight: 700; font-family: 'DM Mono', monospace;
+.gauge-num   { font-size: 2.1rem; font-weight: 700; font-family: 'DM Mono', monospace;
                line-height: 1; text-shadow: 0 0 20px currentColor; }
-.gauge-lbl   { font-size: 0.68rem; color: rgba(255,255,255,0.55) !important; margin-top: 0.25rem; }
-.gauge-cmt   { font-size: 0.64rem; color: rgba(255,255,255,0.40) !important;
+.gauge-lbl   { font-size: 0.74rem; color: rgba(255,255,255,0.55) !important; margin-top: 0.25rem; }
+.gauge-cmt   { font-size: 0.70rem; color: rgba(255,255,255,0.40) !important;
                margin-top: 0.3rem; line-height: 1.3; }
 .score-high  { color: #10b981 !important; }
 .score-mid   { color: #f59e0b !important; }
 .score-low   { color: #ef4444 !important; }
 
 .big-score {
-    font-size: 5rem;
+    font-size: 5.5rem;
     font-weight: 900;
     font-family: 'DM Mono', monospace;
     line-height: 1;
@@ -471,7 +471,7 @@ small, .small,
     color: rgba(110,231,183,1) !important;
     border-radius: 8px;
     padding: 0.28rem 0.75rem;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     margin: 0.2rem;
     font-weight: 500;
     transition: all 0.2s ease;
@@ -487,7 +487,7 @@ small, .small,
     display: inline-flex; align-items: center;
     padding: 0.28rem 0.75rem;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 600;
     margin: 0.2rem;
 }
@@ -512,9 +512,9 @@ small, .small,
     padding: 0.55rem 0;
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.mixing-sno  { font-size: 0.72rem; font-family: 'DM Mono', monospace;
+.mixing-sno  { font-size: 0.76rem; font-family: 'DM Mono', monospace;
                color: #a5b4fc !important; min-width: 36px; font-weight: 700; }
-.mixing-ing  { font-weight: 600; flex: 1; font-size: 0.84rem; color: rgba(255,255,255,0.90) !important; }
+.mixing-ing  { font-weight: 600; flex: 1; font-size: 0.88rem; color: rgba(255,255,255,0.90) !important; }
 .mixing-pct  { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.88rem;
                color: #10b981 !important; min-width: 48px; }
 .mixing-ml   { font-size: 0.78rem; color: #93c5fd !important; font-weight: 600;
@@ -531,13 +531,13 @@ small, .small,
     background: linear-gradient(90deg, #6366f1, #a78bfa);
     box-shadow: 0 0 8px rgba(99,102,241,0.5);
 }
-.mixing-conc { font-size: 0.68rem; color: rgba(200,200,230,0.45) !important; min-width: 72px; }
+.mixing-conc { font-size: 0.73rem; color: rgba(200,200,230,0.45) !important; min-width: 72px; }
 
 .step-badge {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px; border-radius: 50%;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white !important; font-size: 0.68rem; font-weight: 700;
+    color: white !important; font-size: 0.72rem; font-weight: 700;
     margin-right: 0.5rem; flex-shrink: 0;
     box-shadow: 0 0 8px rgba(99,102,241,0.5);
 }
@@ -545,7 +545,7 @@ small, .small,
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px; border-radius: 50%;
     background: linear-gradient(135deg, #10b981, #059669);
-    color: white !important; font-size: 0.68rem; font-weight: 700;
+    color: white !important; font-size: 0.72rem; font-weight: 700;
     margin-right: 0.5rem; flex-shrink: 0;
     box-shadow: 0 0 8px rgba(16,185,129,0.5);
 }
@@ -560,19 +560,19 @@ small, .small,
     color: white !important; border-radius: 50%;
     width: 24px; height: 24px; min-width: 24px;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 0.70rem; font-weight: 700;
+    font-size: 0.73rem; font-weight: 700;
     box-shadow: 0 0 10px rgba(99,102,241,0.4);
 }
-.priority-label { font-weight: 600; flex: 1; font-size: 0.84rem; color: rgba(255,255,255,0.90) !important; }
-.priority-score { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.84rem; }
-.priority-msg   { font-size: 0.75rem; color: rgba(200,200,230,0.55) !important; }
+.priority-label { font-weight: 600; flex: 1; font-size: 0.88rem; color: rgba(255,255,255,0.90) !important; }
+.priority-score { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.88rem; }
+.priority-msg   { font-size: 0.78rem; color: rgba(200,200,230,0.55) !important; }
 
 .patent-banner {
     background: rgba(59,130,246,0.12);
     border: 1px solid rgba(59,130,246,0.28);
     border-radius: 10px;
     padding: 0.6rem 1rem;
-    font-size: 0.76rem;
+    font-size: 0.82rem;
     color: #93c5fd !important;
     margin-bottom: 1rem;
     text-align: center;
@@ -583,7 +583,7 @@ small, .small,
     border: 1px solid rgba(239,68,68,0.28);
     border-radius: 10px;
     padding: 0.6rem 1rem;
-    font-size: 0.76rem;
+    font-size: 0.82rem;
     color: #fca5a5 !important;
     margin-bottom: 1rem;
     text-align: center;
@@ -594,7 +594,7 @@ small, .small,
     border: 1px solid rgba(16,185,129,0.28);
     border-radius: 10px;
     padding: 0.5rem 1rem;
-    font-size: 0.76rem;
+    font-size: 0.82rem;
     color: #6ee7b7 !important;
     margin-bottom: 0.8rem;
     font-weight: 600;
@@ -604,7 +604,7 @@ small, .small,
     border: 1px solid rgba(245,158,11,0.28);
     border-radius: 10px;
     padding: 0.5rem 1rem;
-    font-size: 0.76rem;
+    font-size: 0.82rem;
     color: #fcd34d !important;
     margin-bottom: 0.8rem;
     font-weight: 600;
@@ -641,7 +641,7 @@ small, .small,
     border-left: 3px solid rgba(99,102,241,0.65);
     border-radius: 0 10px 10px 0;
     padding: 0.9rem 1rem;
-    font-size: 0.78rem;
+    font-size: 0.84rem;
     color: rgba(220,220,240,0.70) !important;
     line-height: 1.75;
     margin-bottom: 1rem;
@@ -667,7 +667,7 @@ small, .small,
 .scalp-section p, .scalp-section span, .scalp-section div { color: #e2e8f0 !important; }
 
 .result-text {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     color: rgba(220,220,245,0.85) !important;
     line-height: 1.8;
 }
@@ -677,7 +677,7 @@ small, .small,
     border: 1px solid rgba(245,158,11,0.22);
     border-radius: 10px;
     padding: 0.7rem 1rem;
-    font-size: 0.82rem;
+    font-size: 0.86rem;
     margin-top: 0.8rem;
     color: #e2e8f0 !important;
 }
@@ -688,7 +688,7 @@ small, .small,
     border: 1px solid rgba(99,102,241,0.25);
     border-radius: 10px;
     padding: 0.6rem 1rem;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     color: #a5b4fc !important;
     margin-bottom: 0.8rem;
     font-weight: 500;
@@ -891,14 +891,14 @@ def svg_gauge(score, label, comment="", size=100):
       transform="rotate(-90 50 50)"
       style="filter:drop-shadow(0 0 6px {c})"/>
     <text x="50" y="46" text-anchor="middle"
-      fill="{c}" font-size="18" font-weight="700"
+      fill="{c}" font-size="21" font-weight="700"
       font-family="DM Mono,monospace"
       style="filter:drop-shadow(0 0 4px {c})">{score}</text>
     <text x="50" y="60" text-anchor="middle"
-      fill="rgba(255,255,255,0.60)" font-size="8.5"
+      fill="rgba(255,255,255,0.60)" font-size="11"
       font-family="Noto Sans KR,sans-serif">{label}</text>
   </svg>
-  <div style="font-size:0.62rem;color:rgba(210,210,240,0.50);
+  <div style="font-size:0.68rem;color:rgba(210,210,240,0.50);
     line-height:1.3;margin-top:0.1rem;max-width:90px;
     margin-left:auto;margin-right:auto;">
     {comment}</div>
@@ -1211,7 +1211,7 @@ def show_mixing_card(mixing, title, is_scalp=False):
     lbl_color = "#6ee7b7" if is_scalp else "#a5b4fc"
     st.markdown("<div class='mixing-card'>", unsafe_allow_html=True)
     st.markdown(
-        f"<div style='font-size:0.65rem;letter-spacing:0.16em;text-transform:uppercase;"
+        f"<div style='font-size:0.72rem;letter-spacing:0.16em;text-transform:uppercase;"
         f"color:{lbl_color};font-weight:700;font-family:DM Mono,monospace;"
         f"margin-bottom:0.5rem;padding-bottom:0.7rem;"
         f"border-bottom:1px solid rgba(255,255,255,0.08);'>{title}</div>",
@@ -1239,20 +1239,20 @@ def show_mixing_card(mixing, title, is_scalp=False):
             f"</div>")
     st.markdown(rows, unsafe_allow_html=True)
     st.markdown(
-        f"<div style='text-align:right;font-size:0.80rem;font-weight:700;"
+        f"<div style='text-align:right;font-size:0.86rem;font-weight:700;"
         f"color:rgba(220,220,240,0.65);padding:0.5rem 0;'>"
         f"총 {mixing['total_ml']}ml</div>",
         unsafe_allow_html=True)
     badge = "step-badge-green" if is_scalp else "step-badge"
     st.markdown(
-        "<div style='margin-top:0.8rem;font-size:0.75rem;font-weight:700;"
+        "<div style='margin-top:0.8rem;font-size:0.82rem;font-weight:700;"
         "color:rgba(210,210,240,0.65);margin-bottom:0.5rem;letter-spacing:0.08em;'>"
         "MIXING ORDER</div>", unsafe_allow_html=True)
     for dn, s in enumerate(mixing["steps"], start=1):
         items_str = " + ".join(s["items"])
         st.markdown(
             f"<div style='display:flex;align-items:center;gap:0.5rem;"
-            f"padding:0.4rem 0;font-size:0.82rem;color:rgba(220,220,240,0.80);'>"
+            f"padding:0.4rem 0;font-size:0.86rem;color:rgba(220,220,240,0.80);'>"
             f"<span class='{badge}'>{dn}</span>"
             f"<span><b style='color:rgba(255,255,255,0.92);'>{s['label']}</b>"
             f" — {items_str}</span></div>",
@@ -1325,11 +1325,11 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
         f"<div style='display:flex;align-items:center;gap:2rem;flex-wrap:wrap;'>"
         f"<div style='text-align:center;'>"
         f"<div class='big-score' style='color:{sc};'>{overall}</div>"
-        f"<div style='font-size:0.70rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
+        f"<div style='font-size:0.76rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
         f"font-family:DM Mono,monospace;letter-spacing:0.1em;'>OVERALL SCORE</div>"
         f"</div>"
         f"<div style='flex:1;'>"
-        f"<div style='font-size:1.1rem;font-weight:700;color:white;margin-bottom:0.5rem;'>"
+        f"<div style='font-size:1.2rem;font-weight:700;color:white;margin-bottom:0.5rem;'>"
         f"피부 타입: <span style='color:{sc};text-shadow:0 0 15px {sc};'>{skin_type}</span></div>"
         f"<div class='result-text'>{result.get('summary','')}</div>"
         f"<div style='margin-top:0.7rem;'>{pm25_chip(pm25_val)} {ceei_chip}</div>"
@@ -1444,7 +1444,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<div style='display:flex;align-items:center;gap:2rem;flex-wrap:wrap;'>"
         f"<div style='text-align:center;'>"
         f"<div class='big-score' style='color:{sc};'>{overall}</div>"
-        f"<div style='font-size:2rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
+        f"<div style='font-size:0.70rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
         f"font-family:DM Mono,monospace;letter-spacing:0.1em;'>SCALP SCORE</div>"
         f"</div>"
         f"<div style='flex:1;'>"
@@ -1473,11 +1473,11 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
     hlc = result.get("hair_loss_risk_comment", "")
     st.markdown(
         f"<div class='hair-loss-box'>"
-        f"<span style='color:rgba(220,220,240,0.75);font-size:0.80rem;'>"
+        f"<span style='color:rgba(220,220,240,0.75);font-size:0.86rem;'>"
         f"탈모 진행도 (참고용)</span> "
         f"<span style='font-weight:700;font-family:DM Mono,monospace;"
         f"color:{score_color(hl)};text-shadow:0 0 10px {score_color(hl)};'>{hl}점</span>"
-        f"<span style='color:rgba(200,200,230,0.60);font-size:0.78rem;'> — {hlc}</span></div>",
+        f"<span style='color:rgba(200,200,230,0.60);font-size:0.82rem;'> — {hlc}</span></div>",
         unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1502,7 +1502,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"border-radius:10px;padding:0.6rem;text-align:center;'>"
         f"<div style='font-weight:700;color:#6ee7b7;font-size:0.88rem;"
         f"font-family:DM Mono,monospace;'>{v}</div>"
-        f"<div style='color:rgba(200,200,230,0.55);font-size:0.65rem;margin-top:0.2rem;'>{k}</div></div>"
+        f"<div style='color:rgba(200,200,230,0.55);font-size:0.72rem;margin-top:0.2rem;'>{k}</div></div>"
         for k,v in seei_comp.items()])
     uv_d   = f"{uv_val:.1f}" if uv_val is not None else "--"
     hum_d  = f"{hum_val:.0f}%" if hum_val is not None else "--"
@@ -1538,7 +1538,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<div style='color:rgba(200,200,230,0.55);font-size:0.65rem;margin-top:0.2rem;'>습도</div>"
         f"<div style='color:rgba(180,180,220,0.35);font-size:0.60rem;'>습도 ×{hum_corr}</div></div>"
         f"</div></div>"
-        f"<div style='font-size:0.72rem;color:rgba(180,180,220,0.40);margin-top:0.6rem;"
+        f"<div style='font-size:0.78rem;color:rgba(180,180,220,0.40);margin-top:0.6rem;"
         f"font-style:italic;font-family:DM Mono,monospace;'>"
         f"SEEI = (PM2.5×0.40+PM10×0.25+NO2×0.20+O3×0.15)×거주기간×계절×UV×습도</div>"
         f"<div class='result-text' style='margin-top:0.5rem;'>{seei_msg}</div></div>",
@@ -1601,7 +1601,7 @@ def _html_head(title, bg_from, bg_to):
         f"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR"
         f":wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');"
         f"*{{box-sizing:border-box;margin:0;padding:0;}}"
-        f"body{{font-family:'Noto Sans KR',sans-serif;font-size:14px;"
+        f"body{{font-family:'Noto Sans KR',sans-serif;font-size:15px;"
         f"background:linear-gradient(135deg,{bg_from},{bg_to});"
         f"color:#e2e8f0;min-height:100vh;line-height:1.8;}}"
         f".wrap{{max-width:900px;margin:0 auto;padding:24px;}}"
@@ -1609,36 +1609,36 @@ def _html_head(title, bg_from, bg_to):
         f"border:1px solid rgba(255,255,255,0.10);border-radius:16px;"
         f"padding:22px 28px;margin-bottom:16px;"
         f"display:flex;justify-content:space-between;align-items:center;}}"
-        f".header h1{{font-size:20px;font-weight:700;color:white;line-height:1.4;}}"
-        f".header .sub{{font-size:11px;opacity:0.65;margin-top:4px;color:#a5b4fc;}}"
+        f".header h1{{font-size:22px;font-weight:700;color:white;line-height:1.4;}}"
+        f".header .sub{{font-size:12px;opacity:0.65;margin-top:4px;color:#a5b4fc;}}"
         f".card{{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);"
         f"border-radius:14px;padding:18px 22px;margin-bottom:14px;}}"
-        f".stitle{{font-size:10px;font-weight:700;letter-spacing:0.14em;"
+        f".stitle{{font-size:12px;font-weight:700;letter-spacing:0.14em;"
         f"text-transform:uppercase;color:#a5b4fc;margin-bottom:12px;"
         f"font-family:'DM Mono',monospace;padding-bottom:8px;"
         f"border-bottom:1px solid rgba(99,102,241,0.20);}}"
-        f".stitle-green{{font-size:10px;font-weight:700;letter-spacing:0.14em;"
+        f".stitle-green{{font-size:12px;font-weight:700;letter-spacing:0.14em;"
         f"text-transform:uppercase;color:#6ee7b7;margin-bottom:12px;"
         f"font-family:'DM Mono',monospace;padding-bottom:8px;"
         f"border-bottom:1px solid rgba(16,185,129,0.20);}}"
-        f"table{{width:100%;border-collapse:collapse;font-size:13px;}}"
+        f"table{{width:100%;border-collapse:collapse;font-size:14px;}}"
         f"th{{background:rgba(99,102,241,0.25);color:#c7d2fe;padding:9px 10px;"
-        f"text-align:left;font-size:11px;border:1px solid rgba(99,102,241,0.20);"
+        f"text-align:left;font-size:12px;border:1px solid rgba(99,102,241,0.20);"
         f"font-weight:600;}}"
         f"td{{padding:8px 10px;border:1px solid rgba(255,255,255,0.07);"
         f"color:#cbd5e1;vertical-align:middle;}}"
         f"tr:nth-child(even) td{{background:rgba(255,255,255,0.03);}}"
         f".chip{{background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:10px;"
-        f"padding:3px 10px;font-size:11px;display:inline-block;margin:2px;"
+        f"padding:3px 10px;font-size:12px;display:inline-block;margin:2px;"
         f"border:1px solid rgba(255,255,255,0.10);}}"
         f".sample-no{{font-family:'DM Mono',monospace;font-weight:700;"
-        f"color:#a5b4fc;font-size:12px;}}"
+        f"color:#a5b4fc;font-size:13px;}}"
         f".footer{{text-align:center;color:rgba(255,255,255,0.30);"
         f"font-size:10px;padding:14px;margin-top:8px;line-height:1.6;}}"
         f".print-btn{{position:fixed;bottom:20px;right:20px;"
         f"background:linear-gradient(135deg,#4f46e5,#7c3aed);"
         f"color:white;border:none;padding:11px 22px;border-radius:10px;"
-        f"font-size:13px;cursor:pointer;font-weight:600;"
+        f"font-size:14px;cursor:pointer;font-weight:600;"
         f"box-shadow:0 4px 15px rgba(79,70,229,0.4);}}"
         f"@media print{{.print-btn{{display:none;}}}}"
         f"</style></head><body><div class='wrap'>"
@@ -1660,7 +1660,7 @@ def _mixing_html_table(mixing, color_h, is_scalp=False):
         f"{mixing['ml'].get(ing,0)}ml</td>"
         f"<td style='color:#94a3b8;'>"
         f"{(get_sample_conc(ing) or {}).get('pct','재량')}%</td>"
-        f"<td style='color:#64748b;font-size:12px;'>"
+        f"<td style='color:#64748b;font-size:13px;'>"
         f"{(get_sample_conc(ing) or {}).get('note','')}</td>"
         f"</tr>"
         for i,(ing,pct) in enumerate(
@@ -2232,15 +2232,15 @@ def main():
     kma_status = "기상청 API 연동 중" if kma_key else "기상청 API 미연동 (시간대 추정값)"
 
     st.markdown(
-    "<div class='hero'>"
-    "<div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>"
-    "<h1 style='font-size:2.0rem; font-weight:800; color:#e2e8f0; letter-spacing:-0.3px; line-height:1.4; margin:6px 0 10px 0;'>🔬 AI 피부·두피 분석</h1>"
-    "<p>에어코리아(PM2.5·PM10·NO2·O3) + 기상청(UV·습도) + LLM 비전 AI<br>"
-    "CEEI·SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
-    "YD Lab 공방 협업 제조 | 사전 준비 20종 샘플(v4.2) 기반</p>"
-    f"<div class='hero-version'>v4.5 · {kma_status}</div>"
-    "</div>",
-    unsafe_allow_html=True)
+        "<div class='hero'>"
+        "<div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>"
+        "<h1>🔬 AI 피부·두피 분석</h1>"
+        "<p>에어코리아(PM2.5·PM10·NO2·O3) + 기상청(UV·습도) + LLM 비전 AI<br>"
+        "CEEI·SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
+        "YD Lab 공방 협업 제조 | 사전 준비 20종 샘플(v4.2) 기반</p>"
+        f"<div class='hero-version'>v4.5 · {kma_status}</div>"
+        "</div>",
+        unsafe_allow_html=True)
 
     # 분석 모드
     st.markdown("<div class='glass-card'><div class='card-label'>분석 모드 선택</div>",
