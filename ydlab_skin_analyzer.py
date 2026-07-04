@@ -295,8 +295,14 @@ footer    { visibility: hidden !important; }
 ::-webkit-scrollbar-thumb  { background: rgba(99,102,241,0.50); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.80); }
 
-/* 최소 글자 크기 */
-body, html { font-size: 15px !important; }
+/* 기본 폰트 강제 */
+body, html { font-size: 16px !important; }
+[data-testid="stMarkdownContainer"] { font-size: 15px !important; }
+[data-testid="stMarkdownContainer"] p { font-size: 15px !important; }
+[data-testid="stMarkdownContainer"] span { font-size: inherit !important; }
+[data-testid="stMarkdownContainer"] div { font-size: inherit !important; }
+.stMarkdown { font-size: 15px !important; }
+.stMarkdown p { font-size: 15px !important; }
 small, .small,
 [data-testid="stFileUploader"] small,
 [data-testid="stFileUploaderDropzoneInstructions"] small {
@@ -378,72 +384,103 @@ small, .small,
     to   { transform: rotate(360deg); }
 }
 .hero-label {
-    font-size: 0.72rem;
+    font-size: 13px !important;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: rgba(16,185,129,0.90) !important;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.7rem;
     font-family: 'DM Mono', monospace;
+    display: block !important;
 }
-.hero h1 {
-    font-size: 1.95rem;
-    font-weight: 700;
+.hero h1,
+.hero h1 *,
+[data-testid="stMarkdownContainer"] .hero h1 {
+    font-size: 32px !important;
+    font-weight: 800 !important;
     color: white !important;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 0 30px rgba(99,102,241,0.5);
+    margin-bottom: 0.6rem !important;
+    text-shadow: 0 0 30px rgba(99,102,241,0.5) !important;
+    line-height: 1.2 !important;
 }
-.hero p {
-    font-size: 0.88rem;
+.hero p,
+[data-testid="stMarkdownContainer"] .hero p {
+    font-size: 15px !important;
     color: rgba(255,255,255,0.70) !important;
-    line-height: 1.75;
+    line-height: 1.75 !important;
 }
 .hero-version {
     font-family: 'DM Mono', monospace;
-    font-size: 0.74rem;
+    font-size: 12px !important;
     color: rgba(16,185,129,0.80) !important;
     margin-top: 0.5rem;
+    display: block !important;
 }
 
-.card-label {
-    font-size: 0.72rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+.card-label,
+[data-testid="stMarkdownContainer"] .card-label {
+    font-size: 13px !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
     color: rgba(165,180,252,1) !important;
-    font-weight: 700;
-    font-family: 'DM Mono', monospace;
-    margin-bottom: 1rem;
-    padding-bottom: 0.7rem;
-    border-bottom: 1px solid rgba(99,102,241,0.20);
+    font-weight: 700 !important;
+    font-family: 'DM Mono', monospace !important;
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.7rem !important;
+    border-bottom: 1px solid rgba(99,102,241,0.20) !important;
+    display: block !important;
 }
-.card-label-green {
-    font-size: 0.72rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+.card-label-green,
+[data-testid="stMarkdownContainer"] .card-label-green {
+    font-size: 13px !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
     color: rgba(110,231,183,1) !important;
-    font-weight: 700;
-    font-family: 'DM Mono', monospace;
-    margin-bottom: 1rem;
-    padding-bottom: 0.7rem;
-    border-bottom: 1px solid rgba(16,185,129,0.20);
+    font-weight: 700 !important;
+    font-family: 'DM Mono', monospace !important;
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.7rem !important;
+    border-bottom: 1px solid rgba(16,185,129,0.20) !important;
+    display: block !important;
 }
 
 .gauge-wrap  { text-align: center; padding: 0.8rem 0.4rem; }
-.gauge-num   { font-size: 2.1rem; font-weight: 700; font-family: 'DM Mono', monospace;
-               line-height: 1; text-shadow: 0 0 20px currentColor; }
-.gauge-lbl   { font-size: 0.74rem; color: rgba(255,255,255,0.55) !important; margin-top: 0.25rem; }
-.gauge-cmt   { font-size: 0.70rem; color: rgba(255,255,255,0.40) !important;
-               margin-top: 0.3rem; line-height: 1.3; }
+.gauge-num,
+[data-testid="stMarkdownContainer"] .gauge-num {
+    font-size: 36px !important;
+    font-weight: 700 !important;
+    font-family: 'DM Mono', monospace !important;
+    line-height: 1 !important;
+    text-shadow: 0 0 20px currentColor !important;
+    display: block !important;
+}
+.gauge-lbl,
+[data-testid="stMarkdownContainer"] .gauge-lbl {
+    font-size: 13px !important;
+    color: rgba(255,255,255,0.65) !important;
+    margin-top: 0.3rem !important;
+    display: block !important;
+}
+.gauge-cmt,
+[data-testid="stMarkdownContainer"] .gauge-cmt {
+    font-size: 12px !important;
+    color: rgba(255,255,255,0.45) !important;
+    margin-top: 0.3rem !important;
+    line-height: 1.4 !important;
+    display: block !important;
+}
 .score-high  { color: #10b981 !important; }
 .score-mid   { color: #f59e0b !important; }
 .score-low   { color: #ef4444 !important; }
 
-.big-score {
-    font-size: 5.5rem;
-    font-weight: 900;
-    font-family: 'DM Mono', monospace;
-    line-height: 1;
-    text-shadow: 0 0 40px currentColor, 0 0 80px currentColor;
-    letter-spacing: -2px;
+.big-score,
+[data-testid="stMarkdownContainer"] .big-score {
+    font-size: 88px !important;
+    font-weight: 900 !important;
+    font-family: 'DM Mono', monospace !important;
+    line-height: 1 !important;
+    text-shadow: 0 0 40px currentColor, 0 0 80px currentColor !important;
+    letter-spacing: -2px !important;
+    display: block !important;
 }
 
 .ing-chip {
@@ -514,7 +551,7 @@ small, .small,
 }
 .mixing-sno  { font-size: 0.76rem; font-family: 'DM Mono', monospace;
                color: #a5b4fc !important; min-width: 36px; font-weight: 700; }
-.mixing-ing  { font-weight: 600; flex: 1; font-size: 0.88rem; color: rgba(255,255,255,0.90) !important; }
+.mixing-ing  { font-weight: 600; flex: 1; font-size: 15px !important; color: rgba(255,255,255,0.90) !important; }
 .mixing-pct  { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.88rem;
                color: #10b981 !important; min-width: 48px; }
 .mixing-ml   { font-size: 0.78rem; color: #93c5fd !important; font-weight: 600;
@@ -563,9 +600,9 @@ small, .small,
     font-size: 0.73rem; font-weight: 700;
     box-shadow: 0 0 10px rgba(99,102,241,0.4);
 }
-.priority-label { font-weight: 600; flex: 1; font-size: 0.88rem; color: rgba(255,255,255,0.90) !important; }
-.priority-score { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 0.88rem; }
-.priority-msg   { font-size: 0.78rem; color: rgba(200,200,230,0.55) !important; }
+.priority-label { font-weight: 600; flex: 1; font-size: 15px !important; color: rgba(255,255,255,0.90) !important; }
+.priority-score { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 15px !important; }
+.priority-msg   { font-size: 13px !important; color: rgba(200,200,230,0.65) !important; }
 
 .patent-banner {
     background: rgba(59,130,246,0.12);
@@ -666,10 +703,11 @@ small, .small,
 }
 .scalp-section p, .scalp-section span, .scalp-section div { color: #e2e8f0 !important; }
 
-.result-text {
-    font-size: 0.92rem;
-    color: rgba(220,220,245,0.85) !important;
-    line-height: 1.8;
+.result-text,
+[data-testid="stMarkdownContainer"] .result-text {
+    font-size: 15px !important;
+    color: rgba(220,220,245,0.90) !important;
+    line-height: 1.8 !important;
 }
 
 .hair-loss-box {
