@@ -2232,15 +2232,15 @@ def main():
     kma_status = "기상청 API 연동 중" if kma_key else "기상청 API 미연동 (시간대 추정값)"
 
     st.markdown(
-        "<div class='hero'>"
-        "<div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>"
-        "<h1>🔬 AI 피부·두피 분석</h1>"
-        "<p>에어코리아(PM2.5·PM10·NO2·O3) + 기상청(UV·습도) + LLM 비전 AI<br>"
-        "CEEI·SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
-        "YD Lab 공방 협업 제조 | 사전 준비 20종 샘플(v4.2) 기반</p>"
-        f"<div class='hero-version'>v4.5 · {kma_status}</div>"
-        "</div>",
-        unsafe_allow_html=True)
+    "<div class='hero'>"
+    "<div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>"
+    "<h1 style='font-size:2.0rem; font-weight:800; color:#e2e8f0; letter-spacing:-0.3px; line-height:1.4; margin:6px 0 10px 0;'>🔬 AI 피부·두피 분석</h1>"
+    "<p>에어코리아(PM2.5·PM10·NO2·O3) + 기상청(UV·습도) + LLM 비전 AI<br>"
+    "CEEI·SEEI 환경노출지수 연동 맞춤형 화장품 제안 시스템 (특허 출원 중)<br>"
+    "YD Lab 공방 협업 제조 | 사전 준비 20종 샘플(v4.2) 기반</p>"
+    f"<div class='hero-version'>v4.5 · {kma_status}</div>"
+    "</div>",
+    unsafe_allow_html=True)
 
     # 분석 모드
     st.markdown("<div class='glass-card'><div class='card-label'>분석 모드 선택</div>",
