@@ -386,8 +386,8 @@ small, .small,
     font-family: 'DM Mono', monospace;
 }
 .hero h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 2.0rem;
+    font-weight: 800;
     color: white !important;
     margin-bottom: 0.5rem;
     text-shadow: 0 0 30px rgba(99,102,241,0.5);
