@@ -1444,7 +1444,7 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<div style='display:flex;align-items:center;gap:2rem;flex-wrap:wrap;'>"
         f"<div style='text-align:center;'>"
         f"<div class='big-score' style='color:{sc};'>{overall}</div>"
-        f"<div style='font-size:0.70rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
+        f"<div style='font-size:2rem;color:rgba(200,200,230,0.55);margin-top:0.3rem;"
         f"font-family:DM Mono,monospace;letter-spacing:0.1em;'>SCALP SCORE</div>"
         f"</div>"
         f"<div style='flex:1;'>"
