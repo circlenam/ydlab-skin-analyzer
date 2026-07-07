@@ -1515,6 +1515,7 @@ def vol_selector(key_prefix):
             if st.button(preset["label"], key=f"{key_prefix}_vol_{i}",
                          use_container_width=True):
                 st.session_state[state_key] = preset["ml"]
+                st.rerun()
     chosen = st.number_input(
         "직접 입력 (ml)", min_value=5, max_value=300,
         value=st.session_state[state_key], step=5,
