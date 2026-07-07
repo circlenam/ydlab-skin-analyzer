@@ -2082,13 +2082,22 @@ def force_selectbox_white():
 def check_access_code(code: str) -> str:
     """반환: 'edu' / 'biz' / '' """
     code = (code or "").strip().upper()
-    edu_codes = [c.strip().upper() for c in st.secrets.get("EDU_ACCESS_CODES", "").split(",") if c.strip()]
-    biz_codes = [c.strip().upper() for c in st.secrets.get("BIZ_ACCESS_CODES", "").split(",") if c.strip()]
+    try:
+        edu_raw = st.secrets["EDU_ACCESS_CODES"] if "EDU_ACCESS_CODES" in st.secrets else ""
+    except Exception:
+        edu_raw = ""
+    try:
+        biz_raw = st.secrets["BIZ_ACCESS_CODES"] if "BIZ_ACCESS_CODES" in st.secrets else ""
+    except Exception:
+        biz_raw = ""
+    edu_codes = [c.strip().upper() for c in str(edu_raw).split(",") if c.strip()]
+    biz_codes = [c.strip().upper() for c in str(biz_raw).split(",") if c.strip()]
     if code in edu_codes:
         return "edu"
     if code in biz_codes:
         return "biz"
     return ""
+
 
 def login_screen():
     st.markdown("<div class='glass-card' style='text-align:center;'><h1>🌿 YD Lab</h1><p>피부·두피 분석 시스템</p></div>", unsafe_allow_html=True)
