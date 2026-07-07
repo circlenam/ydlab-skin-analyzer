@@ -13,6 +13,7 @@ secrets.toml:
   [gcp_service_account] ...
 """
 import streamlit as st
+import streamlit.components.v1 as components
 import gspread
 from google.oauth2.service_account import Credentials
 import anthropic
@@ -126,6 +127,13 @@ label,
 .stSelectbox svg, .stMultiSelect svg {
     fill: #a78bfa !important;
     color: #a78bfa !important;
+}
+/* 선택박스 안에 표시되는 선택값 텍스트(닫힌 상태) 밝게 강제 */
+[data-baseweb="select"],
+[data-baseweb="select"] *,
+[data-baseweb="select"] div,
+[data-baseweb="select"] span {
+    color: #e2e8f0 !important;
 }
 [data-baseweb="popover"],
 [data-baseweb="popover"] > div,
@@ -887,6 +895,58 @@ def show_product_match_card(product, grade_label, grade_value, is_scalp=False):
         f"</div></div>",
         unsafe_allow_html=True,
     )
+def generate_biz_match_report_html(product, grade_label, grade_value,
+                                    region, pid, age, gender, overall,
+                                    result, is_scalp=False):
+    """사업용(매장) 모드 전용 — 매장 전달용 추천 제품 안내 리포트 (혼합표 없음)."""
+    accent  = "#10b981" if is_scalp else "#6366f1"
+    label   = "두피" if is_scalp else "피부"
+    stitle  = "stitle-green" if is_scalp else "stitle"
+    bg_from, bg_to = ("#0a0a1a","#0a1a0d") if is_scalp else ("#0a0a1a","#0d1b3e")
+    def sc(s): return "#10b981" if s>=70 else "#f59e0b" if s>=40 else "#ef4444"
+    ing_h = "".join([
+        f"<span class='chip' style='color:{accent};border-color:{accent}55;"
+        f"background:{accent}22;'>{i}</span>"
+        for i in product.get("ingredients", [])])
+    booster_html = ""
+    if product.get("booster_recommended"):
+        booster_html = (
+            f"<div class='card' style='background:rgba(245,158,11,0.08);"
+            f"border-color:rgba(245,158,11,0.20);'>"
+            f"<div style='font-size:13px;color:#fcd34d;line-height:1.7;'>"
+            f"오늘 {grade_label} <b>{grade_value}</b> — 항산화 부스터 앰플 추가 사용을 "
+            f"권장합니다 (완제품 배합 변경 없음, 별도 제품 레이어링)</div></div>")
+    code = ("YDL-" + ("SC" if is_scalp else "SK") + "-BIZ-"
+            + datetime.now().strftime("%Y%m%d") + "-"
+            + ''.join(random.choices(string.ascii_uppercase+string.digits, k=4)))
+    return (
+        _html_head(f"YD Lab {label} 추천 제품 안내", bg_from, bg_to) +
+        f"<div class='header' style='{'border-color:rgba(16,185,129,0.20);' if is_scalp else ''}'>"
+        f"<div><h1>YD Lab {label} 진단 · 추천 제품 안내</h1>"
+        f"<div class='sub' style='{'color:#6ee7b7;' if is_scalp else ''}'>"
+        f"AI {label} 분석 기반 매장 추천 완제품 (특허 출원 중)</div></div>"
+        f"<div style='font-family:DM Mono,monospace;font-size:11px;"
+        f"color:{'#6ee7b7' if is_scalp else '#a5b4fc'};'>{code}</div></div>"
+        f"<div class='card'>"
+        f"<div style='font-size:13px;color:#94a3b8;line-height:1.8;'>"
+        f"분석일: {datetime.now().strftime('%Y년 %m월 %d일')} &nbsp;|&nbsp; "
+        f"참여자: {pid} {age} {gender} &nbsp;|&nbsp; 지역: {region}<br>"
+        f"종합 점수: <b style='color:{sc(overall)};'>{overall}점</b> &nbsp;|&nbsp; "
+        f"{grade_label} 등급: <b style='color:{accent};'>{grade_value}</b></div></div>"
+        f"<div class='card'><div class='{stitle}'>매장 추천 제품 (완제품 · 즉시 사용 가능)</div>"
+        f"<div style='font-size:20px;font-weight:800;color:white;margin-bottom:6px;'>"
+        f"{product['code']} · {product['name']}</div>"
+        f"<div style='font-size:13px;color:#94a3b8;margin-bottom:10px;'>"
+        f"{product.get('desc','')}</div>"
+        f"<div>{ing_h}</div></div>"
+        f"{booster_html}"
+        f"<div class='card' style='font-size:12px;color:#64748b;'>"
+        f"이 제품은 완제품으로 사전 제조되어 있습니다. 매장에서 추가 혼합·소분 없이 "
+        f"바로 전달하시면 됩니다.</div>"
+        f"<div class='footer'>"
+        f"본 안내는 AI 분석 기반 참고용이며 의료적 처방이 아닙니다<br>"
+        f"YD Lab / 재능대학교 AI-바이오분석특화연구소</div>"
+        f"</div></body></html>")
 # ══════════════════════════════════════════
 # ── AI 프롬프트 ──
 SKIN_PROMPT = (
@@ -1350,6 +1410,24 @@ def show_air_status(air, uv_data=None, humidity_data=None):
         f"PM2.5 {air.get('pm25','-')} | PM10 {air.get('pm10','-')} | "
         f"NO2 {air.get('no2','-')}ppm | O3 {air.get('o3','-')}ppm</div>",
         unsafe_allow_html=True)
+def scroll_to_results():
+    # 다운로드 버튼 클릭 등으로 페이지가 새로고침(rerun)되면 스트림릿은
+    # 항상 화면을 맨 위로 되돌립니다. 이 때문에 "분석기(입력 화면)만 보이고
+    # 분석 결과가 사라진 것"처럼 보이는데, 실제로는 데이터가 사라진 것이
+    # 아니라 스크롤 위치만 초기화된 것입니다. 아래 스크립트로 결과 위치까지
+    # 자동으로 스크롤을 내려줍니다.
+    components.html(
+        """
+        <script>
+        setTimeout(function() {
+            const doc = window.parent.document;
+            const el = doc.getElementById('ydlab-results-anchor');
+            if (el) { el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+        }, 150);
+        </script>
+        """,
+        height=0,
+    )
 def vol_selector(key_prefix):
     state_key = f"{key_prefix}_total_ml"
     if state_key not in st.session_state:
@@ -1456,6 +1534,12 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
     if usage_mode == "biz":
         product = match_skin_product(result, ceei_grade)
         show_product_match_card(product, "CEEI", ceei_grade, is_scalp=False)
+        biz_html = generate_biz_match_report_html(
+            product, "CEEI", ceei_grade, region, pid, age, gender,
+            overall, result, is_scalp=False)
+        st.download_button("매장 전달용 리포트 다운로드", data=biz_html.encode("utf-8"),
+            file_name=f"YDLab_피부추천제품_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+            mime="text/html", use_container_width=True, key="k_skin_biz_report")
         return
     # ── 아래부터는 교육용 전용: 20종 혼합가이드 + 공방주문서 (기존과 동일) ──
 
@@ -1634,6 +1718,12 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
     if usage_mode == "biz":
         product = match_scalp_product(result, seei_grade)
         show_product_match_card(product, "SEEI", seei_grade, is_scalp=True)
+        biz_html = generate_biz_match_report_html(
+            product, "SEEI", seei_grade, region, pid, age, gender,
+            overall, result, is_scalp=True)
+        st.download_button("매장 전달용 리포트 다운로드", data=biz_html.encode("utf-8"),
+            file_name=f"YDLab_두피추천제품_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+            mime="text/html", use_container_width=True, key="k_scalp_biz_report")
         return
     # ── 아래부터는 교육용 전용: 20종 혼합가이드 + 공방주문서 (기존과 동일) ──
 
@@ -2516,7 +2606,10 @@ def main():
         if mkt and mkt_email.strip():
             save_marketing_opt(pid, mkt_email.strip(), region)
     if "result" in st.session_state:
-        st.success("✅ 분석 완료!")
+        st.markdown("<div id='ydlab-results-anchor'></div>", unsafe_allow_html=True)
+        scroll_to_results()
+        st.success("\u2705 \ubd84\uc11d \uc644\ub8cc! (\ub2e4\uc6b4\ub85c\ub4dc \ubc84\ud2bc\uc744 \ub20c\ub7ec\ub3c4 \uc774 \uacb0\uacfc\ub294 \uc0ac\ub77c\uc9c0\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4 \u2014 "
+                   "\ud654\uba74\uc774 \uc704\ub85c \uc2a4\ud06c\ub864\ub418\ub294 \ud604\uc0c1\uc774\ub2c8 \uc7a0\uc2dc \ud6c4 \uc790\ub3d9\uc73c\ub85c \uc774 \uc704\uce58\ub85c \ub3cc\uc544\uc635\ub2c8\ub2e4)")
         cm = st.session_state.get("current_mode","skin")
         if cm == "skin":
             show_skin_result(
@@ -2533,7 +2626,7 @@ def main():
                 st.session_state.get("uv_data"), st.session_state.get("humidity_data"))
     # 관리자 사이드바
     with st.sidebar:
-        st.markdown("### ⚙️ 관리자")
+        st.markdown("### \u2699\ufe0f 관리자")
         admin_pw = st.text_input("관리자 비밀번호", type="password", key="k_admin")
         if admin_pw == st.secrets.get("ADMIN_PASSWORD","ydlab2024"):
             st.success("관리자 모드")
