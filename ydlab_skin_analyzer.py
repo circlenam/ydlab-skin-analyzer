@@ -703,6 +703,23 @@ small, .small,
     margin-bottom: 0.8rem;
     font-weight: 500;
 }
+/* ── 선택박스(닫힌 상태) 표시값 텍스트 최종 강제 (캐스케이드 최우선순위) ── */
+div[data-baseweb="select"],
+div[data-baseweb="select"] div,
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] input,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div > div,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div > div > div {
+    color: #f1f5ff !important;
+    -webkit-text-fill-color: #f1f5ff !important;
+    opacity: 1 !important;
+}
+div[data-baseweb="select"] input::placeholder {
+    color: #c4b5fd !important;
+    -webkit-text-fill-color: #c4b5fd !important;
+    opacity: 1 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 # ══════════════════════════════════════════
@@ -2544,6 +2561,7 @@ def main():
             "consent": consent, "research_consent": research,
             "current_mode": mode,
         }.items(): st.session_state[k] = v
+        st.session_state["scroll_pending"] = True
         yrs      = RESIDENCE_YEAR_MAP.get(res_str, 0)
         pm25_avg = REGION_PM25_AVG.get(region, 22.0)
         ceei, ceei_grade, _, _ = calc_ceei(pm25_avg, yrs)
@@ -2607,9 +2625,12 @@ def main():
             save_marketing_opt(pid, mkt_email.strip(), region)
     if "result" in st.session_state:
         st.markdown("<div id='ydlab-results-anchor'></div>", unsafe_allow_html=True)
-        scroll_to_results()
-        st.success("\u2705 \ubd84\uc11d \uc644\ub8cc! (\ub2e4\uc6b4\ub85c\ub4dc \ubc84\ud2bc\uc744 \ub20c\ub7ec\ub3c4 \uc774 \uacb0\uacfc\ub294 \uc0ac\ub77c\uc9c0\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4 \u2014 "
-                   "\ud654\uba74\uc774 \uc704\ub85c \uc2a4\ud06c\ub864\ub418\ub294 \ud604\uc0c1\uc774\ub2c8 \uc7a0\uc2dc \ud6c4 \uc790\ub3d9\uc73c\ub85c \uc774 \uc704\uce58\ub85c \ub3cc\uc544\uc635\ub2c8\ub2e4)")
+        # \uc0c8\ub85c \ubd84\uc11d\uc774 \ub05d\ub09c \uc9c1\ud6c4 \ub531 \ud55c \ubc88\ub9cc \uacb0\uacfc \uc704\uce58\ub85c \uc2a4\ud06c\ub864\ud569\ub2c8\ub2e4.
+        # (\ub9e4 \uc0c8\ub85c\uace0\uce68\ub9c8\ub2e4 \uc2a4\ud06c\ub864\ud558\uba74 \uc704\ucabd \ubd84\uc11d\ubaa8\ub4dc \uc120\ud0dd \uc601\uc5ed\uc774 \ud654\uba74\uc5d0\uc11c
+        #  \uacc4\uc18d \ubc00\ub824\ub098 "\uc0ac\ub77c\uc9c4 \uac83\ucc98\ub7fc" \ubcf4\uc774\ub294 \ubb38\uc81c\uac00 \uc788\uc5b4 1\ud68c\uc131\uc73c\ub85c \ubcc0\uacbd)
+        if st.session_state.pop("scroll_pending", False):
+            scroll_to_results()
+        st.success("\u2705 \ubd84\uc11d \uc644\ub8cc! \uc704\ub85c \uc2a4\ud06c\ub864\ud558\uba74 \ubd84\uc11d \ubaa8\ub4dc \uc120\ud0dd \ud654\uba74\ub3c4 \uadf8\ub300\ub85c \uc788\uc2b5\ub2c8\ub2e4.")
         cm = st.session_state.get("current_mode","skin")
         if cm == "skin":
             show_skin_result(
