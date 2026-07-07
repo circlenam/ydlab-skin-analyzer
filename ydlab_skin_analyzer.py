@@ -133,41 +133,18 @@ label,
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
 }
+/* 드롭다운 목록(팝오버) 색상은 config.toml의 dark 테마가 자동으로 맞춰주므로
+   더 이상 흰 배경/검정 글씨로 강제하지 않습니다 (이전 버전에서 다크 테마와
+   충돌해 옵션 글씨가 안 보이던 원인이었습니다). 배경색만 살짝 다듬습니다. */
 [data-baseweb="popover"],
-[data-baseweb="popover"] > div,
-[data-baseweb="popover"] > div > div,
-ul[data-baseweb="menu"],
 [data-baseweb="menu"],
-[data-baseweb="menu"] > div,
-[role="listbox"],
-[role="listbox"] > div,
-[role="listbox"] > div > div {
-    background: #ffffff !important;
-    background-color: #ffffff !important;
+[role="listbox"] {
     border: 1px solid rgba(99,102,241,0.45) !important;
     border-radius: 10px !important;
 }
-[role="option"], [role="option"] *,
-[data-baseweb="option"], [data-baseweb="option"] *,
-li[role="option"], li[role="option"] *,
-[data-baseweb="menu"] li, [data-baseweb="menu"] li * {
-    color: #111111 !important;
-    background: transparent !important;
-    background-color: transparent !important;
+[role="option"], [data-baseweb="option"] {
     font-family: 'Noto Sans KR', sans-serif !important;
     font-size: 0.87rem !important;
-}
-[role="option"]:hover, [role="option"]:hover *,
-[data-baseweb="option"]:hover, [data-baseweb="option"]:hover * {
-    background: rgba(99,102,241,0.12) !important;
-    background-color: rgba(99,102,241,0.12) !important;
-    color: #111111 !important;
-}
-[aria-selected="true"][role="option"],
-[aria-selected="true"][role="option"] * {
-    background: rgba(99,102,241,0.18) !important;
-    background-color: rgba(99,102,241,0.18) !important;
-    color: #111111 !important;
 }
 .stCheckbox > label > div[data-testid="stMarkdownContainer"] p,
 .stCheckbox span,
@@ -188,7 +165,7 @@ li[role="option"], li[role="option"] *,
 }
 [data-testid="stFileUploader"] *,
 [data-testid="stFileUploadDropzone"] * {
-    color: #111111 !important;
+    color: #e2e8f0 !important;
 }
 [data-testid="stFileUploader"] small,
 [data-testid="stFileUploaderDropzoneInstructions"] small {
