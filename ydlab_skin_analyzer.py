@@ -128,12 +128,13 @@ label,
     fill: #a78bfa !important;
     color: #a78bfa !important;
 }
-/* 선택박스 안에 표시되는 선택값 텍스트(닫힌 상태) 밝게 강제 */
+/* 선택박스 안에 표시되는 선택값 텍스트(닫힌 상태) 흰색으로 강제 */
 [data-baseweb="select"],
 [data-baseweb="select"] *,
 [data-baseweb="select"] div,
 [data-baseweb="select"] span {
-    color: #e2e8f0 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 [data-baseweb="popover"],
 [data-baseweb="popover"] > div,
@@ -705,20 +706,22 @@ small, .small,
 }
 /* ── 선택박스(닫힌 상태) 표시값 텍스트 최종 강제 (캐스케이드 최우선순위) ── */
 div[data-baseweb="select"],
+div[data-baseweb="select"] *,
 div[data-baseweb="select"] div,
 div[data-baseweb="select"] span,
 div[data-baseweb="select"] input,
 div[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
 div[data-testid="stSelectbox"] div[data-baseweb="select"] > div > div,
 div[data-testid="stSelectbox"] div[data-baseweb="select"] > div > div > div {
-    color: #f1f5ff !important;
-    -webkit-text-fill-color: #f1f5ff !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     opacity: 1 !important;
+    font-weight: 600 !important;
 }
 div[data-baseweb="select"] input::placeholder {
-    color: #c4b5fd !important;
-    -webkit-text-fill-color: #c4b5fd !important;
-    opacity: 1 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 0.9 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1441,6 +1444,36 @@ def scroll_to_results():
             const el = doc.getElementById('ydlab-results-anchor');
             if (el) { el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
         }, 150);
+        </script>
+        """,
+        height=0,
+    )
+def force_selectbox_white():
+    # CSS !important 만으로는 선택박스(BaseWeb Select) 내부 표시값 텍스트 색이
+    # 브라우저에 따라 반영되지 않는 경우가 있어, JS로 직접 스타일을 강제 지정합니다.
+    # MutationObserver로 재렌더링(모드 변경, rerun 등) 이후에도 계속 흰색을 유지합니다.
+    components.html(
+        """
+        <script>
+        (function() {
+            function paintWhite(root) {
+                var boxes = root.querySelectorAll('[data-baseweb="select"]');
+                boxes.forEach(function(box) {
+                    box.style.color = '#ffffff';
+                    box.style.setProperty('-webkit-text-fill-color', '#ffffff');
+                    var all = box.querySelectorAll('*');
+                    all.forEach(function(el) {
+                        el.style.color = '#ffffff';
+                        el.style.setProperty('-webkit-text-fill-color', '#ffffff');
+                    });
+                });
+            }
+            var doc = window.parent.document;
+            paintWhite(doc);
+            var observer = new MutationObserver(function() { paintWhite(doc); });
+            observer.observe(doc.body, {childList: true, subtree: true});
+            setInterval(function() { paintWhite(doc); }, 800);
+        })();
         </script>
         """,
         height=0,
@@ -2409,6 +2442,7 @@ def main():
         st.error("ANTHROPIC_API_KEY가 설정되지 않았습니다."); st.stop()
     kma_key    = st.secrets.get("KMA_API_KEY","")
     kma_status = "기상청 API 연동 중" if kma_key else "기상청 API 미연동 (시간대 추정값)"
+    force_selectbox_white()
     st.markdown(
         "<div class='hero'>"
         "<div class='hero-label'>YD Lab · 재능대학교 AI-바이오분석특화연구소</div>"
