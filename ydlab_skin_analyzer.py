@@ -1080,24 +1080,34 @@ def svg_gauge(score, label, comment="", size=100):
 # ══════════════════════════════════════════
 # 환경 지수
 # ══════════════════════════════════════════
+# ── CEEI(피부) 등급 경계값 — 문헌·공식 기준 근거 (2026-07 기준) ──
+# "농도 × 10년(거주기간 최상위 구간과 동일)"으로 환산해 아래 세 기준점을 그대로 사용:
+#   · 50  = WHO(2021) 대기질 권고기준 PM2.5 연평균  5 ug/m3 × 10y
+#   · 150 = 대한민국 대기환경기준(2018 개정) PM2.5 연평균 15 ug/m3 × 10y
+#   · 260 = Kim et al., Int J Environ Res Public Health 2017;14(12):1458
+#           (장기노출 PM2.5 약 26.04 ug/m3 이상에서 피부 유해영향 유의하게 관찰) × 10y
+# "정상/비정상"이 아니라 "공인 기준·선행연구 대비 상대적 수준"으로 해석해 주세요.
+CEEI_GRADE_LOW  = 50
+CEEI_GRADE_MID  = 150
+CEEI_GRADE_HIGH = 260
 def calc_ceei(pm25_avg, residence_years):
     ceei = round(pm25_avg * residence_years, 1)
-    if ceei < 50:
+    if ceei < CEEI_GRADE_LOW:
         return (ceei,"낮음",
                 f"<span class='chip chip-good'>CEEI {ceei} 낮음</span>",
-                "환경 노출 영향 낮음 — 기본 보습·자외선 차단 유지")
-    elif ceei < 150:
+                "WHO 대기질 권고기준(PM2.5 연평균 5㎍/m³) 이내 수준의 누적 노출 — 기본 보습·자외선 차단 유지")
+    elif ceei < CEEI_GRADE_MID:
         return (ceei,"보통",
                 f"<span class='chip chip-mid'>CEEI {ceei} 보통</span>",
-                "중간 수준 환경 노출 — 항산화 성분 정기 사용 권장")
-    elif ceei < 300:
+                "국내 대기환경기준(PM2.5 연평균 15㎍/m³) 이내 수준 — 항산화 성분 정기 사용 권장")
+    elif ceei < CEEI_GRADE_HIGH:
         return (ceei,"높음",
                 f"<span class='chip chip-warn'>CEEI {ceei} 높음</span>",
-                "높은 환경 노출 누적 — 항산화·장벽강화 집중 케어 필요")
+                "선행연구에서 피부 유해영향이 보고되기 시작하는 노출 수준(PM2.5 약 26㎍/m³ 이상 장기노출)에 근접 — 항산화·장벽강화 집중 케어 필요")
     else:
         return (ceei,"매우높음",
                 f"<span class='chip chip-bad'>CEEI {ceei} 매우높음</span>",
-                "매우 높은 누적 노출 — 피부과 상담·기능성 화장품 집중 케어 권장")
+                "선행연구 상 피부 유해영향이 관찰된 노출 수준을 초과하는 누적 노출 — 피부과 상담·기능성 화장품 집중 케어 권장")
 def uv_index_grade(uv):
     if uv is None: return ("알수없음", 1.0, "#888888")
     uv = float(uv)
@@ -1114,6 +1124,14 @@ def humidity_correction(hum):
     elif h >= 40: return 1.0
     elif h >= 30: return 1.1
     else:         return 1.2
+# ── SEEI(두피) 등급 경계값 — 잠정 기준 (2026-07 기준) ──
+# 두피·모발에 특이적으로 검증된 정량적 노출-반응 임계치는 아직 학계에 보고된 바가
+# 없어(관련 세포·동물 연구는 있으나 사람 대상 정량 임계치 논문은 확인되지 않음),
+# "두피도 피부의 연장선"이라는 논리로 CEEI와 동일한 숫자 구간을 잠정 적용합니다.
+# 자체 수집 데이터가 누적되면 두피 특이적 임계치로 보정·논문화할 예정입니다.
+SEEI_GRADE_LOW  = 50
+SEEI_GRADE_MID  = 150
+SEEI_GRADE_HIGH = 300
 def calc_seei(air, residence_years, uv_data=None, humidity_data=None):
     pm25 = float(air.get("pm25") or 0)
     pm10 = float(air.get("pm10") or 0)
@@ -1133,22 +1151,22 @@ def calc_seei(air, residence_years, uv_data=None, humidity_data=None):
     hum_val  = humidity_data.get("humidity") if humidity_data else None
     hum_corr = humidity_correction(hum_val)
     seei = round(composite * residence_years * season * uv_corr * hum_corr, 1)
-    if seei < 50:
+    if seei < SEEI_GRADE_LOW:
         grade, chip, msg = ("낮음",
             f"<span class='chip chip-good'>SEEI {seei} 낮음</span>",
-            "복합 환경 노출 낮음 — 기본 두피 보습·청결 유지")
-    elif seei < 150:
+            "복합 환경 노출 낮음(잠정 기준) — 기본 두피 보습·청결 유지")
+    elif seei < SEEI_GRADE_MID:
         grade, chip, msg = ("보통",
             f"<span class='chip chip-mid'>SEEI {seei} 보통</span>",
-            "중간 수준 복합 오염 — 두피 항산화·항균 성분 정기 사용 권장")
-    elif seei < 300:
+            "중간 수준 복합 오염(잠정 기준) — 두피 항산화·항균 성분 정기 사용 권장")
+    elif seei < SEEI_GRADE_HIGH:
         grade, chip, msg = ("높음",
             f"<span class='chip chip-warn'>SEEI {seei} 높음</span>",
-            "높은 복합 오염 누적 — 탈모 위험 증가, 두피케어 집중 필요")
+            "높은 복합 오염 누적(잠정 기준, 두피 특이적 검증 진행 중) — 탈모 위험 증가, 두피케어 집중 필요")
     else:
         grade, chip, msg = ("매우높음",
             f"<span class='chip chip-bad'>SEEI {seei} 매우높음</span>",
-            "매우 높은 누적 — 두피 전문 케어·피부과 상담 권장")
+            "매우 높은 누적(잠정 기준, 두피 특이적 검증 진행 중) — 두피 전문 케어·피부과 상담 권장")
     return (seei, grade, chip, msg, components, season,
             uv_val, uv_gstr, hum_val, hum_corr)
 # ══════════════════════════════════════════
@@ -1609,7 +1627,10 @@ def show_skin_result(result, air, region, res_str, pid, age, gender, parts):
         f"{pm25_chip(pm25_val)} {ceei_chip}"
         f"<span class='chip chip-neu'>연평균 {pm25_avg}㎍/m³</span>"
         f"<span class='chip chip-neu'>거주 {yrs}년</span></div>"
-        f"<div class='result-text'>{ceei_msg}</div></div>",
+        f"<div class='result-text'>{ceei_msg}</div>"
+        f"<div style='font-size:0.70rem;color:rgba(180,180,220,0.40);margin-top:0.5rem;'>"
+        f"* 등급 기준: WHO(2021) 대기질 권고기준, 국내 대기환경기준, "
+        f"Kim et al. 2017(Int J Environ Res Public Health) 참고 — 의학적 진단 아님</div></div>",
         unsafe_allow_html=True)
     st.markdown("---")
     mixing_final = generate_mixing_guide(ings, skin_type, ceei_grade, total_ml=chosen_ml)
@@ -1739,7 +1760,9 @@ def show_scalp_result(result, air, region, res_str, pid, age, gender, parts,
         f"<div style='font-size:0.78rem;color:rgba(180,180,220,0.40);margin-top:0.6rem;"
         f"font-style:italic;font-family:DM Mono,monospace;'>"
         f"SEEI = (PM2.5×0.40+PM10×0.25+NO2×0.20+O3×0.15)×거주기간×계절×UV×습도</div>"
-        f"<div class='result-text' style='margin-top:0.5rem;'>{seei_msg}</div></div>",
+        f"<div class='result-text' style='margin-top:0.5rem;'>{seei_msg}</div>"
+        f"<div style='font-size:0.70rem;color:rgba(180,180,220,0.40);margin-top:0.5rem;'>"
+        f"* 등급 구간은 CEEI(피부) 문헌 기준을 잠정 준용 — 두피 특이적 검증은 자체 데이터 축적 후 진행 예정</div></div>",
         unsafe_allow_html=True)
     pri_scores = {
         "각질":result.get("keratin_score",0),
