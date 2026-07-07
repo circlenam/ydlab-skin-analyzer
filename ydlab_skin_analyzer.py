@@ -661,7 +661,13 @@ small, .small,
     margin-bottom: 0.8rem;
     font-weight: 500;
 }
-/* ── 선택박스(닫힌 상태) 표시값 텍스트 최종 강제 (캐스케이드 최우선순위) ── */
+/* ── 선택박스: 멀티셀렉트 태그(빨간 배지)와 동일한 톤으로 통일 ── */
+/* 박스 자체를 빨간색 배경으로 채워서 텍스트 색 이슈와 무관하게 항상 보이게 함 */
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    background: #ef4444 !important;
+    border: 1px solid #ef4444 !important;
+    border-radius: 8px !important;
+}
 div[data-baseweb="select"],
 div[data-baseweb="select"] *,
 div[data-baseweb="select"] div,
@@ -679,6 +685,22 @@ div[data-baseweb="select"] input::placeholder {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     opacity: 0.9 !important;
+}
+div[data-baseweb="select"] svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+/* 멀티셀렉트(주요 고민 등)의 선택 태그도 동일한 빨간 배지 톤으로 통일 */
+div[data-baseweb="tag"] {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
+div[data-baseweb="tag"] span,
+div[data-baseweb="tag"] div,
+div[data-baseweb="tag"] svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1490,11 +1512,22 @@ def force_selectbox_white():
                 boxes.forEach(function(box) {
                     box.style.setProperty('color', '#ffffff', 'important');
                     box.style.setProperty('-webkit-text-fill-color', '#ffffff', 'important');
+                    box.style.setProperty('background', '#ef4444', 'important');
                     var all = box.querySelectorAll('*');
                     all.forEach(function(el) {
                         el.style.setProperty('color', '#ffffff', 'important');
                         el.style.setProperty('-webkit-text-fill-color', '#ffffff', 'important');
                         el.style.setProperty('opacity', '1', 'important');
+                    });
+                });
+                var tags = root.querySelectorAll('[data-baseweb="tag"]');
+                tags.forEach(function(tag) {
+                    tag.style.setProperty('background', '#ef4444', 'important');
+                    tag.style.setProperty('border-color', '#ef4444', 'important');
+                    var all = tag.querySelectorAll('*');
+                    all.forEach(function(el) {
+                        el.style.setProperty('color', '#ffffff', 'important');
+                        el.style.setProperty('fill', '#ffffff', 'important');
                     });
                 });
             }
