@@ -144,8 +144,8 @@ ul[data-baseweb="menu"],
 [role="listbox"],
 [role="listbox"] > div,
 [role="listbox"] > div > div {
-    background: #ffffff !important;
-    background-color: #ffffff !important;
+    background: #1a1a3e !important;
+    background-color: #1a1a3e !important;
     border: 1px solid rgba(99,102,241,0.45) !important;
     border-radius: 10px !important;
 }
@@ -153,7 +153,8 @@ ul[data-baseweb="menu"],
 [data-baseweb="option"], [data-baseweb="option"] *,
 li[role="option"], li[role="option"] *,
 [data-baseweb="menu"] li, [data-baseweb="menu"] li * {
-    color: #111111 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     background: transparent !important;
     background-color: transparent !important;
     font-family: 'Noto Sans KR', sans-serif !important;
@@ -161,15 +162,17 @@ li[role="option"], li[role="option"] *,
 }
 [role="option"]:hover, [role="option"]:hover *,
 [data-baseweb="option"]:hover, [data-baseweb="option"]:hover * {
-    background: rgba(99,102,241,0.12) !important;
-    background-color: rgba(99,102,241,0.12) !important;
-    color: #111111 !important;
+    background: rgba(99,102,241,0.30) !important;
+    background-color: rgba(99,102,241,0.30) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 [aria-selected="true"][role="option"],
 [aria-selected="true"][role="option"] * {
-    background: rgba(99,102,241,0.18) !important;
-    background-color: rgba(99,102,241,0.18) !important;
-    color: #111111 !important;
+    background: rgba(99,102,241,0.45) !important;
+    background-color: rgba(99,102,241,0.45) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 .stCheckbox > label > div[data-testid="stMarkdownContainer"] p,
 .stCheckbox span,
@@ -190,7 +193,7 @@ li[role="option"], li[role="option"] *,
 }
 [data-testid="stFileUploader"] *,
 [data-testid="stFileUploadDropzone"] * {
-    color: #111111 !important;
+    color: #e2e8f0 !important;
 }
 [data-testid="stFileUploader"] small,
 [data-testid="stFileUploaderDropzoneInstructions"] small {
@@ -933,12 +936,40 @@ def show_product_match_card(product, grade_label, grade_value, is_scalp=False):
 def generate_biz_match_report_html(product, grade_label, grade_value,
                                     region, pid, age, gender, overall,
                                     result, is_scalp=False):
-    """사업용(매장) 모드 전용 — 매장 전달용 추천 제품 안내 리포트 (혼합표 없음)."""
+    """사업용(매장) 모드 전용 — 진단 결과(세부지표) + 매장 전달용 추천 제품·사용법 안내 리포트."""
     accent  = "#10b981" if is_scalp else "#6366f1"
     label   = "두피" if is_scalp else "피부"
     stitle  = "stitle-green" if is_scalp else "stitle"
     bg_from, bg_to = ("#0a0a1a","#0a1a0d") if is_scalp else ("#0a0a1a","#0d1b3e")
     def sc(s): return "#10b981" if s>=70 else "#f59e0b" if s>=40 else "#ef4444"
+    if is_scalp:
+        metrics = [
+            ("각질",     result.get("keratin_score",0),          result.get("keratin_comment","")),
+            ("모공피지", result.get("pore_score",0),             result.get("pore_comment","")),
+            ("모발굵기", result.get("hair_thickness_score",0),   result.get("hair_thickness_comment","")),
+            ("색상염증", result.get("scalp_color_score",0),      result.get("scalp_color_comment","")),
+            ("수분유분", result.get("moisture_balance_score",0), result.get("moisture_balance_comment","")),
+            ("손상도",   result.get("hair_damage_score",0),      result.get("hair_damage_comment","")),
+        ]
+        type_val = result.get("scalp_type","")
+    else:
+        metrics = [
+            ("주름",   result.get("wrinkle_score",0),  result.get("wrinkle_comment","")),
+            ("모공",   result.get("pore_score",0),      result.get("pore_comment","")),
+            ("피부결", result.get("texture_score",0),   result.get("texture_comment","")),
+            ("피부톤", result.get("tone_score",0),       result.get("tone_comment","")),
+            ("수분",   result.get("moisture_score",0),  result.get("moisture_comment","")),
+        ]
+        type_val = result.get("skin_type","")
+    metric_boxes = "".join([
+        f"<div style='flex:1;min-width:88px;background:rgba(255,255,255,0.04);"
+        f"border:1px solid {accent}22;border-radius:10px;"
+        f"padding:12px 8px;text-align:center;'>"
+        f"<div style='font-size:24px;font-weight:700;color:{sc(v)};"
+        f"font-family:DM Mono,monospace;text-shadow:0 0 10px {sc(v)};'>{v}</div>"
+        f"<div style='font-size:11px;color:#94a3b8;margin-top:4px;'>{l}</div>"
+        f"<div style='font-size:10px;color:#64748b;margin-top:4px;line-height:1.4;'>{c}</div></div>"
+        for l,v,c in metrics])
     ing_h = "".join([
         f"<span class='chip' style='color:{accent};border-color:{accent}55;"
         f"background:{accent}22;'>{i}</span>"
@@ -951,6 +982,32 @@ def generate_biz_match_report_html(product, grade_label, grade_value,
             f"<div style='font-size:13px;color:#fcd34d;line-height:1.7;'>"
             f"오늘 {grade_label} <b>{grade_value}</b> — 항산화 부스터 앰플 추가 사용을 "
             f"권장합니다 (완제품 배합 변경 없음, 별도 제품 레이어링)</div></div>")
+    if is_scalp:
+        usage_steps = [
+            "샴푸 후 타월로 두피 물기를 가볍게 제거합니다 (촉촉한 상태 유지).",
+            f"{product['name']}을(를) 두피에 직접 소량(1~2ml) 도포합니다.",
+            "손가락 끝으로 두피를 원형으로 1~2분 마사지합니다.",
+            "씻어내지 않고 미지근한 바람으로 건조합니다 (Leave-on 타입).",
+            "주 3~4회, 샴푸 직후 사용을 권장합니다.",
+        ]
+        usage_note = "보관: 서늘한 곳 / 개봉 후 3개월 내 사용 / 눈 접촉 시 즉시 세척"
+    else:
+        usage_steps = [
+            "세안 후 토너(스킨)로 피부결을 정돈합니다.",
+            f"{product['name']}을(를) 적당량 덜어 얼굴 전체에 고르게 펴 바릅니다.",
+            "가볍게 두드려 흡수시킵니다.",
+            "이후 로션·크림으로 마무리합니다 (아침에는 자외선차단제 필수).",
+            "아침·저녁 1일 2회 사용을 권장합니다.",
+        ]
+        usage_note = "보관: 직사광선을 피한 서늘한 곳 / 개봉 후 6개월 내 사용"
+    usage_html = "".join([
+        f"<div style='display:flex;align-items:flex-start;gap:8px;padding:6px 0;"
+        f"font-size:13px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.05);'>"
+        f"<span style='background:{accent};color:white;border-radius:50%;"
+        f"width:20px;height:20px;min-width:20px;display:inline-flex;align-items:center;"
+        f"justify-content:center;font-size:10px;font-weight:700;'>{i+1}</span>"
+        f"<span>{step}</span></div>"
+        for i, step in enumerate(usage_steps)])
     code = ("YDL-" + ("SC" if is_scalp else "SK") + "-BIZ-"
             + datetime.now().strftime("%Y%m%d") + "-"
             + ''.join(random.choices(string.ascii_uppercase+string.digits, k=4)))
@@ -965,9 +1022,19 @@ def generate_biz_match_report_html(product, grade_label, grade_value,
         f"<div class='card'>"
         f"<div style='font-size:13px;color:#94a3b8;line-height:1.8;'>"
         f"분석일: {datetime.now().strftime('%Y년 %m월 %d일')} &nbsp;|&nbsp; "
-        f"참여자: {pid} {age} {gender} &nbsp;|&nbsp; 지역: {region}<br>"
-        f"종합 점수: <b style='color:{sc(overall)};'>{overall}점</b> &nbsp;|&nbsp; "
-        f"{grade_label} 등급: <b style='color:{accent};'>{grade_value}</b></div></div>"
+        f"참여자: {pid} {age} {gender} &nbsp;|&nbsp; 지역: {region}</div></div>"
+        f"<div class='card'><div class='{stitle}'>종합 분석 결과</div>"
+        f"<div style='display:flex;align-items:center;gap:20px;flex-wrap:wrap;'>"
+        f"<div style='font-size:52px;font-weight:900;color:{sc(overall)};"
+        f"font-family:DM Mono,monospace;line-height:1;"
+        f"text-shadow:0 0 20px {sc(overall)};'>{overall}</div>"
+        f"<div><div style='font-size:15px;font-weight:700;color:white;margin-bottom:4px;'>"
+        f"{label} 타입: <span style='color:{sc(overall)};'>{type_val}</span> "
+        f"&nbsp;|&nbsp; {grade_label} 등급: <span style='color:{accent};font-weight:700;'>{grade_value}</span></div>"
+        f"<div style='font-size:13px;color:#94a3b8;line-height:1.7;'>{result.get('summary','')}</div>"
+        f"</div></div></div>"
+        f"<div class='card'><div class='{stitle}'>{label} 세부 지표</div>"
+        f"<div style='display:flex;gap:8px;flex-wrap:wrap;'>{metric_boxes}</div></div>"
         f"<div class='card'><div class='{stitle}'>매장 추천 제품 (완제품 · 즉시 사용 가능)</div>"
         f"<div style='font-size:20px;font-weight:800;color:white;margin-bottom:6px;'>"
         f"{product['code']} · {product['name']}</div>"
@@ -975,6 +1042,8 @@ def generate_biz_match_report_html(product, grade_label, grade_value,
         f"{product.get('desc','')}</div>"
         f"<div>{ing_h}</div></div>"
         f"{booster_html}"
+        f"<div class='card'><div class='{stitle}'>사용 방법</div>{usage_html}"
+        f"<div style='font-size:11px;color:#64748b;margin-top:10px;'>{usage_note}</div></div>"
         f"<div class='card' style='font-size:12px;color:#64748b;'>"
         f"이 제품은 완제품으로 사전 제조되어 있습니다. 매장에서 추가 혼합·소분 없이 "
         f"바로 전달하시면 됩니다.</div>"
