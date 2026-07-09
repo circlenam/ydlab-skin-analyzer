@@ -2630,6 +2630,8 @@ def main():
             st.error("익명 참여 코드를 입력해 주세요."); st.stop()
         if age == "선택" or gender == "선택":
             st.warning("연령대와 성별을 선택해 주세요."); st.stop()
+        if res_str == "선택":
+            st.warning("거주 기간을 선택해 주세요."); st.stop()
         if not parts:
             st.warning("촬영 부위를 하나 이상 선택해 주세요."); st.stop()
         images = []
