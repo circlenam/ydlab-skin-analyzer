@@ -6,8 +6,8 @@ secrets.toml:
   ANTHROPIC_API_KEY = "..."
   AIRKOREA_API_KEY  = "..."
   KMA_API_KEY       = "..."
-  EDU_ACCESS_CODES  = ["YDLAB_EDU_2026"]
-  BIZ_ACCESS_CODES  = ["YDLAB_BIZ_2026"]
+  EDU_ACCESS_CODES  = ["edu2026"]
+  BIZ_ACCESS_CODES  = ["biz2026"]
   ADMIN_PASSWORD    = "YDLAB2025"
   GOOGLE_SHEETS_ID  = "..."
   [gcp_service_account] ...
